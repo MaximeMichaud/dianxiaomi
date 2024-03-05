@@ -3,9 +3,10 @@
 	Plugin Name: Dianxiaomi - WooCommerce ERP
 	Plugin URI: http://dianxiaomi.com/
 	Description: Add tracking number and carrier name to WooCommerce, display tracking info at order history page, auto import tracking numbers to Dianxiaomi.
-	Version: 1.0.1
-	Author: Dianxiaomi
-	Author URI: http://dianxiaomi.com
+	Version: 1.0.5
+	Author: Dianxiaomi(Wilson Modified)
+    Updated: 2024-01-24
+	Author URI: https://github.com/whywilson/dianxiaomi-for-woocommerce/releases
 	Copyright: © Dianxiaomi
 */
 
@@ -56,12 +57,10 @@ if (is_woocommerce_active()) {
                 $this->api = new Dianxiaomi_API();
 
                 $options = get_option('dianxiaomi_option_name');
-				
                 if ($options) {
 
                     if (isset($options['plugin'])) {
                         $plugin = $options['plugin'];
-						
                         if ($plugin == 'dianxiaomi') {
                             add_action('admin_print_scripts', array(&$this, 'library_scripts'));
                             add_action('in_admin_footer', array(&$this, 'include_footer_script'));
@@ -162,7 +161,6 @@ if (is_woocommerce_active()) {
              */
             public function add_meta_box()
             {
-				
                 add_meta_box('woocommerce-dianxiaomi', __('Dianxiaomi', 'wc_dianxiaomi'), array(&$this, 'meta_box'), 'shop_order', 'side', 'high');
             }
 
@@ -173,7 +171,7 @@ if (is_woocommerce_active()) {
              */
             public function meta_box()
             {
-			
+
                 // just draw the layout, no data
                 global $post;
 
@@ -415,7 +413,6 @@ if (is_woocommerce_active()) {
 
             private function display_order_dianxiaomi($order_id, $for_email)
             {
-
                 //print_r($this->dianxiaomi_fields);
                 $values = array();
                 foreach ($this->dianxiaomi_fields as $field) {
@@ -465,18 +462,27 @@ if (is_woocommerce_active()) {
                 // echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . $values['dianxiaomi_tracking_number'] . $required_fields_msg;
 
 
-                $dianxiaomi_tracking_provider_name = $values['dianxiaomi_tracking_provider_name'];
+                $dianxiaomi_tracking_provider_name = get_post_meta($order_id, '_dianxiaomi_tracking_provider_name', true);
+                $custom_domain = $this->custom_domain;
+                if (strpos($custom_domain, "http") === false) {
+                    $custom_domain = 'https://t.17track.net/en#nums=';
+                }
+
+                $dianxiaomi_tracking_number = $values['dianxiaomi_tracking_number'];
+                $dianxiaomi_tracking_provider = $values['dianxiaomi_tracking_provider'];
 
                 if ($dianxiaomi_tracking_provider_name == '4PX Express' || $dianxiaomi_tracking_provider_name == '4PX') {
-                    echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . '<a target="_blank" href="http://track.4px.com/#/result/0/' . $values['dianxiaomi_tracking_number'] . '">' . $values['dianxiaomi_tracking_number'] . '</a>.' . $required_fields_msg;
+                    echo $track_message_1 . $dianxiaomi_tracking_provider_name . '<br/>' . $track_message_2 . '<a target="_blank" href="http://track.4px.com/#/result/0/' . $dianxiaomi_tracking_number . '">' . $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
                 } else if ($dianxiaomi_tracking_provider_name == 'DHL') {
-                    echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . '<a target="_blank" href="http://www.dhl.com/en/express/tracking.html?AWB=' . $values['dianxiaomi_tracking_number'] . '&brand=DHL">' . $values['dianxiaomi_tracking_number'] . '</a>.' . $required_fields_msg;
+                    echo $track_message_1 . $dianxiaomi_tracking_provider_name . '<br/>' . $track_message_2 . '<a target="_blank" href="http://www.dhl.com/en/express/tracking.html?AWB=' . $dianxiaomi_tracking_number . '&brand=DHL">' . $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
                 } else if ($dianxiaomi_tracking_provider_name == 'FedEx') {
-                    echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . '<a target="_blank" href="https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $values['dianxiaomi_tracking_number'] . '">' . $values['dianxiaomi_tracking_number'] . '</a>.' . $required_fields_msg;
+                    echo $track_message_1 . $dianxiaomi_tracking_provider_name . '<br/>' . $track_message_2 . '<a target="_blank" href="https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $dianxiaomi_tracking_number . '">' . $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
                 } else if ($dianxiaomi_tracking_provider_name == 'UPS') {
-                    echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . '<a target="_blank" href="https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=' . $values['dianxiaomi_tracking_number'] . '">' . $values['dianxiaomi_tracking_number'] . '</a>.' . $required_fields_msg;
+                    echo $track_message_1 . $dianxiaomi_tracking_provider_name . '<br/>' . $track_message_2 . '<a target="_blank" href="https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=' . $dianxiaomi_tracking_number . '">' . $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
+                }  else if (!empty($dianxiaomi_tracking_provider_name)) {
+                    echo $track_message_1 . $dianxiaomi_tracking_provider_name . '.<br/>' . $track_message_2 . '<a target="_blank" href="' . $custom_domain . $dianxiaomi_tracking_number . '">' .  $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
                 } else {
-                    echo $track_message_1 . $values['dianxiaomi_tracking_provider_name'] . '<br/>' . $track_message_2 . '<a target="_blank" href="https://www.aftership.com/track/' . $values['dianxiaomi_tracking_number'] . '">' . $values['dianxiaomi_tracking_number'] . '</a>.' . $required_fields_msg;
+                    echo $track_message_2 . '<a target="_blank" href="' . $custom_domain . $dianxiaomi_tracking_number . '">' . $dianxiaomi_tracking_number . '</a>.' . $required_fields_msg;
                 }
 
                 if (!$for_email && $this->use_track_button) {
