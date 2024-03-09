@@ -16,6 +16,11 @@ Objectifs (en ordre)
 - Assurer la compatibilité avec PHP 8.1, ainsi qu'avec les versions PHP 8.2/8.3, en corrigeant les dépréciations et autres avertissements.
 - Implémenter HPOS
 
+Autre(s) :
+
+Explorer l'utilisation de PHPCS pour adhérer aux standards de codage de WordPress. Exemple d'utilisation : vendor/bin/phpcs -ps dianxiaomi.php --standard=WordPress. 
+Ceci est applicable si PHPCS est inclus dans le répertoire vendor via Composer, ce qui n'est pas le cas actuellement.
+
 ## 2 - Exigences du Plugin
 
 ### Compatibilité PHP
