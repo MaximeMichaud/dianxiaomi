@@ -8,6 +8,13 @@ Le plugin Dianxiaomi est développé pour optimiser la publication de produits e
 
 Il est essentiel que le plugin soit compatible avec PHP 8.2, et qu'il soit également testé sous PHP 8.3 pour garantir une compatibilité avec les versions actuelles et futures de PHP.
 
+
+Objectifs (en ordre)
+
+- Mettre à jour le plugin pour assurer la compatibilité avec les dernières versions de WordPress.
+- Assurer la compatibilité avec PHP 8.1, ainsi qu'avec les versions PHP 8.2/8.3, en corrigeant les dépréciations et autres avertissements.
+- Implémenter HPOS
+
 ## 2 - Exigences du Plugin
 
 ### Compatibilité PHP
