@@ -11,6 +11,7 @@ Il est essentiel que le plugin soit compatible avec PHP 8.2, et qu'il soit égal
 
 Objectifs (en ordre)
 
+- Vérifiez si la version trouvée sur Github contient du code utile ou justifiable : [Diff](https://github.com/MaximeMichaud/dianxiaomi/commit/9f2d3bbf3c17206c121b9722b6da006a1bd680a8)
 - Mettre à jour le plugin pour assurer la compatibilité avec les dernières versions de WordPress.
 - Assurer la compatibilité avec PHP 8.1, ainsi qu'avec les versions PHP 8.2/8.3, en corrigeant les dépréciations et autres avertissements.
 - Implémenter HPOS
