@@ -2,8 +2,9 @@
 /**
  * Functions used by plugins
  */
-if ( ! class_exists( 'Dianxiaomi_Dependencies' ) )
+if ( ! class_exists( 'Dianxiaomi_Dependencies' ) ) {
 	require_once 'class-dianxiaomi-dependencies.php';
+}
 
 /**
  * WC Detection

@@ -10,10 +10,12 @@
  * @since       1.0
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
 
-interface Dianxiaomi_API_Handler
-{
+interface Dianxiaomi_API_Handler {
+
 
 	/**
 	 * Get the content type for the response
@@ -32,7 +34,7 @@ interface Dianxiaomi_API_Handler
 	 * @param string $data
 	 * @return array
 	 */
-	public function parse_body($data);
+	public function parse_body( $data );
 
 	/**
 	 * Generate a response from an array of data
@@ -41,6 +43,5 @@ interface Dianxiaomi_API_Handler
 	 * @param array $data
 	 * @return string
 	 */
-	public function generate_response($data);
-
+	public function generate_response( $data );
 }
