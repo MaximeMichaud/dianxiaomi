@@ -17,6 +17,6 @@ jobs:
           tools: phpcs
       - uses: 10up/wpcs-action@stable
         with:
-          standard: 'phpcs.xml'
+          standard: 'dianxiaomi/phpcs.xml'
           paths: 'dianxiaomi/'
           use_local_config: true
