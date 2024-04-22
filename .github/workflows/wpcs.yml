@@ -6,17 +6,16 @@ jobs:
   phpcs:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        php-version: ['8.0', '8.1', '8.2']  # Définit les versions de PHP à tester
+        php-version: ['8.0', '8.1', '8.2']
     steps:
       - uses: actions/checkout@v4
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}  # Utilise la version de PHP de la matrice
+          php-version: ${{ matrix.php-version }}
           tools: phpcs
-      - name: WPCS check using local config
-        uses: 10up/wpcs-action@stable
+      - uses: 10up/wpcs-action@stable
         with:
           standard: 'phpcs.xml'
           paths: 'dianxiaomi/'
