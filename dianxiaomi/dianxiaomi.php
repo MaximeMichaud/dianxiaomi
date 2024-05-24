@@ -3,7 +3,7 @@
 	Plugin Name: Dianxiaomi - WooCommerce ERP
 	Plugin URI: http://dianxiaomi.com/
 	Description: Add tracking number and carrier name to WooCommerce, display tracking info at order history page, auto import tracking numbers to Dianxiaomi.
-	Version: 1.0.1
+	Version: 1.0.5
 	Author: Dianxiaomi
 	Author URI: http://dianxiaomi.com
 	Copyright: © Dianxiaomi
@@ -25,6 +25,16 @@ if ( ! function_exists( 'is_woocommerce_active' ) ) {
 /**
  * Plugin updates
  */
+/**
+ * HPOS compatibility
+ */
+add_action('before_woocommerce_init', 'before_woocommerce_hpos');
+
+function before_woocommerce_hpos() { 
+    if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) { 
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true); 
+    }
+}
 
 if ( is_woocommerce_active() ) {
 

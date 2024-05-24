@@ -47,21 +47,18 @@ class Dianxiaomi_API_Authentication {
 	 * @param WP_User $user
 	 * @return null|WP_Error|WP_User
 	 */
-	public function authenticate( $user ) {
-
-		// allow access to the index by default
-		if ( '/' === getDianxiaomiInstance()->api->server->path ) {
-			return new WP_User( 0 );
+	public function authenticate($user) {
+		// Utilisez la méthode getter pour accéder à la propriété 'path'
+		if ('/' === getDianxiaomiInstance()->api->server->getPath()) {
+			return new WP_User(0);
 		}
-
+	
 		try {
 			$user = $this->perform_authentication();
-
-		} catch ( Exception $e ) {
-
-			$user = new WP_Error( 'dianxiaomi_api_authentication_error', $e->getMessage(), array( 'status' => $e->getCode() ) );
+		} catch (Exception $e) {
+			$user = new WP_Error('dianxiaomi_api_authentication_error', $e->getMessage(), array('status' => $e->getCode()));
 		}
-
+	
 		return $user;
 	}
 
