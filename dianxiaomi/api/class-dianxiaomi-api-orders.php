@@ -274,29 +274,39 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource
 	 */
 	public function ship_order($id, $data)
 {
-    $id = $this->validate_request($id, 'shop_order', 'edit');
+    $validated_id = $this->validate_request($id, 'shop_order', 'edit');
 
-    if (is_wp_error($id))
-        return $id;
+    if (is_wp_error($validated_id))
+        return $validated_id;
 
-    //  obtenir l'objet de commande
-    $order = wc_get_order($id);
+    // Obtenir l'objet de commande
+    $order = wc_get_order($validated_id);
 
-    if (!empty($data['status'])) {
-        //  mettre à jour les métadonnées
-        $order->update_meta_data('_dianxiaomi_tracking_number', $data['tracking_number']);
-        $order->update_meta_data('_dianxiaomi_tracking_provider', $data['tracking_provider']);
-        
-        // Mettre à jour le statut de la commande
-        $dianxiaomi_ignore_order_status = get_option('dianxiaomi_ignore_order_status', 'no');
-        $order->update_status($dianxiaomi_ignore_order_status == 'yes' ? $order->get_status() : $data['status'], isset($data['note']) ? $data['note'] : '');
-
-        // Sauvegardez les modifications 
-        $order->save();
+    if (!$order) {
+        return new WP_Error('invalid_order', 'La commande n\'existe pas', array('status' => 404));
     }
 
-    // Retournez les données de la commande mise à jour
-    return $this->get_order($id);
+    // Mettre à jour les métadonnées si elles sont fournies
+    if (!empty($data['tracking_number'])) {
+        $order->update_meta_data('_dianxiaomi_tracking_number', $data['tracking_number']);
+    }
+    if (!empty($data['tracking_provider'])) {
+        $order->update_meta_data('_dianxiaomi_tracking_provider', $data['tracking_provider']);
+    }
+
+    // Vérifier si le statut de la commande doit être ignoré
+    $ignore_status = get_option('dianxiaomi_ignore_order_status', 'no');
+
+    // Mettre à jour le statut de la commande si nécessaire
+    if (!empty($data['status']) && $ignore_status !== 'yes') {
+        $order->set_status($data['status'], isset($data['note']) ? $data['note'] : '');
+    }
+
+    // Sauvegarder les modifications
+    $order->save();
+
+    // Retourner les données de la commande mise à jour
+    return $this->get_order($validated_id);
 }
 
 	/**
