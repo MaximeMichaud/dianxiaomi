@@ -11,11 +11,12 @@
 /** Alex 02/03/2024
  * Utilisation de tableaux courts : 
  * Remplacement des array() par [] pour une syntaxe plus moderne et concise.
-* Opérateur null coalescent : 
-* Utilisation de ?? pour gérer les cas o les indices de tableau ou les variables peuvent ne pas être définis.
+ * Opérateur null coalescent : 
+ * Utilisation de ?? pour gérer les cas o les indices de tableau ou les variables peuvent ne pas être définis.
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 if (!function_exists('getallheaders')) {
     function getallheaders()
@@ -51,7 +52,7 @@ class Dianxiaomi_API_Authentication
 
         return $user;
     }
-	private function perform_authentication()
+    private function perform_authentication()
     {
         $headers = getallheaders();
         $headers = json_decode(json_encode($headers), true);

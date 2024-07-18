@@ -10,7 +10,8 @@
  * @since       1.0
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 class Dianxiaomi_API
 {
@@ -137,18 +138,18 @@ class Dianxiaomi_API
     private function includes(): void
     {
         // API server / response handlers
-        include_once('api/class-dianxiaomi-api-server.php');
-        include_once('api/interface-dianxiaomi-api-handler.php');
-        include_once('api/class-dianxiaomi-api-json-handler.php');
+        include_once ('api/class-dianxiaomi-api-server.php');
+        include_once ('api/interface-dianxiaomi-api-handler.php');
+        include_once ('api/class-dianxiaomi-api-json-handler.php');
 
         // authentication
-        include_once('api/class-dianxiaomi-api-authentication.php');
+        include_once ('api/class-dianxiaomi-api-authentication.php');
         $this->authentication = new Dianxiaomi_API_Authentication();
 
-        include_once('api/class-dianxiaomi-api-resource.php');
+        include_once ('api/class-dianxiaomi-api-resource.php');
 
         // self api
-        include_once('api/class-dianxiaomi-api-orders.php');
+        include_once ('api/class-dianxiaomi-api-orders.php');
 
         // allow plugins to load other response handlers or resource classes
         do_action('woocommerce_api_loaded');
@@ -162,7 +163,8 @@ class Dianxiaomi_API
      */
     public function register_resources(Dianxiaomi_API_Server $server): void
     {
-        $api_classes = apply_filters('dianxiaomi_api_classes',
+        $api_classes = apply_filters(
+            'dianxiaomi_api_classes',
             array(
                 'Dianxiaomi_API_Orders',
             )

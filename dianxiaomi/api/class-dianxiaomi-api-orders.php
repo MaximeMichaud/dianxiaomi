@@ -20,7 +20,8 @@
  * 
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource
 {
@@ -243,28 +244,28 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource
 
         return $this->get_order($id);
     }
-/**
- * Get the total number of orders
- *
- * @since 2.1
- * @param string|null $status Optional status to filter the count.
- * @param array $filter Additional filters for the query.
- * @return array|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
- */
-public function get_orders_count(?string $status = null, array $filter = []): array|WP_Error
-{
-    if (!empty($status)) {
-        $filter['status'] = $status;
+    /**
+     * Get the total number of orders
+     *
+     * @since 2.1
+     * @param string|null $status Optional status to filter the count.
+     * @param array $filter Additional filters for the query.
+     * @return array|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
+     */
+    public function get_orders_count(?string $status = null, array $filter = []): array|WP_Error
+    {
+        if (!empty($status)) {
+            $filter['status'] = $status;
+        }
+
+        $query = $this->query_orders($filter);
+
+        if (!current_user_can('read_private_shop_orders')) {
+            return new WP_Error('dianxiaomi_api_user_cannot_read_orders_count', __('You do not have permission to read the orders count', 'dianxiaomi'), ['status' => 401]);
+        }
+
+        return ['count' => (int) $query->found_posts];
     }
-
-    $query = $this->query_orders($filter);
-
-    if (!current_user_can('read_private_shop_orders')) {
-        return new WP_Error('dianxiaomi_api_user_cannot_read_orders_count', __('You do not have permission to read the orders count', 'dianxiaomi'), ['status' => 401]);
-    }
-
-    return ['count' => (int)$query->found_posts];
-}
     /**
      * Ship an order
      *
@@ -273,69 +274,69 @@ public function get_orders_count(?string $status = null, array $filter = []): ar
      * @param array $data
      * @return array
      */
-   /**
- * Ship an order
- *
- * @since 2.1
- * @param int $id the order ID
- * @param array $data Data containing shipping and order status information.
- * @return array|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
- */
-public function ship_order(int $id, array $data): array|WP_Error
-{
-    $validated_id = $this->validate_request($id, 'shop_order', 'edit');
+    /**
+     * Ship an order
+     *
+     * @since 2.1
+     * @param int $id the order ID
+     * @param array $data Data containing shipping and order status information.
+     * @return array|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
+     */
+    public function ship_order(int $id, array $data): array|WP_Error
+    {
+        $validated_id = $this->validate_request($id, 'shop_order', 'edit');
 
-    if (is_wp_error($validated_id)) {
-        return $validated_id;
+        if (is_wp_error($validated_id)) {
+            return $validated_id;
+        }
+
+        // Obtenir l'objet de commande
+        $order = wc_get_order($validated_id);
+
+        if (!$order) {
+            return new WP_Error('invalid_order', 'La commande n\'existe pas', ['status' => 404]);
+        }
+
+        // Mettre à jour les métadonnées si elles sont fournies
+        if (!empty($data['tracking_number'])) {
+            $order->update_meta_data('_dianxiaomi_tracking_number', $data['tracking_number']);
+        }
+        if (!empty($data['tracking_provider'])) {
+            $order->update_meta_data('_dianxiaomi_tracking_provider', $data['tracking_provider']);
+        }
+
+        // Vérifier si le statut de la commande doit être ignoré
+        $ignore_status = get_option('dianxiaomi_ignore_order_status', 'no');
+
+        // Mettre à jour le statut de la commande si nécessaire
+        if (!empty($data['status']) && $ignore_status !== 'yes') {
+            $order->set_status($data['status'], isset($data['note']) ? $data['note'] : '');
+        }
+
+        // Sauvegarder les modifications
+        $order->save();
+
+        // Retourner les données de la commande mise à jour
+        return $this->get_order($validated_id);
     }
+    /**
+     * Delete an order
+     *
+     * @TODO enable along with POST in 2.2
+     * @param int $id the order ID
+     * @param bool $force true to permanently delete order, false to move to trash
+     * @return array|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
+     */
+    public function delete_order(int $id, bool $force = false): array|WP_Error
+    {
+        $validated_id = $this->validate_request($id, 'shop_order', 'delete');
 
-    // Obtenir l'objet de commande
-    $order = wc_get_order($validated_id);
+        if (is_wp_error($validated_id)) {
+            return $validated_id;
+        }
 
-    if (!$order) {
-        return new WP_Error('invalid_order', 'La commande n\'existe pas', ['status' => 404]);
+        return $this->delete($validated_id, 'order', $force);
     }
-
-    // Mettre à jour les métadonnées si elles sont fournies
-    if (!empty($data['tracking_number'])) {
-        $order->update_meta_data('_dianxiaomi_tracking_number', $data['tracking_number']);
-    }
-    if (!empty($data['tracking_provider'])) {
-        $order->update_meta_data('_dianxiaomi_tracking_provider', $data['tracking_provider']);
-    }
-
-    // Vérifier si le statut de la commande doit être ignoré
-    $ignore_status = get_option('dianxiaomi_ignore_order_status', 'no');
-
-    // Mettre à jour le statut de la commande si nécessaire
-    if (!empty($data['status']) && $ignore_status !== 'yes') {
-        $order->set_status($data['status'], isset($data['note']) ? $data['note'] : '');
-    }
-
-    // Sauvegarder les modifications
-    $order->save();
-
-    // Retourner les données de la commande mise à jour
-    return $this->get_order($validated_id);
-}
-/**
- * Delete an order
- *
- * @TODO enable along with POST in 2.2
- * @param int $id the order ID
- * @param bool $force true to permanently delete order, false to move to trash
- * @return array|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
- */
-public function delete_order(int $id, bool $force = false): array|WP_Error
-{
-    $validated_id = $this->validate_request($id, 'shop_order', 'delete');
-
-    if (is_wp_error($validated_id)) {
-        return $validated_id;
-    }
-
-    return $this->delete($validated_id, 'order', $force);
-}
 
     /**
      * Get order notes
@@ -367,80 +368,80 @@ public function delete_order(int $id, bool $force = false): array|WP_Error
         return ['order_notes' => apply_filters('dianxiaomi_api_order_notes_response', $order_notes, $id, $this->server)];
     }
 
-   /**
- * Helper method to get order post objects
- *
- * @since 2.1
- * @param array $args request arguments for filtering query
- * @return WP_Query
- */
-private function query_orders(array $args): WP_Query
-{
-    $woo_version = $this->get_woocommerce_version_number();
+    /**
+     * Helper method to get order post objects
+     *
+     * @since 2.1
+     * @param array $args request arguments for filtering query
+     * @return WP_Query
+     */
+    private function query_orders(array $args): WP_Query
+    {
+        $woo_version = $this->get_woocommerce_version_number();
 
-    $query_args = [
-        'fields' => 'ids',
-        'post_type' => 'shop_order',
-        'post_status' => $woo_version >= '2.2' ? array_keys(wc_get_order_statuses()) : 'publish',
-    ];
-
-    if (!empty($args['status'])) {
-        $statuses = explode(',', $args['status']);
-        $query_args['tax_query'] = [
-            [
-                'taxonomy' => 'shop_order_status',
-                'field' => 'slug',
-                'terms' => $statuses,
-            ],
+        $query_args = [
+            'fields' => 'ids',
+            'post_type' => 'shop_order',
+            'post_status' => $woo_version >= '2.2' ? array_keys(wc_get_order_statuses()) : 'publish',
         ];
-        unset($args['status']);
+
+        if (!empty($args['status'])) {
+            $statuses = explode(',', $args['status']);
+            $query_args['tax_query'] = [
+                [
+                    'taxonomy' => 'shop_order_status',
+                    'field' => 'slug',
+                    'terms' => $statuses,
+                ],
+            ];
+            unset($args['status']);
+        }
+
+        $query_args = array_merge($query_args, $args);
+
+        return new WP_Query($query_args);
     }
 
-    $query_args = array_merge($query_args, $args);
+    /**
+     * Helper method to get the WooCommerce version number
+     *
+     * @return string|null
+     */
+    private function get_woocommerce_version_number(): ?string
+    {
+        if (!function_exists('get_plugins')) {
+            require_once (ABSPATH . 'wp-admin/includes/plugin.php');
+        }
 
-    return new WP_Query($query_args);
-}
+        $plugin_folder = get_plugins('/' . 'woocommerce');
+        $plugin_file = 'woocommerce.php';
 
-/**
- * Helper method to get the WooCommerce version number
- *
- * @return string|null
- */
-private function get_woocommerce_version_number(): ?string
-{
-    if (!function_exists('get_plugins')) {
-        require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        return $plugin_folder[$plugin_file]['Version'] ?? null;
     }
 
-    $plugin_folder = get_plugins('/' . 'woocommerce');
-    $plugin_file = 'woocommerce.php';
-
-    return $plugin_folder[$plugin_file]['Version'] ?? null;
-}
-
-/**
- * Helper method to get the order subtotal
- *
- * @since 2.1
- * @param WC_Order $order
- * @return float
- */
-private function get_order_subtotal(WC_Order $order): float
-{
-    $subtotal = 0;
-    foreach ($order->get_items() as $item) {
-        $subtotal += $item['line_subtotal'] ?? 0;
+    /**
+     * Helper method to get the order subtotal
+     *
+     * @since 2.1
+     * @param WC_Order $order
+     * @return float
+     */
+    private function get_order_subtotal(WC_Order $order): float
+    {
+        $subtotal = 0;
+        foreach ($order->get_items() as $item) {
+            $subtotal += $item['line_subtotal'] ?? 0;
+        }
+        return $subtotal;
     }
-    return $subtotal;
-}
 
-/**
- * Ping method to check API status
- *
- * @return string
- */
-public function ping(): string
-{
-    return "pong";
-}
+    /**
+     * Ping method to check API status
+     *
+     * @return string
+     */
+    public function ping(): string
+    {
+        return "pong";
+    }
 }

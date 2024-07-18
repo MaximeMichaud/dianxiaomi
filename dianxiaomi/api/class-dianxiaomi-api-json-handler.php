@@ -10,14 +10,15 @@
  * @since       1.0
  */
 
- /**
+/**
  * Alex 02/03/2024
  * Déclarations de type : Ajout de déclarations de type pour les paramètres et les valeurs de retour pour améliorer la robustesse et la prévisibilité du code.
  * Sécurité améliorée pour JSONP : Utilisation de htmlspecialchars pour nettoyer la sortie JSONP et éviter les attaques XSS.
  * Gestion des erreurs : Amélioration de la gestion des erreurs pour les réponses JSONP.
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler
 {
@@ -32,16 +33,17 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler
         return 'application/json; charset=' . get_option('blog_charset');
     }
 
-   /**
+    /**
      * Parses the JSON body.
      *
      * @param string $data JSON string to be parsed.
      * @return array Parsed data as an associative array.
      */
-    public function parse_body(string $data): array {
+    public function parse_body(string $data): array
+    {
         return json_decode($data, true);
     }
- /**
+    /**
      * Generate a JSON response given an array of data
      *
      * @since 2.1

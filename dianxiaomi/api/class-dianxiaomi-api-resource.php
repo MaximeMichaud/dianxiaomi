@@ -10,7 +10,8 @@
  * @since       1.0
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 class Dianxiaomi_API_Resource
 {
@@ -123,7 +124,7 @@ class Dianxiaomi_API_Resource
         if (isset($this->server->params['GET']['filter']['meta']) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object($resource)) {
             $meta_name = match (get_class($resource)) {
                 'WC_Order' => 'order_meta',
-				'WC_Coupon' => 'coupon_meta',
+                'WC_Coupon' => 'coupon_meta',
                 'WC_Product' => 'product_meta',
                 default => 'resource_meta'
             };
@@ -132,53 +133,53 @@ class Dianxiaomi_API_Resource
         return $data;
     }
 
-/**
- * Filter response fields based on specified fields in the request
- *
- * @since 2.1
- * @param array $data the full data array for the resource
- * @param object $resource the object that provided the response data, e.g. WC_Coupon or WC_Order
- * @param array $fields list of fields requested to be returned
- * @return array tableau de données filtré
- */
-public function filter_response_fields(array $data, object $resource, ?string $fields): array
-{
-    if (empty($fields)) {
-        return $data;
-    }
-
-    $fields = explode(',', $fields);
-    $sub_fields = [];
-
-    // Extraire les sous-champs
-    foreach ($fields as $field) {
-        if (strpos($field, '.') !== false) {
-            [$name, $value] = explode('.', $field);
-            $sub_fields[$name] = $value;
+    /**
+     * Filter response fields based on specified fields in the request
+     *
+     * @since 2.1
+     * @param array $data the full data array for the resource
+     * @param object $resource the object that provided the response data, e.g. WC_Coupon or WC_Order
+     * @param array $fields list of fields requested to be returned
+     * @return array tableau de données filtré
+     */
+    public function filter_response_fields(array $data, object $resource, ?string $fields): array
+    {
+        if (empty($fields)) {
+            return $data;
         }
-    }
 
-    // Itérer à travers les champs de niveau supérieur
-    foreach ($data as $data_field => $data_value) {
-        // Si un champ a des sous-champs et que le champ de niveau supérieur a des sous-champs à filtrer
-        if (is_array($data_value) && array_key_exists($data_field, $sub_fields)) {
-            // Itérer à travers chaque sous-champ
-            foreach ($data_value as $sub_field => $sub_field_value) {
-                // Supprimer les sous-champs non correspondants
-                if (!in_array($sub_field, $sub_fields[$data_field])) {
-                    unset($data[$data_field][$sub_field]);
+        $fields = explode(',', $fields);
+        $sub_fields = [];
+
+        // Extraire les sous-champs
+        foreach ($fields as $field) {
+            if (strpos($field, '.') !== false) {
+                [$name, $value] = explode('.', $field);
+                $sub_fields[$name] = $value;
+            }
+        }
+
+        // Itérer à travers les champs de niveau supérieur
+        foreach ($data as $data_field => $data_value) {
+            // Si un champ a des sous-champs et que le champ de niveau supérieur a des sous-champs à filtrer
+            if (is_array($data_value) && array_key_exists($data_field, $sub_fields)) {
+                // Itérer à travers chaque sous-champ
+                foreach ($data_value as $sub_field => $sub_field_value) {
+                    // Supprimer les sous-champs non correspondants
+                    if (!in_array($sub_field, $sub_fields[$data_field])) {
+                        unset($data[$data_field][$sub_field]);
+                    }
+                }
+            } else {
+                // Supprimer les champs de niveau supérieur non correspondants
+                if (!in_array($data_field, $fields)) {
+                    unset($data[$data_field]);
                 }
             }
-        } else {
-            // Supprimer les champs de niveau supérieur non correspondants
-            if (!in_array($data_field, $fields)) {
-                unset($data[$data_field]);
-            }
         }
-    }
 
-    return $data;
-}
+        return $data;
+    }
 
     /**
      * Delete a given resource

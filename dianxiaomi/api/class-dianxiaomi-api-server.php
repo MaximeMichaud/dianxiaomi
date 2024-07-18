@@ -36,7 +36,8 @@
  *    - Mise à jour des commentaires et annotations pour mieux documenter les changements et les attentes.
  * 
  */
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 require_once ABSPATH . 'wp-admin/includes/admin.php';
 
@@ -88,8 +89,8 @@ class Dianxiaomi_API_Server
         }
 
         $handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
-                         ($this->is_xml_request() ? 'WC_API_XML_Handler' :
-                         apply_filters('dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this));
+            ($this->is_xml_request() ? 'WC_API_XML_Handler' :
+                apply_filters('dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this));
 
         $this->handler = new $handler_class();
     }
@@ -142,240 +143,241 @@ class Dianxiaomi_API_Server
 
         $served = apply_filters('dianxiaomi_api_serve_request', false, $result, $this);
         if (!$served) {
-            if ('HEAD' === $this->method) return;
+            if ('HEAD' === $this->method)
+                return;
             echo $this->handler->generate_response($result);
         }
     }
 
-public function get_routes(): array
-{
-    $endpoints = [
-        '/' => [[$this, 'get_index'], self::READABLE],
-    ];
+    public function get_routes(): array
+    {
+        $endpoints = [
+            '/' => [[$this, 'get_index'], self::READABLE],
+        ];
 
-    $endpoints = apply_filters('dianxiaomi_api_endpoints', $endpoints);
+        $endpoints = apply_filters('dianxiaomi_api_endpoints', $endpoints);
 
-    foreach ($endpoints as $route => &$handlers) {
-        if (count($handlers) <= 2 && isset($handlers[1]) && !is_array($handlers[1])) {
-            $handlers = [$handlers];
+        foreach ($endpoints as $route => &$handlers) {
+            if (count($handlers) <= 2 && isset($handlers[1]) && !is_array($handlers[1])) {
+                $handlers = [$handlers];
+            }
         }
+
+        return $endpoints;
     }
 
-    return $endpoints;
-}
+    public function dispatch()
+    {
+        $method = match ($this->method) {
+            'HEAD', 'GET' => self::METHOD_GET,
+            'POST' => self::METHOD_POST,
+            'PUT' => self::METHOD_PUT,
+            'PATCH' => self::METHOD_PATCH,
+            'DELETE' => self::METHOD_DELETE,
+            default => new WP_Error('dianxiaomi_api_unsupported_method', __('Unsupported request method', 'dianxiaomi'), ['status' => 400])
+        };
 
-public function dispatch()
-{
-    $method = match ($this->method) {
-        'HEAD', 'GET' => self::METHOD_GET,
-        'POST' => self::METHOD_POST,
-        'PUT' => self::METHOD_PUT,
-        'PATCH' => self::METHOD_PATCH,
-        'DELETE' => self::METHOD_DELETE,
-        default => new WP_Error('dianxiaomi_api_unsupported_method', __('Unsupported request method', 'dianxiaomi'), ['status' => 400])
-    };
-
-    if ($method instanceof WP_Error) {
-        return $method;
-    }
-
-    foreach ($this->get_routes() as $route => $handlers) {
-        foreach ($handlers as $handler) {
-            $callback = $handler[0];
-            $supported = $handler[1] ?? self::METHOD_GET;
-
-            if (!($supported & $method)) {
-                continue;
-            }
-
-            $match = preg_match('@^' . $route . '$@i', urldecode($this->path), $args);
-
-            if (!$match) {
-                continue;
-            }
-
-            if (!is_callable($callback)) {
-                return new WP_Error('dianxiaomi_api_invalid_handler', __('The handler for the route is invalid', 'dianxiaomi'), ['status' => 500]);
-            }
-
-            $args = array_merge($args, $this->params['GET'], $this->params['POST']);
-            if ($supported & self::ACCEPT_DATA) {
-                $data = $this->handler->parse_body($this->get_raw_data());
-                $args = array_merge($args, ['data' => $data]);
-            } elseif ($supported & self::ACCEPT_RAW_DATA) {
-                $data = $this->get_raw_data();
-                $args = array_merge($args, ['data' => $data]);
-            }
-
-            $args['_method'] = $method;
-            $args['_route'] = $route;
-            $args['_path'] = $this->path;
-            $args['_headers'] = $this->headers;
-            $args['_files'] = $this->files;
-
-            $args = apply_filters('dianxiaomi_api_dispatch_args', $args, $callback);
-
-            if (is_wp_error($args)) {
-                return $args;
-            }
-
-            $params = $this->sort_callback_params($callback, $args);
-            if (is_wp_error($params)) {
-                return $params;
-            }
-
-            return call_user_func_array($callback, $params);
+        if ($method instanceof WP_Error) {
+            return $method;
         }
+
+        foreach ($this->get_routes() as $route => $handlers) {
+            foreach ($handlers as $handler) {
+                $callback = $handler[0];
+                $supported = $handler[1] ?? self::METHOD_GET;
+
+                if (!($supported & $method)) {
+                    continue;
+                }
+
+                $match = preg_match('@^' . $route . '$@i', urldecode($this->path), $args);
+
+                if (!$match) {
+                    continue;
+                }
+
+                if (!is_callable($callback)) {
+                    return new WP_Error('dianxiaomi_api_invalid_handler', __('The handler for the route is invalid', 'dianxiaomi'), ['status' => 500]);
+                }
+
+                $args = array_merge($args, $this->params['GET'], $this->params['POST']);
+                if ($supported & self::ACCEPT_DATA) {
+                    $data = $this->handler->parse_body($this->get_raw_data());
+                    $args = array_merge($args, ['data' => $data]);
+                } elseif ($supported & self::ACCEPT_RAW_DATA) {
+                    $data = $this->get_raw_data();
+                    $args = array_merge($args, ['data' => $data]);
+                }
+
+                $args['_method'] = $method;
+                $args['_route'] = $route;
+                $args['_path'] = $this->path;
+                $args['_headers'] = $this->headers;
+                $args['_files'] = $this->files;
+
+                $args = apply_filters('dianxiaomi_api_dispatch_args', $args, $callback);
+
+                if (is_wp_error($args)) {
+                    return $args;
+                }
+
+                $params = $this->sort_callback_params($callback, $args);
+                if (is_wp_error($params)) {
+                    return $params;
+                }
+
+                return call_user_func_array($callback, $params);
+            }
+        }
+
+        return new WP_Error('dianxiaomi_api_no_route', __('No route was found matching the URL and request method', 'dianxiaomi'), ['status' => 404]);
     }
 
-    return new WP_Error('dianxiaomi_api_no_route', __('No route was found matching the URL and request method', 'dianxiaomi'), ['status' => 404]);
-}
-
-public function get_index(): array
-{
-    $available = [
-        'store' => [
-            'name' => get_option('blogname'),
-            'description' => get_option('blogdescription'),
-            'URL' => get_option('siteurl'),
-            'wc_version' => WC()->version,
-            'routes' => [],
-            'meta' => [
-                'timezone' => wc_timezone_string(),
-                'currency' => get_dianxiaomi_currency(),
-                'currency_format' => get_dianxiaomi_currency_symbol(),
-                'tax_included' => ('yes' === get_option('dianxiaomi_prices_include_tax')),
-                'weight_unit' => get_option('dianxiaomi_weight_unit'),
-                'dimension_unit' => get_option('dianxiaomi_dimension_unit'),
-                'ssl_enabled' => ('yes' === get_option('dianxiaomi_force_ssl_checkout')),
-                'permalinks_enabled' => ('' !== get_option('permalink_structure')),
-                'links' => [
-                    'help' => 'https://dianxiaomi.uservoice.com/knowledgebase',
+    public function get_index(): array
+    {
+        $available = [
+            'store' => [
+                'name' => get_option('blogname'),
+                'description' => get_option('blogdescription'),
+                'URL' => get_option('siteurl'),
+                'wc_version' => WC()->version,
+                'routes' => [],
+                'meta' => [
+                    'timezone' => wc_timezone_string(),
+                    'currency' => get_dianxiaomi_currency(),
+                    'currency_format' => get_dianxiaomi_currency_symbol(),
+                    'tax_included' => ('yes' === get_option('dianxiaomi_prices_include_tax')),
+                    'weight_unit' => get_option('dianxiaomi_weight_unit'),
+                    'dimension_unit' => get_option('dianxiaomi_dimension_unit'),
+                    'ssl_enabled' => ('yes' === get_option('dianxiaomi_force_ssl_checkout')),
+                    'permalinks_enabled' => ('' !== get_option('permalink_structure')),
+                    'links' => [
+                        'help' => 'https://dianxiaomi.uservoice.com/knowledgebase',
+                    ],
                 ],
-            ],
-        ]
-    ];
+            ]
+        ];
 
-    foreach ($this->get_routes() as $route => $callbacks) {
-        $data = [];
-        $route = preg_replace('#\(\?P<\w+?>.*?\)#', '$1', $route);
-        $methods = [];
-        foreach (self::$method_map as $name => $bitmask) {
-            foreach ($callbacks as $callback) {
-                if ($callback[1] & self::HIDDEN_ENDPOINT) {
-                    continue 3;
-                }
+        foreach ($this->get_routes() as $route => $callbacks) {
+            $data = [];
+            $route = preg_replace('#\(\?P<\w+?>.*?\)#', '$1', $route);
+            $methods = [];
+            foreach (self::$method_map as $name => $bitmask) {
+                foreach ($callbacks as $callback) {
+                    if ($callback[1] & self::HIDDEN_ENDPOINT) {
+                        continue 3;
+                    }
 
-                if ($callback[1] & $bitmask) {
-                    $data['supports'][] = $name;
-                }
+                    if ($callback[1] & $bitmask) {
+                        $data['supports'][] = $name;
+                    }
 
-                if ($callback[1] & self::ACCEPT_DATA) {
-                    $data['accepts_data'] = true;
-                }
+                    if ($callback[1] & self::ACCEPT_DATA) {
+                        $data['accepts_data'] = true;
+                    }
 
-                if (strpos($route, '<') === false) {
-                    $data['meta'] = [
-                        'self' => get_dianxiaomi_api_url($route),
-                    ];
+                    if (strpos($route, '<') === false) {
+                        $data['meta'] = [
+                            'self' => get_dianxiaomi_api_url($route),
+                        ];
+                    }
                 }
             }
+            $available['store']['routes'][$route] = apply_filters('dianxiaomi_api_endpoints_description', $data);
         }
-        $available['store']['routes'][$route] = apply_filters('dianxiaomi_api_endpoints_description', $data);
+        return apply_filters('dianxiaomi_api_index', $available);
     }
-    return apply_filters('dianxiaomi_api_index', $available);
-}
-/**
- * Send pagination headers for resources
- *
- * @since 2.1
- * @param WP_Query|WP_User_Query $query
- */
-public function add_pagination_headers(WP_Query|WP_User_Query $query): void
-{
-    if ($query instanceof WP_User_Query) {
-        $page = $query->page;
-        $single = count($query->get_results()) > 1;
-        $total = $query->get_total();
-        $total_pages = $query->total_pages;
-    } else {
-        $page = $query->get('paged');
-        $single = $query->is_single();
-        $total = $query->found_posts;
-        $total_pages = $query->max_num_pages;
-    }
-
-    if (!$page) {
-        $page = 1;
-    }
-
-    $next_page = absint($page) + 1;
-
-    if (!$single) {
-        if ($page > 1) {
-            $this->link_header('first', $this->get_paginated_url(1));
-            $this->link_header('prev', $this->get_paginated_url($page - 1));
+    /**
+     * Send pagination headers for resources
+     *
+     * @since 2.1
+     * @param WP_Query|WP_User_Query $query
+     */
+    public function add_pagination_headers(WP_Query|WP_User_Query $query): void
+    {
+        if ($query instanceof WP_User_Query) {
+            $page = $query->page;
+            $single = count($query->get_results()) > 1;
+            $total = $query->get_total();
+            $total_pages = $query->total_pages;
+        } else {
+            $page = $query->get('paged');
+            $single = $query->is_single();
+            $total = $query->found_posts;
+            $total_pages = $query->max_num_pages;
         }
 
-        if ($next_page <= $total_pages) {
-            $this->link_header('next', $this->get_paginated_url($next_page));
+        if (!$page) {
+            $page = 1;
         }
 
-        if ($page != $total_pages) {
-            $this->link_header('last', $this->get_paginated_url($total_pages));
+        $next_page = absint($page) + 1;
+
+        if (!$single) {
+            if ($page > 1) {
+                $this->link_header('first', $this->get_paginated_url(1));
+                $this->link_header('prev', $this->get_paginated_url($page - 1));
+            }
+
+            if ($next_page <= $total_pages) {
+                $this->link_header('next', $this->get_paginated_url($next_page));
+            }
+
+            if ($page != $total_pages) {
+                $this->link_header('last', $this->get_paginated_url($total_pages));
+            }
         }
+
+        $this->header('X-WC-Total', (string) $total);
+        $this->header('X-WC-TotalPages', (string) $total_pages);
+
+        do_action('dianxiaomi_api_pagination_headers', $this, $query);
     }
 
-    $this->header('X-WC-Total', (string)$total);
-    $this->header('X-WC-TotalPages', (string)$total_pages);
 
-    do_action('dianxiaomi_api_pagination_headers', $this, $query);
-}
+    /**
+     * Send a HTTP header
+     *
+     * @since 2.1
+     * @param string $key Header key
+     * @param string $value Header value
+     * @param boolean $replace Should we replace the existing header?
+     */
+    public function header($key, $value, $replace = true)
+    {
+        header(sprintf('%s: %s', $key, $value), $replace);
+    }
 
+    /**
+     * Send a Link header
+     *
+     * @internal The $rel parameter is first, as this looks nicer when sending multiple
+     *
+     * @link http://tools.ietf.org/html/rfc5988
+     * @link http://www.iana.org/assignments/link-relations/link-relations.xml
+     *
+     * @since 2.1
+     * @param string $rel Link relation. Either a registered type, or an absolute URL
+     * @param string $link Target IRI for the link
+     * @param array $other Other parameters to send, as an associative array
+     */
+    public function link_header($rel, $link, $other = array())
+    {
 
-	/**
-	 * Send a HTTP header
-	 *
-	 * @since 2.1
-	 * @param string $key Header key
-	 * @param string $value Header value
-	 * @param boolean $replace Should we replace the existing header?
-	 */
-	public function header($key, $value, $replace = true)
-	{
-		header(sprintf('%s: %s', $key, $value), $replace);
-	}
+        $header = sprintf('<%s>; rel="%s"', $link, esc_attr($rel));
 
- 	/**
-	 * Send a Link header
-	 *
-	 * @internal The $rel parameter is first, as this looks nicer when sending multiple
-	 *
-	 * @link http://tools.ietf.org/html/rfc5988
-	 * @link http://www.iana.org/assignments/link-relations/link-relations.xml
-	 *
-	 * @since 2.1
-	 * @param string $rel Link relation. Either a registered type, or an absolute URL
-	 * @param string $link Target IRI for the link
-	 * @param array $other Other parameters to send, as an associative array
-	 */
-	public function link_header($rel, $link, $other = array())
-	{
+        foreach ($other as $key => $value) {
 
-		$header = sprintf('<%s>; rel="%s"', $link, esc_attr($rel));
+            if ('title' == $key) {
 
-		foreach ($other as $key => $value) {
+                $value = '"' . $value . '"';
+            }
 
-			if ('title' == $key) {
+            $header .= '; ' . $key . '=' . $value;
+        }
 
-				$value = '"' . $value . '"';
-			}
-
-			$header .= '; ' . $key . '=' . $value;
-		}
-
-		$this->header('Link', $header, false);
-	}
+        $this->header('Link', $header, false);
+    }
 
 
     /**
@@ -498,42 +500,42 @@ public function add_pagination_headers(WP_Query|WP_User_Query $query): void
 
         return isset($this->headers['ACCEPT']) && 'application/json' == $this->headers['ACCEPT'];
     }
-/**
-	 * Sort parameters by order specified in method declaration
-	 *
-	 * Takes a callback and a list of available params, then filters and sorts
-	 * by the parameters the method actually needs, using the Reflection API
-	 *
-	 * @since 2.1
-	 * @param callable|array $callback the endpoint callback
-	 * @param array $provided the provided request parameters
-	 * @return array
-	 */
-	protected function sort_callback_params($callback, $provided)
-	{
-		if (is_array($callback))
-			$ref_func = new ReflectionMethod($callback[0], $callback[1]);
-		else
-			$ref_func = new ReflectionFunction($callback);
+    /**
+     * Sort parameters by order specified in method declaration
+     *
+     * Takes a callback and a list of available params, then filters and sorts
+     * by the parameters the method actually needs, using the Reflection API
+     *
+     * @since 2.1
+     * @param callable|array $callback the endpoint callback
+     * @param array $provided the provided request parameters
+     * @return array
+     */
+    protected function sort_callback_params($callback, $provided)
+    {
+        if (is_array($callback))
+            $ref_func = new ReflectionMethod($callback[0], $callback[1]);
+        else
+            $ref_func = new ReflectionFunction($callback);
 
-		$wanted = $ref_func->getParameters();
-		$ordered_parameters = array();
+        $wanted = $ref_func->getParameters();
+        $ordered_parameters = array();
 
-		foreach ($wanted as $param) {
-			if (isset($provided[$param->getName()])) {
-				// We have this parameters in the list to choose from
+        foreach ($wanted as $param) {
+            if (isset($provided[$param->getName()])) {
+                // We have this parameters in the list to choose from
 
-				$ordered_parameters[] = is_array($provided[$param->getName()]) ? array_map('urldecode', $provided[$param->getName()]) : urldecode($provided[$param->getName()]);
-			} elseif ($param->isDefaultValueAvailable()) {
-				// We don't have this parameter, but it's optional
-				$ordered_parameters[] = $param->getDefaultValue();
-			} else {
-				// We don't have this parameter and it wasn't optional, abort!
-				return new WP_Error('dianxiaomi_api_missing_callback_param', sprintf(__('Missing parameter %s', 'dianxiaomi'), $param->getName()), array('status' => 400));
-			}
-		}
-		return $ordered_parameters;
-	}
+                $ordered_parameters[] = is_array($provided[$param->getName()]) ? array_map('urldecode', $provided[$param->getName()]) : urldecode($provided[$param->getName()]);
+            } elseif ($param->isDefaultValueAvailable()) {
+                // We don't have this parameter, but it's optional
+                $ordered_parameters[] = $param->getDefaultValue();
+            } else {
+                // We don't have this parameter and it wasn't optional, abort!
+                return new WP_Error('dianxiaomi_api_missing_callback_param', sprintf(__('Missing parameter %s', 'dianxiaomi'), $param->getName()), array('status' => 400));
+            }
+        }
+        return $ordered_parameters;
+    }
     /**
      * Check if the current request accepts an XML response by checking the endpoint suffix (.xml) or
      * the HTTP ACCEPT header

@@ -10,7 +10,8 @@
  * @since       1.0
  */
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
 
 if (!class_exists('Dianxiaomi_Dependencies'))
     require_once 'class-dianxiaomi-dependencies.php';

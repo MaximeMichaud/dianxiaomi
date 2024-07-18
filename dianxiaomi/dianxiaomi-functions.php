@@ -10,7 +10,8 @@ if (!class_exists('Dianxiaomi_Dependencies')) {
  * WC Detection
  */
 if (!function_exists('is_woocommerce_active')) {
-    function is_woocommerce_active(): bool {
+    function is_woocommerce_active(): bool
+    {
         return Dianxiaomi_Dependencies::woocommerce_active_check();
     }
 }
