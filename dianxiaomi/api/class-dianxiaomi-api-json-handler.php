@@ -1,12 +1,14 @@
 <?php
 /**
- * Dianxiaomi API
+ * Dianxiaomi API.
  *
  * Handles parsing JSON request bodies and generating JSON responses
  *
  * @author      Dianxiaomi
+ *
  * @category    API
  * @package     Dianxiaomi/API
+ *
  * @since       1.0
  */
 
@@ -17,57 +19,76 @@
  * Gestion des erreurs : Amélioration de la gestion des erreurs pour les réponses JSONP.
  */
 
-if (!defined('ABSPATH'))
-    exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+} // Exit if accessed directly
 
-class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler
-{
-    /**
-     * Get the content type for the response
-     *
-     * @since 2.1
-     * @return string
-     */
-    public function get_content_type(): string
-    {
-        return 'application/json; charset=' . get_option('blog_charset');
-    }
+/**
+ * Dianxiaomi API JSON Handler.
+ *
+ * @since 1.0
+ */
+class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
+	/**
+	 * Get the content type for the response.
+	 *
+	 * @since 2.1
+	 *
+	 * @return string
+	 */
+	public function get_content_type(): string {
+		return 'application/json; charset=' . get_option( 'blog_charset' );
+	}
 
-    /**
-     * Parses the JSON body.
-     *
-     * @param string $data JSON string to be parsed.
-     * @return array Parsed data as an associative array.
-     */
-    public function parse_body(string $data): array
-    {
-        return json_decode($data, true);
-    }
-    /**
-     * Generate a JSON response given an array of data
-     *
-     * @since 2.1
-     * @param array $data the response data
-     * @return string
-     */
-    public function generate_response(array $data): string
-    {
-        if (isset($_GET['_jsonp'])) {
-            // JSONP enabled by default
-            if (!apply_filters('dianxiaomi_api_jsonp_enabled', true)) {
-                WC()->api->server->send_status(400);
-                $data = [['code' => 'dianxiaomi_api_jsonp_disabled', 'message' => __('JSONP support is disabled on this site', 'dianxiaomi')]];
-            }
+	/**
+	 * Parses the JSON body.
+	 *
+	 * @param string $data JSON string to be parsed.
+	 *
+	 * @return array Parsed data as an associative array.
+	 */
+	public function parse_body( string $data ): array {
+		return json_decode( $data, true );
+	}
+	/**
+	 * Generate a JSON response given an array of data.
+	 *
+	 * @since 2.1
+	 *
+	 * @param array $data the response data
+	 *
+	 * @return string
+	 */
+	public function generate_response( array $data ): string {
+		if ( isset( $_GET['_jsonp'] ) ) {
+			// Vérification du nonce
+			$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+			if ( ! $wpnonce || ! wp_verify_nonce( $wpnonce, 'dianxiaomi_jsonp' ) ) {
+				WC()->api->server->send_status( 400 );
+				$data = array(
+					array(
+						'code'    => 'dianxiaomi_api_nonce_invalid',
+						'message' => __( 'Nonce verification failed', 'dianxiaomi' ),
+					),
+				);
+				return wp_json_encode( $data );
+			}
 
-            // Check for invalid characters (only alphanumeric allowed)
-            if (preg_match('/\W/', $_GET['_jsonp'])) {
-                WC()->api->server->send_status(400);
-                $data = [['code' => 'dianxiaomi_api_jsonp_callback_invalid', 'message' => __('The JSONP callback function is invalid', 'dianxiaomi')]];
-            }
+			// JSONP enabled by default
+			if ( ! apply_filters( 'dianxiaomi_api_jsonp_enabled', true ) ) {
+				WC()->api->server->send_status( 400 );
+				$data = array(
+					array(
+						'code'    => 'dianxiaomi_api_jsonp_disabled',
+						'message' => __( 'JSONP support is disabled on this site', 'dianxiaomi' ),
+					),
+				);
+				return wp_json_encode( $data );
+			}
+			$jsonp_callback = sanitize_text_field( wp_unslash( $_GET['_jsonp'] ) );
+			return htmlspecialchars( $jsonp_callback ) . '(' . wp_json_encode( $data ) . ')';
+		}
 
-            return htmlspecialchars($_GET['_jsonp']) . '(' . json_encode($data) . ')';
-        }
-
-        return json_encode($data);
-    }
+		return wp_json_encode( $data );
+	}
 }

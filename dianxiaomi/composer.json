@@ -5,12 +5,14 @@
     "require": {
         "wp-coding-standards/wpcs": "3.0",
         "squizlabs/php_codesniffer": "^3.8",
-        "automattic/vipwpcs": "^0.2.4"
+        "automattic/vipwpcs": "^0.2.4",
+        "vena/php-cs-fixer-wordpress": "dev-main"
     },
     "license": "GPL",
     "autoload": {
         "psr-4": {
-            "dianxiaomi\\dianxiaomi\\": "src/"
+            "dianxiaomi\\dianxiaomi\\": "src/",
+            "App\\": "src/"
         }
     },
     "authors": [
@@ -24,5 +26,8 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
+    },
+    "require-dev": {
+        "tareq1988/wp-php-cs-fixer": "dev-master"
     }
 }
