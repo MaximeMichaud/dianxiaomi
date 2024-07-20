@@ -191,7 +191,7 @@ class Dianxiaomi_API_Resource {
 		// Extraire les sous-champs
 		foreach ( $fields as $field ) {
 			if ( strpos( $field, '.' ) !== false ) {
-				[ $name, $value ]    = explode( '.', $field );
+				list( $name, $value ) = explode( '.', $field );
 				$sub_fields[ $name ] = $value;
 			}
 		}

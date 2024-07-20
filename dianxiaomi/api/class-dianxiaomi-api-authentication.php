@@ -34,9 +34,8 @@ if ( ! function_exists( 'getallheaders' ) ) {
 	}
 }
 
-class Dianxiaomi_API_Authentication {
-	
-public function __construct() {
+class Dianxiaomi_API_Authentication {	
+	public function __construct() {
 		add_filter( 'dianxiaomi_api_check_authentication', array( $this, 'authenticate' ), 0 );
 	}
 

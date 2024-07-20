@@ -264,17 +264,14 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
 	 */
-	public function get_orders_count( ?string $status = null, array $filter = array() ): array|WP_Error {
+	public function get_orders_count( ?string $status = null, array $filter = array() ){
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
-	
 		$query = $this->query_orders( $filter );
-	
 		if ( ! current_user_can( 'read_private_shop_orders' ) ) {
 			return new WP_Error( 'dianxiaomi_api_user_cannot_read_orders_count', __( 'You do not have permission to read the orders count', 'dianxiaomi' ), array( 'status' => 401 ) );
 		}
-	
 		return array( 'count' => (int) $query->found_posts );
 	}
 	/**
