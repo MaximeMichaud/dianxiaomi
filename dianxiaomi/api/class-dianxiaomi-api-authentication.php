@@ -35,7 +35,8 @@ if ( ! function_exists( 'getallheaders' ) ) {
 }
 
 class Dianxiaomi_API_Authentication {
-	public function __construct() {
+	
+public function __construct() {
 		add_filter( 'dianxiaomi_api_check_authentication', array( $this, 'authenticate' ), 0 );
 	}
 
@@ -52,35 +53,53 @@ class Dianxiaomi_API_Authentication {
 
 		return $user;
 	}
+
 	private function perform_authentication() {
 		$headers = getallheaders();
 		$headers = json_decode( wp_json_encode( $headers ), true );
 		$key     = 'AFTERSHIP_WP_KEY';
 		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
 		$key2    = 'DIANXIAOMI-WP-KEY';
-		$qskey   = $_GET['key'] ?? null;  // Utilisation de l'opérateur null coalescent
-
-		$api_key = $headers[$key] ?? $headers[$key1] ?? $headers[$key2] ?? $qskey;
-
+		$qskey   = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;  // Sanitize input
+		// Vérification du nonce
+		$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $wpnonce, 'dianxiaomi_api_nonce' ) ) {
+			throw new Exception( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
+		}
+		$api_key = $headers[ $key ] ?? $headers[ $key1 ] ?? $headers[ $key2 ] ?? $qskey;
 		if ( empty( $api_key ) ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress Key is missing', 'dianxiaomi' ), 404 );
 		}
-
 		return $this->get_user_by_api_key( $api_key );
 	}
 
 	private function get_user_by_api_key( $api_key ) {
-		$user_query = new WP_User_Query( array(
-			'meta_key'   => 'dianxiaomi_wp_api_key',
-			'meta_value' => $api_key,
-		) );
+		global $wpdb;
 
-		$users = $user_query->get_results();
+		$cache_key = 'dianxiaomi_user_' . md5( $api_key );
+		$user_id   = wp_cache_get( $cache_key );
 
-		if ( empty( $users[0] ) ) {
+		if ( false === $user_id ) {
+			$user_id = get_users(
+				array(
+					'meta_key'   => 'dianxiaomi_wp_api_key',
+					'meta_value' => $api_key,
+					'number'     => 1,
+					'fields'     => 'ID',
+				)
+			);
+
+			$user_id = ! empty( $user_id ) ? $user_id[0] : false;
+
+			if ( $user_id ) {
+				wp_cache_set( $cache_key, $user_id, '', 3600 );
+			}
+		}
+
+		if ( ! $user_id ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress API Key is invalid', 'dianxiaomi' ), 401 );
 		}
 
-		return $users[0];
+		return new WP_User( $user_id );
 	}
 }

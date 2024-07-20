@@ -28,16 +28,15 @@ class Dianxiaomi_Dependencies {
 
 		if ( is_array( $plugin ) ) {
 			foreach ( $plugin as $path ) {
-				if ( in_array( $path, self::$active_plugins ) || array_key_exists( $path, self::$active_plugins ) ) {
+				if ( in_array( $path, self::$active_plugins, true ) || array_key_exists( $path, self::$active_plugins ) ) {
 					return true;
 				}
 			}
 			return false;
 		} else {
-			return in_array( $plugin, self::$active_plugins ) || array_key_exists( $plugin, self::$active_plugins );
+			return in_array( $plugin, self::$active_plugins, true ) || array_key_exists( $plugin, self::$active_plugins );
 		}
 	}
-
 	/**
 	 * Check if WooCommerce is active.
 	 *
