@@ -6,7 +6,7 @@ class Dianxiaomi_Dependencies {
 	/**
 	 * Initialize the class by fetching active plugins.
 	 */
-	public static function init(): void {
+	public static function init() {
 		self::$active_plugins = (array) get_option( 'active_plugins', array() );
 
 		if ( is_multisite() ) {
@@ -21,7 +21,7 @@ class Dianxiaomi_Dependencies {
 	 *
 	 * @return bool True if the plugin is active, false otherwise.
 	 */
-	public static function plugin_active_check( string|array $plugin ) {
+	public static function plugin_active_check( $plugin ) {
 		if ( ! self::$active_plugins ) {
 			self::init();
 		}
@@ -42,7 +42,7 @@ class Dianxiaomi_Dependencies {
 	 *
 	 * @return bool True if WooCommerce is active, false otherwise.
 	 */
-	public static function woocommerce_active_check(): bool {
+	public static function woocommerce_active_check() {
 		return self::plugin_active_check( 'woocommerce/woocommerce.php' );
 	}
 }

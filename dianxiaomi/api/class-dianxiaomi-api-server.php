@@ -182,7 +182,8 @@ class Dianxiaomi_API_Server {
 
 	public function dispatch() {
 		$method = match ( $this->method ) {
-			'HEAD', 'GET' => self::METHOD_GET,
+			'HEAD'   => self::METHOD_GET,
+			'GET'    => self::METHOD_GET,
 			'POST'   => self::METHOD_POST,
 			'PUT'    => self::METHOD_PUT,
 			'PATCH'  => self::METHOD_PATCH,

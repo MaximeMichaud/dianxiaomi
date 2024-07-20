@@ -156,13 +156,13 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return array
 	 */
-	public function maybe_add_meta( array $data, object $res ): array {
+	public function maybe_add_meta( array $data, object $res ) {
 		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) ) {
 			$meta_name = match ( get_class( $res ) ) {
 				'WC_Order'   => 'order_meta',
 				'WC_Coupon'  => 'coupon_meta',
 				'WC_Product' => 'product_meta',
-				default      => 'resource_meta'
+				default      => 'resource_meta',
 			};
 			$data[ $meta_name ] = get_post_meta( $res->get_id() );
 		}
@@ -180,7 +180,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return array tableau de données filtré
 	 */
-	public function filter_response_fields( array $data, object $res, ?array $fields ): array {
+	public function filter_response_fields( array $data, object $res, ?array $fields ) {
 		if ( empty( $fields ) ) {
 			return $data;
 		}
@@ -264,7 +264,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return bool
 	 */
-	protected function is_readable( $post ): bool {
+	protected function is_readable( $post ) {
 		return $this->check_permission( $post, 'read' );
 	}
 
@@ -277,7 +277,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return bool
 	 */
-	protected function is_editable( $post ): bool {
+	protected function is_editable( $post ) {
 		return $this->check_permission( $post, 'edit' );
 	}
 
@@ -290,7 +290,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return bool
 	 */
-	protected function is_deletable( $post ): bool {
+	protected function is_deletable( $post ) {
 		return $this->check_permission( $post, 'delete' );
 	}
 
@@ -304,7 +304,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return bool true if the current user has the permissions to perform the context on the post
 	 */
-	private function check_permission( $post, string $context ): bool {
+	private function check_permission( $post, string $context ) {
 		if ( ! is_a( $post, 'WP_Post' ) ) {
 			$post = get_post( $post );
 		}
