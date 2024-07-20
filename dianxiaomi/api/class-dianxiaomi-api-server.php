@@ -100,7 +100,7 @@ class Dianxiaomi_API_Server {
 		$this->handler = new $handler_class();
 	}
 
-	public function check_authentication(): WP_User|WP_Error {
+	public function check_authentication() {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
 		if ( is_a( $user, 'WP_User' ) ) {
 			wp_set_current_user( $user->ID );

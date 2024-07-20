@@ -21,7 +21,7 @@ class Dianxiaomi_Dependencies {
 	 *
 	 * @return bool True if the plugin is active, false otherwise.
 	 */
-	public static function plugin_active_check( string|array $plugin ): bool {
+	public static function plugin_active_check( string|array $plugin ) {
 		if ( ! self::$active_plugins ) {
 			self::init();
 		}

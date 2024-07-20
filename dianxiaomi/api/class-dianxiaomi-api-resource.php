@@ -65,7 +65,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return int|WP_Error valid post ID or WP_Error if any of the checks fails
 	 */
-	protected function validate_request( $id, string $type, string $context ): int|WP_Error {
+	protected function validate_request( $id, string $type, string $context ) {
 		$resource_name = $type === 'shop_order' || $type === 'shop_coupon' ? str_replace( 'shop_', '', $type ) : $type;
 		$id            = absint( $id );
 		if ( empty( $id ) ) {
@@ -227,7 +227,7 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return array|WP_Error
 	 */
-	protected function delete( int $id, string $type, bool $force = false ): array|WP_Error {
+	protected function delete( int $id, string $type, bool $force = false ) {
 		$resource_name = $type === 'shop_order' || $type === 'shop_coupon' ? str_replace( 'shop_', '', $type ) : $type;
 
 		if ( 'customer' === $type ) {

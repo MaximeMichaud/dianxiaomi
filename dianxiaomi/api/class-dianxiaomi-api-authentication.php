@@ -33,8 +33,18 @@ if ( ! function_exists( 'getallheaders' ) ) {
 		return $headers;
 	}
 }
+/**
+ * Dianxiaomi API Authentication Class.
+ *
+ * @author      Dianxiaomi
+ *
+ * @category    API
+ * @package     Dianxiaomi/API
+ *
+ * @since       1
+ */
+class Dianxiaomi_API_Authentication {
 
-class Dianxiaomi_API_Authentication {	
 	public function __construct() {
 		add_filter( 'dianxiaomi_api_check_authentication', array( $this, 'authenticate' ), 0 );
 	}

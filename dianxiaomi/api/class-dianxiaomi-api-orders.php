@@ -264,7 +264,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
 	 */
-	public function get_orders_count( ?string $status = null, array $filter = array() ){
+	public function get_orders_count( ?string $status = null, array $filter = array() ) {
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
@@ -294,7 +294,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
 	 */
-	public function ship_order( int $id, array $data ): array|WP_Error {
+	public function ship_order( int $id, array $data ) {
 		$validated_id = $this->validate_request( $id, 'shop_order', 'edit' );
 
 		if ( is_wp_error( $validated_id ) ) {
@@ -340,7 +340,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
 	 */
-	public function delete_order( int $id, bool $force = false ): array|WP_Error {
+	public function delete_order( int $id, bool $force = false ) {
 		$validated_id = $this->validate_request( $id, 'shop_order', 'delete' );
 
 		if ( is_wp_error( $validated_id ) ) {
