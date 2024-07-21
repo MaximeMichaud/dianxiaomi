@@ -181,15 +181,27 @@ class Dianxiaomi_API_Server {
 	}
 
 	public function dispatch() {
-		$method = match ( $this->method ) {
-			'HEAD'   => self::METHOD_GET,
-			'GET'    => self::METHOD_GET,
-			'POST'   => self::METHOD_POST,
-			'PUT'    => self::METHOD_PUT,
-			'PATCH'  => self::METHOD_PATCH,
-			'DELETE' => self::METHOD_DELETE,
-			default  => new WP_Error( 'dianxiaomi_api_unsupported_method', __( 'Unsupported request method', 'dianxiaomi' ), array( 'status' => 400 ) )
-		};
+		$method = null;
+		switch ( $this->method ) {
+			case 'HEAD':
+			case 'GET':
+				$method = self::METHOD_GET;
+				break;
+			case 'POST':
+				$method = self::METHOD_POST;
+				break;
+			case 'PUT':
+				$method = self::METHOD_PUT;
+				break;
+			case 'PATCH':
+				$method = self::METHOD_PATCH;
+				break;
+			case 'DELETE':
+				$method = self::METHOD_DELETE;
+				break;
+			default:
+				return new WP_Error( 'dianxiaomi_api_unsupported_method', __( 'Unsupported request method', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
 
 		if ( $method instanceof WP_Error ) {
 			return $method;

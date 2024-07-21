@@ -158,12 +158,20 @@ class Dianxiaomi_API_Resource {
 	 */
 	public function maybe_add_meta( array $data, object $res ) {
 		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) ) {
-			$meta_name = match ( get_class( $res ) ) {
-				'WC_Order'   => 'order_meta',
-				'WC_Coupon'  => 'coupon_meta',
-				'WC_Product' => 'product_meta',
-				default      => 'resource_meta',
-			};
+			switch ( get_class( $res ) ) {
+				case 'WC_Order':
+					$meta_name = 'order_meta';
+					break;
+				case 'WC_Coupon':
+					$meta_name = 'coupon_meta';
+					break;
+				case 'WC_Product':
+					$meta_name = 'product_meta';
+					break;
+				default:
+					$meta_name = 'resource_meta';
+					break;
+			}
 			$data[ $meta_name ] = get_post_meta( $res->get_id() );
 		}
 		return $data;
