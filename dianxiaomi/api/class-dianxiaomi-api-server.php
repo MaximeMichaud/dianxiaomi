@@ -319,7 +319,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @param WP_Query|WP_User_Query $query
 	 */
-	public function add_pagination_headers( WP_Query|WP_User_Query $query ): void {
+	public function add_pagination_headers( $query ): void {
 		if ( $query instanceof WP_User_Query ) {
 			$page        = $query->page;
 			$single      = count( $query->get_results() ) > 1;
@@ -410,7 +410,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return string
 	 */
-	private function get_paginated_url( int $page ): string {
+	private function get_paginated_url( int $page ) {
 		$request = remove_query_arg( 'page' );
 		$request = urldecode( add_query_arg( 'page', $page, $request ) );
 		$host    = wp_parse_url( get_home_url(), PHP_URL_HOST );
@@ -425,7 +425,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return string
 	 */
-	public function get_raw_data(): string {
+	public function get_raw_data() {
 		return file_get_contents( 'php://input' );
 	}
 
@@ -440,7 +440,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return string MySQL datetime (YYYY-MM-DD HH:MM:SS)
 	 */
-	public function parse_datetime( string $datetime ): string {
+	public function parse_datetime( $datetime ) {
 		if ( strpos( $datetime, '.' ) !== false ) {
 			$datetime = preg_replace( '/\.\d+/', '', $datetime );
 		}
@@ -466,7 +466,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return string RFC3339 datetime
 	 */
-	public function format_datetime( $timestamp, bool $convert_to_utc = false ): string {
+	public function format_datetime( $timestamp, $convert_to_utc = false ) {
 		$timezone = $convert_to_utc ? new DateTimeZone( wc_timezone_string() ) : new DateTimeZone( 'UTC' );
 
 		try {
@@ -495,7 +495,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return array Headers extracted from the input
 	 */
-	public function get_headers( array $server ): array {
+	public function get_headers( $server ) {
 		$headers    = array();
 		$additional = array(
 			'CONTENT_LENGTH' => true,
@@ -522,7 +522,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return bool
 	 */
-	private function is_json_request(): bool {
+	private function is_json_request() {
 		if ( false !== stripos( $this->path, '.json' ) ) {
 			return true;
 		}
@@ -576,7 +576,7 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return bool
 	 */
-	private function is_xml_request(): bool {
+	private function is_xml_request() {
 		if ( false !== stripos( $this->path, '.xml' ) ) {
 			return true;
 		}
