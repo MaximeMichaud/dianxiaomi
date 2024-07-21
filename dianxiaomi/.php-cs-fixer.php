@@ -62,7 +62,6 @@ return (new PhpCsFixer\Config())
         'phpdoc_to_comment' => false, 
         'phpdoc_summary' => true, 
         'include' => true,
-        'comment_to_phpdoc' => true,
         'phpdoc_no_empty_return' => true,
         'phpdoc_no_useless_inheritdoc' => true,
         'phpdoc_order' => true,
