@@ -99,11 +99,9 @@ class Dianxiaomi_API_Server {
 		$this->params['POST'] = $_POST;
 		$this->headers        = $this->get_headers( $_SERVER );
 
-	
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
-	
 		$this->handler = new $handler_class();
 	}
 	public function check_authentication() {

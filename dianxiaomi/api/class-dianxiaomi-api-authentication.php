@@ -78,13 +78,12 @@ class Dianxiaomi_API_Authentication {
 		// Valider la clé API et obtenir l'utilisateur
 		$user = $this->get_user_by_api_key( $api_key );
 		// Génération du nonce si la clé API est valide
-		$nonce = wp_create_nonce( 'dianxiaomi_action' );
-		// Ajouter le nonce à la requête
-		$_GET['_wpnonce']     = $nonce;
-		$_POST['_wpnonce']    = $nonce;
-		$_REQUEST['_wpnonce'] = $nonce;
+		$nonce             = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
+		$_GET['_wpnonce']  = $nonce;
+		$_POST['_wpnonce'] = $nonce;
+		// Vérification du nonce pour les requêtes GET et POST
 		// Vérification du nonce
-		$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : (isset(  $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '');
+		$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : ( isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '' );
 		if ( ! wp_verify_nonce( $wpnonce, 'dianxiaomi_action' ) ) {
 			throw new Exception( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 		}
