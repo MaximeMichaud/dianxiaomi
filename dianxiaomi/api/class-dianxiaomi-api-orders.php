@@ -451,9 +451,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	/**
 	 * Ping method to check API status.
 	 *
-	 * @return string
+	 * @return array
 	 */
-	public function ping(): string {
-		return 'pong';
+	public function ping(): array {
+		return array(
+			'status' => 'success',
+			'message' => 'pong',
+		);
 	}
 }

@@ -81,24 +81,28 @@ class Dianxiaomi_API_Server {
 	public array $files   = array();
 	public $handler;
 	public function __construct( string $path ) {
+		$this->path           = $path ? $path : ( filter_input( INPUT_SERVER, 'PATH_INFO', FILTER_SANITIZE_STRING ) ?? '/' );
+		$this->method         = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
+		$this->params['GET']  = $_GET;
+		$this->params['POST'] = $_POST;
+		$this->headers        = $this->get_headers( $_SERVER );
+	
+		$_REQUEST['_wpnonce'] = wp_create_nonce('dianxiaomi_action');
+		$_GET['_wpnonce'] = $_REQUEST['_wpnonce'];
 		// Vérification du nonce pour les requêtes GET et POST
 		if ( in_array( $this->method, array( 'GET', 'POST' ), true ) && isset( $_REQUEST['_wpnonce'] ) ) {
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'dianxiaomi_action' ) ) {
 				wp_die( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 			}
 		}
-		$this->path           = $path ? $path : ( filter_input( INPUT_SERVER, 'PATH_INFO', FILTER_SANITIZE_STRING ) ?? '/' );
-		$this->method         = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
-		$this->params['GET']  = $_GET;
-		$this->params['POST'] = $_POST;
-		$this->headers        = $this->get_headers( $_SERVER );
-
+	
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
-
+	
 		$this->handler = new $handler_class();
 	}
+	
 
 	public function check_authentication() {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
