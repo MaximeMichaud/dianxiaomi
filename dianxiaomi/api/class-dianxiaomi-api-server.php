@@ -95,15 +95,12 @@ class Dianxiaomi_API_Server {
 				wp_die( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 			}
 		}
-	
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
 	
 		$this->handler = new $handler_class();
 	}
-	
-
 	public function check_authentication() {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
 		if ( is_a( $user, 'WP_User' ) ) {
@@ -575,7 +572,7 @@ class Dianxiaomi_API_Server {
 	/**
 	 * Check if the current request accepts an XML response by checking the endpoint suffix (.xml) or
 	 * the HTTP ACCEPT header.
-	 *
+	 *  
 	 * @since 2.1
 	 *
 	 * @return bool
@@ -587,7 +584,6 @@ class Dianxiaomi_API_Server {
 
 		return isset( $this->headers['ACCEPT'] ) && ( 'application/xml' === $this->headers['ACCEPT'] || 'text/xml' === $this->headers['ACCEPT'] );
 	}
-
 	/**
 	 * Send a HTTP status code
 	 *
@@ -596,6 +592,6 @@ class Dianxiaomi_API_Server {
 	 */
 	public function send_status($code)
 	{
-		status_header($code);
+		status_header( $code );
 	}
 }

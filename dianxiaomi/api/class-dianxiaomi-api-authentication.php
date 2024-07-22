@@ -70,38 +70,30 @@ class Dianxiaomi_API_Authentication {
 		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
 		$key2    = 'DIANXIAOMI-WP-KEY';
 		$qskey   = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;  // Sanitize input
-	
 		// Vérification de la clé API
 		$api_key = $headers[ $key ] ?? $headers[ $key1 ] ?? $headers[ $key2 ] ?? $qskey;
 		if ( empty( $api_key ) ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress Key is missing', 'dianxiaomi' ), 404 );
 		}
-	
 		// Valider la clé API et obtenir l'utilisateur
-		$user = $this->get_user_by_api_key( $api_key );
-	
+		$user = $this->get_user_by_api_key ( $api_key );
 		// Génération du nonce si la clé API est valide
 		$nonce = wp_create_nonce('dianxiaomi_action');
-	
 		// Ajouter le nonce à la requête
 		$_GET['_wpnonce'] = $nonce;
 		$_REQUEST['_wpnonce'] = $nonce;
-	
 		// Vérification du nonce
 		$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 		if ( ! wp_verify_nonce( $wpnonce, 'dianxiaomi_action' ) ) {
 			throw new Exception( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 		}
-	
 		return $user;
 	}
 	
 	private function get_user_by_api_key( $api_key ) {
 		global $wpdb;
-	
 		$cache_key = 'dianxiaomi_user_' . md5( $api_key );
 		$user_id   = wp_cache_get( $cache_key );
-	
 		if ( false === $user_id ) {
 			$user_id = get_users(
 				array(
@@ -111,18 +103,14 @@ class Dianxiaomi_API_Authentication {
 					'fields'     => 'ID',
 				)
 			);
-	
 			$user_id = ! empty( $user_id ) ? $user_id[0] : false;
-	
 			if ( $user_id ) {
 				wp_cache_set( $cache_key, $user_id, '', 3600 );
 			}
 		}
-	
 		if ( ! $user_id ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress API Key is invalid', 'dianxiaomi' ), 401 );
 		}
-	
 		return new WP_User( $user_id );
 	}
 }
