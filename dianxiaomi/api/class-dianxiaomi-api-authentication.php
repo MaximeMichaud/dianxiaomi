@@ -50,7 +50,7 @@ class Dianxiaomi_API_Authentication {
 	}
 
 	public function authenticate( $user ) {
-		if ( '/' === getDianxiaomiInstance()->api->server->path ) {
+		if ( '/' === get_dianxiaomi_instance()->api->server->path ) {
 			return new WP_User( 0 );
 		}
 

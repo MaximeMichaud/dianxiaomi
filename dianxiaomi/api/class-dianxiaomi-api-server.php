@@ -583,4 +583,15 @@ class Dianxiaomi_API_Server {
 
 		return isset( $this->headers['ACCEPT'] ) && ( 'application/xml' === $this->headers['ACCEPT'] || 'text/xml' === $this->headers['ACCEPT'] );
 	}
+
+	/**
+	 * Send a HTTP status code
+	 *
+	 * @since 2.1
+	 * @param int $code HTTP status
+	 */
+	public function send_status($code)
+	{
+		status_header($code);
+	}
 }
