@@ -3,9 +3,9 @@
  * Plugin Name: Dianxiaomi - WooCommerce ERP Compatibility php 8.2
  * Plugin URI: http://dianxiaomi.com/
  * Description: Add tracking number and carrier name to WooCommerce, display tracking info at order history page, auto import tracking numbers to Dianxiaomi.
- * Version: 1.0.20
+ * Version: 1.30
  * Author: Dianxiaomi (Alex Modified)
- * Updated: 2024-06-04
+ * Updated: 2024-07-23
  * Author URI: https://github.com/whywilson/dianxiaomi-for-woocommerce/releases
  * Copyright: © Dianxiaomi
  *

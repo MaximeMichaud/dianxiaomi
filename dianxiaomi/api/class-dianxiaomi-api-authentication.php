@@ -8,6 +8,7 @@
  * @package     Dianxiaomi/API
  *
  * @since       1
+ * @version     1.30
  */
 
 /** Alex 02/03/2024
