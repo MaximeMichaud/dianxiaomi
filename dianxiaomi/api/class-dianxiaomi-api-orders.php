@@ -10,7 +10,7 @@
  * @package     Dianxiaomi/API
  *
  * @since       1.10
- * @version     1.10
+ * @version     1.30
  */
 
 /**
