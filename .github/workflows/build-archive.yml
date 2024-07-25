@@ -19,7 +19,7 @@ jobs:
         working-directory: dianxiaomi
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dianxiaomi-archive
           path: dianxiaomi.zip
