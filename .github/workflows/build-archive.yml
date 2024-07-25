@@ -1,0 +1,29 @@
+name: Build and Archive
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dianxiaomi/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Archive Code
+        run: zip -r -9 dianxiaomi.zip dianxiaomi/
+        shell: bash
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dianxiaomi-archive
+          path: dianxiaomi.zip
