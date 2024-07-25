@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'dianxiaomi/**'
 
 jobs:
   build:
@@ -15,15 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
       - name: Archive Code
-        run: zip -r -9 dianxiaomi.zip dianxiaomi/
+        run: zip -r -9 ../dianxiaomi.zip .
         shell: bash
+        working-directory: dianxiaomi
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dianxiaomi-archive
           path: dianxiaomi.zip
