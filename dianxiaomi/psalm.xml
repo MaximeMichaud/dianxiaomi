@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<psalm
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
+    errorLevel="1"  <!-- The strictest checking level -->
+    resolveFromConfigFile="true"
+    hideExternalErrors="false">
+    <projectFiles>
+        <!-- Specify the directories and files to analyze -->
+        <directory name="dianxiaomi" />
+        <!-- Exclude specific directories and files from analysis -->
+        <ignoreFiles>
+            <directory name="dianxiaomi/vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <!-- Disable or configure handling of specific errors -->
+        <MissingReturnType errorLevel="info" />
+        <MixedArgument errorLevel="info" />
+    </issueHandlers>
+</psalm>

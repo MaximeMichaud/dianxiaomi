@@ -3,23 +3,20 @@ name: Psalm
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'dianxiaomi/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'dianxiaomi/**'
 
 jobs:
   psalm:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        php-version: ['8.0', '8.1', '8.2', '8.3']
+        php-version: ['8.1', '8.2', '8.3']
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -28,6 +25,12 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
+        working-directory: dianxiaomi
+
+      - name: Install Psalm
+        run: composer require --dev vimeo/psalm
+        working-directory: dianxiaomi
 
       - name: Run Psalm on specific directory
-        run: vendor/bin/psalm --config=psalm.xml dianxiaomi/
+        run: vendor/bin/psalm --config=psalm.xml
+        working-directory: dianxiaomi
