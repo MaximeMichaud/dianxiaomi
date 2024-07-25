@@ -32,5 +32,5 @@ jobs:
         working-directory: dianxiaomi
 
       - name: Run PHPStan on specific directory
-        run: vendor/bin/phpstan analyse . --level max
+        run: vendor/bin/phpstan analyse --configuration phpstan.neon
         working-directory: dianxiaomi
