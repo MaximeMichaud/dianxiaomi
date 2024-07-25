@@ -3,8 +3,12 @@ name: PHPStan
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'dianxiaomi/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'dianxiaomi/**'
 
 jobs:
   phpstan:

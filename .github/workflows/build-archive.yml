@@ -18,3 +18,4 @@ jobs:
         with:
           name: dianxiaomi
           path: dianxiaomi
+          compression-level: 9
