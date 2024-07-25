@@ -1,0 +1,33 @@
+name: PHPStan
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'dianxiaomi/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'dianxiaomi/**'
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['8.0', '8.1', '8.2', '8.3']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run PHPStan on specific directory
+        run: vendor/bin/phpstan analyse dianxiaomi/ --level max
