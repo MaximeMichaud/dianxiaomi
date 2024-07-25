@@ -13,12 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Archive Code
-        run: zip -r -9 dianxiaomi.zip dianxiaomi
-        shell: bash
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dianxiaomi
-          path: dianxiaomi.zip
+          name: dianxiaomi.zip
+          path: dianxiaomi
