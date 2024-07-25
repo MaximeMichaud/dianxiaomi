@@ -1,0 +1,7 @@
+name: "Custom CodeQL Analysis Configuration for PHP"
+
+paths:
+  - dianxiaomi/
+
+queries:
+  - uses: security-and-quality
