@@ -95,3 +95,4 @@ fabric.properties
 # Custom 
 .DS_Store
 
+**/composer.lock

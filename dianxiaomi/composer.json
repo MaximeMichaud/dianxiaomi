@@ -28,7 +28,6 @@
         }
     },
     "require-dev": {
-        "tareq1988/wp-php-cs-fixer": "dev-master",
-        "vimeo/psalm": "^6.0@dev"
+        "tareq1988/wp-php-cs-fixer": "dev-master"
     }
 }
