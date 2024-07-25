@@ -26,8 +26,11 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
 
+      - name: Change to the project directory
+        run: cd dianxiaomi
+
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
 
       - name: Run PHPStan on specific directory
-        run: vendor/bin/phpstan analyse dianxiaomi/ --level max
+        run: ../vendor/bin/phpstan analyse --level max
