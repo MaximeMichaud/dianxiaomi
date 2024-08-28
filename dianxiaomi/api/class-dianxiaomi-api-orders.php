@@ -33,6 +33,9 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	/** @var string the route base */
 	protected string $base = '/orders';
 
+	// Compteur de requêtes
+	private static int $request_count = 0;
+
 	/**
 	 * Register the routes for this class.
 	 *
@@ -245,11 +248,22 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		$order = wc_get_order( $id );
+
 		if ( ! empty( $data['status'] ) ) {
 			$order->update_status( $data['status'], isset( $data['note'] ) ? $data['note'] : '' );
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
 			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
 			$order->save();
+
+			// Incrémenter le compteur
+			self::$request_count++; 
+
+			if ( self::$request_count >= 1500 ) {
+				// Pause de 1 seconde
+				sleep( 1 );
+				// Réinitialiser le compteu
+				self::$request_count = 0;
+			}
 		}
 
 		return $this->get_order( $id );
