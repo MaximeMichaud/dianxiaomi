@@ -73,7 +73,7 @@ final class Dianxiaomi {
 	 * Enqueue admin styles.
 	 */
 	public function admin_styles(): void {
-		$version = '1.0.20'; // Version de votre plugin
+		$version = '1.0.20'; // plugin version
 		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.min.css', array(), $version );
 		wp_enqueue_style( 'dianxiaomi_styles', plugin_dir_url( __FILE__ ) . 'assets/css/admin.css', array(), $version );
 	}
@@ -82,7 +82,7 @@ final class Dianxiaomi {
 	 * Enqueue scripts for the admin panel.
 	 */
 	public function library_scripts(): void {
-		$version = '1.0.20'; // Version de votre plugin
+		$version = '1.0.20'; // plugin version
 		wp_enqueue_script( 'dianxiaomi_script_chosen_jquery', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_script_chosen_proto', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_script_util', plugin_dir_url( __FILE__ ) . 'assets/js/util.js', array(), $version, true );
