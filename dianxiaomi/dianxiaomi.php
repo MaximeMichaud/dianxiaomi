@@ -3,13 +3,13 @@
  * Plugin Name: Dianxiaomi Enhanced for WooCommerce
  * Plugin URI: http://dianxiaomi.com/
  * Description: Enhances WooCommerce by adding tracking numbers, carrier names and automating tracking number imports to Dianxiaomi.
- * Version: 1.30
+ * Version: 1.31
  * Author: Dianxiaomi & Alex
  * Author URI: https://maxikits.com
  * Requires at least: 5.8
  * Requires PHP: 8.0
  * WC requires at least: 4.0
- * WC tested up to: 9.1
+ * WC tested up to: 9.3
  * Requires Plugins: woocommerce
  * Copyright: © Dianxiaomi, Alex
  *
