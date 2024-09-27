@@ -73,21 +73,21 @@ final class Dianxiaomi {
 	 * Enqueue admin styles.
 	 */
 	public function admin_styles(): void {
-		$version = '1.0.20'; // plugin version
-		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugins_url( 'assets/plugin/chosen/chosen.min.css', __DIR__ ), array(), $version );
-		wp_enqueue_style( 'dianxiaomi_styles', plugins_url( 'assets/css/admin.css', __DIR__ ), array(), $version );
+		$version = '1.0.20'; // Version de votre plugin
+		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/plugin/chosen/chosen.min.css', array(), $version );
+		wp_enqueue_style( 'dianxiaomi_styles', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/css/admin.css', array(), $version );
 	}
 
 	/**
 	 * Enqueue scripts for the admin panel.
 	 */
 	public function library_scripts(): void {
-		$version = '1.0.20'; // plugin version
-		wp_enqueue_script( 'dianxiaomi_script_chosen_jquery', plugins_url( 'assets/plugin/chosen/chosen.jquery.min.js', __DIR__ ), array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_chosen_proto', plugins_url( 'assets/plugin/chosen/chosen.proto.min.js', __DIR__ ), array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_util', plugins_url( 'assets/js/util.js', __DIR__ ), array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_couriers', plugins_url( 'assets/js/couriers.js', __DIR__ ), array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_admin', plugins_url( 'assets/js/admin.js', __DIR__ ), array(), $version, true );
+		$version = '1.0.20'; // Version de votre plugin
+		wp_enqueue_script( 'dianxiaomi_script_chosen_jquery', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_chosen_proto', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_util', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/js/util.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_couriers', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/js/couriers.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_admin', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/js/admin.js', array(), $version, true );
 	}
 
 	/**
@@ -95,7 +95,7 @@ final class Dianxiaomi {
 	 */
 	public function include_footer_script(): void {
 		$version = '1.0.20'; // Version de votre plugin
-		wp_enqueue_script( 'dianxiaomi_script_footer', plugins_url( 'assets/js/footer.js', __DIR__ ), array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_footer', plugin_dir_url( __FILE__ ) . 'dianxiaomi/assets/js/footer.js', array(), $version, true );
 	}
 
 	/**
