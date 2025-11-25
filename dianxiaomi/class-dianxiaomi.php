@@ -359,7 +359,7 @@ final class Dianxiaomi {
 
 		$temp_url  = '';
 		$temp_slug = ' data-slug="' . $tracking_provider . '"';
-		if ( $this->custom_domain != '' ) {
+		if ( $this->custom_domain !== '' ) {
 			$temp_url  = '" data-domain="' . $this->custom_domain;
 			$temp_slug = '';
 		}

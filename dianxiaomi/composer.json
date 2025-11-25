@@ -28,6 +28,12 @@
         }
     },
     "require-dev": {
-        "tareq1988/wp-php-cs-fixer": "dev-master"
+        "tareq1988/wp-php-cs-fixer": "dev-master",
+        "phpstan/phpstan": "^1.10",
+        "szepeviktor/phpstan-wordpress": "^1.3",
+        "php-stubs/woocommerce-stubs": "^9.0",
+        "php-stubs/wordpress-stubs": "^6.0",
+        "vimeo/psalm": "^5.0",
+        "humanmade/psalm-plugin-wordpress": "^3.0"
     }
 }

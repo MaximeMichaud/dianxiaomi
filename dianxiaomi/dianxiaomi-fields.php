@@ -9,7 +9,7 @@
  */
 
 $dianxiaomi_fields = array(
-	'dianxiaomi_tracking_provider_name' => array(
+	'dianxiaomi_tracking_provider_name'       => array(
 		'id'          => 'dianxiaomi_tracking_provider_name',
 		'type'        => 'text',
 		'label'       => '',
@@ -18,7 +18,7 @@ $dianxiaomi_fields = array(
 		'class'       => 'hidden',
 	),
 
-	'dianxiaomi_tracking_required_fields' => array(
+	'dianxiaomi_tracking_required_fields'     => array(
 		'id'          => 'dianxiaomi_tracking_required_fields',
 		'type'        => 'text',
 		'label'       => '',
@@ -27,7 +27,7 @@ $dianxiaomi_fields = array(
 		'class'       => 'hidden',
 	),
 
-	'dianxiaomi_tracking_number' => array(
+	'dianxiaomi_tracking_number'              => array(
 		'id'          => 'dianxiaomi_tracking_number',
 		'type'        => 'text',
 		'label'       => 'Tracking number',
@@ -36,7 +36,7 @@ $dianxiaomi_fields = array(
 		'class'       => '',
 	),
 
-	'dianxiaomi_tracking_shipdate' => array(
+	'dianxiaomi_tracking_shipdate'            => array(
 		'key'         => 'tracking_ship_date',
 		'id'          => 'dianxiaomi_tracking_shipdate',
 		'type'        => 'date',
@@ -46,7 +46,7 @@ $dianxiaomi_fields = array(
 		'class'       => 'date-picker-field hidden-field',
 	),
 
-	'dianxiaomi_tracking_postal' => array(
+	'dianxiaomi_tracking_postal'              => array(
 		'key'         => 'tracking_postal_code',
 		'id'          => 'dianxiaomi_tracking_postal',
 		'type'        => 'text',
@@ -56,7 +56,7 @@ $dianxiaomi_fields = array(
 		'class'       => 'hidden-field',
 	),
 
-	'dianxiaomi_tracking_account' => array(
+	'dianxiaomi_tracking_account'             => array(
 		'key'         => 'tracking_account_number',
 		'id'          => 'dianxiaomi_tracking_account',
 		'type'        => 'text',
@@ -66,7 +66,7 @@ $dianxiaomi_fields = array(
 		'class'       => 'hidden-field',
 	),
 
-	'dianxiaomi_tracking_key' => array(
+	'dianxiaomi_tracking_key'                 => array(
 		'key'         => 'tracking_key',
 		'id'          => 'dianxiaomi_tracking_key',
 		'type'        => 'text',

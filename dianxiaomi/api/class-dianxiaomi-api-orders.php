@@ -256,7 +256,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$order->save();
 
 			// Incrémenter le compteur
-			self::$request_count++; 
+			++self::$request_count;
 
 			if ( self::$request_count >= 1500 ) {
 				// Pause de 1 seconde

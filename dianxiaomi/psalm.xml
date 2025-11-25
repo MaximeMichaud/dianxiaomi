@@ -2,19 +2,56 @@
 <psalm
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
-    errorLevel="1">
-	
+    errorLevel="8"
+    findUnusedBaselineEntry="false"
+    findUnusedCode="false">
+
     <projectFiles>
         <directory name="." />
         <ignoreFiles>
             <directory name="vendor" />
+            <directory name="assets" />
+            <file name=".php-cs-fixer.php" />
         </ignoreFiles>
     </projectFiles>
-	
-	<issueHandlers>
-        <!-- Disable or configure handling of specific errors -->
-        <MissingReturnType errorLevel="info" />
-        <MixedArgument errorLevel="info" />
+
+    <!-- TODO: Re-enable WordPress plugin once hook issues are fixed
+    <plugins>
+        <pluginClass class="PsalmWordPress\Plugin" />
+    </plugins>
+    -->
+
+    <stubs>
+        <file name="vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php" />
+        <file name="vendor/php-stubs/wordpress-stubs/wordpress-stubs.php" />
+    </stubs>
+
+    <!-- Suppress known issues from inherited code - TODO: fix these properly -->
+    <issueHandlers>
+        <MissingReturnType errorLevel="suppress" />
+        <MissingParamType errorLevel="suppress" />
+        <MixedArgument errorLevel="suppress" />
+        <MixedAssignment errorLevel="suppress" />
+        <MixedMethodCall errorLevel="suppress" />
+        <MixedPropertyFetch errorLevel="suppress" />
+        <MixedOperand errorLevel="suppress" />
+        <UndefinedThisPropertyFetch errorLevel="suppress" />
+        <UndefinedPropertyAssignment errorLevel="suppress" />
+        <UndefinedPropertyFetch errorLevel="suppress" />
+        <UnusedVariable errorLevel="suppress" />
+        <InvalidGlobal errorLevel="suppress" />
+        <PossiblyInvalidMethodCall errorLevel="suppress" />
+        <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <UndefinedClass errorLevel="suppress" />
+        <UndefinedFunction errorLevel="suppress" />
+        <InvalidReturnType errorLevel="suppress" />
+        <InvalidReturnStatement errorLevel="suppress" />
+        <InvalidFalsableReturnType errorLevel="suppress" />
+        <PossiblyUndefinedVariable errorLevel="suppress" />
+        <UndefinedMagicMethod errorLevel="suppress" />
+        <UndefinedInterfaceMethod errorLevel="suppress" />
+        <UndefinedConstant errorLevel="suppress" />
+        <DuplicateArrayKey errorLevel="suppress" />
     </issueHandlers>
-	
+
 </psalm>

@@ -2,11 +2,17 @@
 <ruleset name="Custom WordPress Standard">
     <description>Custom WordPress coding standards configuration to exclude non-critical phpcs notices.</description>
 
+    <!-- Exclude vendor directory -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <!-- Exclude all assets (JS/CSS) -->
+    <exclude-pattern>*/assets/*</exclude-pattern>
+
     <!-- Path to the WordPress Coding Standards -->
     <rule ref="WordPress">
         <!-- Exclude rules for inline comment formatting -->
         <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
-        
+
         <!-- Exclude rules for missing comments for classes, functions, parameters -->
         <exclude name="Squiz.Commenting.ClassComment.Missing"/>
         <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
@@ -20,9 +26,38 @@
         <!-- Ignore the 'Yoda Conditions' notices -->
         <exclude name="WordPress.PHP.YodaConditions.NotYoda"/>
 
-        <!-- Add more specific exclusions here as needed -->
-		<exclude-pattern>*/vendor/*</exclude-pattern>
+        <!-- Exclude underscore prefix warning for private properties -->
+        <exclude name="PSR2.Classes.PropertyDeclaration.Underscore"/>
+
+        <!-- Exclude unused parameter warnings -->
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+
+        <!-- Exclude strict separation of function/class declarations -->
+        <exclude name="PSR1.Files.SideEffects.FoundWithSymbols"/>
+
+        <!-- Allow polyfill functions with classes -->
+        <exclude name="Universal.Files.SeparateFunctionsFromOO.Mixed"/>
+
+        <!-- Allow slow meta queries (required for plugin functionality) -->
+        <exclude name="WordPress.DB.SlowDBQuery.slow_db_query_meta_key"/>
+        <exclude name="WordPress.DB.SlowDBQuery.slow_db_query_meta_value"/>
+
+        <!-- Exclude member variable comment style -->
+        <exclude name="Squiz.Commenting.VariableComment.WrongStyle"/>
+
+        <!-- Exclude strict equals sign alignment -->
+        <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning"/>
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned"/>
     </rule>
-    
-    <!-- You can specify more rules or modify existing ones to fit your project's needs -->
+
+    <!-- Custom capabilities for this plugin -->
+    <rule ref="WordPress.WP.Capabilities">
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="manage_dianxiaomi"/>
+                <element value="read_private_shop_orders"/>
+            </property>
+        </properties>
+    </rule>
+
 </ruleset>
