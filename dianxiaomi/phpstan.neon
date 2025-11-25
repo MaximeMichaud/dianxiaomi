@@ -1,8 +1,8 @@
 includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
 parameters:
-    level: max
+    level: 5
     paths:
         - .
-    excludes_analyse:
-        - %currentWorkingDirectory%/vendor/*
+    excludePaths:
+        - vendor/*
