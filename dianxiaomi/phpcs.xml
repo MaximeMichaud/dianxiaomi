@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="Custom WordPress Standard">
-    <description>Custom WordPress coding standards configuration to exclude non-critical phpcs notices.</description>
+<ruleset name="Dianxiaomi">
+    <description>Dianxiaomi plugin coding standards based on WordPress Coding Standards</description>
+
+    <!-- Scan these files -->
+    <file>.</file>
 
     <!-- Exclude vendor directory -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
@@ -8,12 +11,31 @@
     <!-- Exclude all assets (JS/CSS) -->
     <exclude-pattern>*/assets/*</exclude-pattern>
 
-    <!-- Path to the WordPress Coding Standards -->
+    <!-- Exclude node_modules if present -->
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <!-- Show sniff codes in all reports -->
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <!-- Scan only PHP files -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Set default encoding -->
+    <arg name="encoding" value="utf-8"/>
+
+    <!-- Show progress -->
+    <arg value="p"/>
+
+    <!-- Set number of parallel jobs -->
+    <arg name="parallel" value="8"/>
+
+    <!-- WordPress Coding Standards -->
     <rule ref="WordPress">
-        <!-- Exclude rules for inline comment formatting -->
+        <!-- Exclude inline comment formatting rules -->
         <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
 
-        <!-- Exclude rules for missing comments for classes, functions, parameters -->
+        <!-- Exclude missing comments for classes, functions, parameters -->
         <exclude name="Squiz.Commenting.ClassComment.Missing"/>
         <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
         <exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
@@ -23,7 +45,7 @@
         <exclude name="Squiz.Commenting.FileComment.Missing"/>
         <exclude name="Squiz.Commenting.FunctionComment.ParamCommentFullStop"/>
 
-        <!-- Ignore the 'Yoda Conditions' notices -->
+        <!-- Exclude Yoda Conditions notices -->
         <exclude name="WordPress.PHP.YodaConditions.NotYoda"/>
 
         <!-- Exclude underscore prefix warning for private properties -->
@@ -50,6 +72,43 @@
         <exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned"/>
     </rule>
 
+    <!-- PHPCompatibility for PHP 8.1+ -->
+    <rule ref="PHPCompatibilityWP"/>
+    <config name="testVersion" value="8.1-"/>
+
+    <!-- Text domain configuration (including legacy domains) -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="dianxiaomi"/>
+                <element value="wc_dianxiaomi"/>
+                <element value="wc_shipment_tracking"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Prefix configuration for globals/hooks (including legacy prefixes) -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="dianxiaomi"/>
+                <element value="DIANXIAOMI"/>
+                <element value="get_dianxiaomi"/>
+                <element value="wc_dianxiaomi"/>
+                <element value="aftership"/>
+                <element value="AFTERSHIP"/>
+                <element value="woocommerce"/>
+                <element value="before_woocommerce"/>
+                <element value="is_woocommerce"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Exclude prefix checks for legacy polyfills (getallheaders) -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound">
+        <exclude-pattern>*/api/class-dianxiaomi-api-authentication.php</exclude-pattern>
+    </rule>
+
     <!-- Custom capabilities for this plugin -->
     <rule ref="WordPress.WP.Capabilities">
         <properties>
@@ -58,6 +117,11 @@
                 <element value="read_private_shop_orders"/>
             </property>
         </properties>
+    </rule>
+
+    <!-- Allow short array syntax -->
+    <rule ref="Generic.Arrays.DisallowShortArraySyntax.Found">
+        <severity>0</severity>
     </rule>
 
 </ruleset>
