@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="Custom WordPress Standard">
+    <description>Custom WordPress coding standards configuration to exclude non-critical phpcs notices.</description>
+
+    <!-- Path to the WordPress Coding Standards -->
+    <rule ref="WordPress">
+        <!-- Exclude rules for inline comment formatting -->
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+        
+        <!-- Exclude rules for missing comments for classes, functions, parameters -->
+        <exclude name="Squiz.Commenting.ClassComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamTag"/>
+        <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+        <exclude name="Squiz.Commenting.VariableComment.Missing"/>
+        <exclude name="Squiz.Commenting.FileComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment.ParamCommentFullStop"/>
+
+        <!-- Ignore the 'Yoda Conditions' notices -->
+        <exclude name="WordPress.PHP.YodaConditions.NotYoda"/>
+
+        <!-- Add more specific exclusions here as needed -->
+		<exclude-pattern>*/vendor/*</exclude-pattern>
+    </rule>
+    
+    <!-- You can specify more rules or modify existing ones to fit your project's needs -->
+</ruleset>

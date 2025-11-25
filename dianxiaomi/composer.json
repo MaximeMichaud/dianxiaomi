@@ -1,0 +1,33 @@
+{
+    "name": "dianxiaomi/dianxiaomi",
+    "description": "WordPress Plugin",
+    "type": "project",
+    "require": {
+        "wp-coding-standards/wpcs": "3.1.0",
+        "squizlabs/php_codesniffer": "^3.8",
+        "automattic/vipwpcs": "^3.0.1",
+        "vena/php-cs-fixer-wordpress": "dev-main"
+    },
+    "license": "GPL",
+    "autoload": {
+        "psr-4": {
+            "dianxiaomi\\dianxiaomi\\": "src/",
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Maxime Michaud",
+            "email": "14856114+MaximeMichaud@users.noreply.github.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "require-dev": {
+        "tareq1988/wp-php-cs-fixer": "dev-master"
+    }
+}

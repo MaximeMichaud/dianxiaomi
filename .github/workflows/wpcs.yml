@@ -1,0 +1,25 @@
+name: WPCS check
+
+on:
+  push:
+    paths:
+      - 'dianxiaomi/**'
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: phpcs
+      - uses: 10up/wpcs-action@stable
+        with:
+          standard: 'dianxiaomi/phpcs.xml'
+          paths: 'dianxiaomi/'
+          use_local_config: true

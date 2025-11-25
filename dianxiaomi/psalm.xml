@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<psalm
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
+    errorLevel="1">
+	
+    <projectFiles>
+        <directory name="." />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+	
+	<issueHandlers>
+        <!-- Disable or configure handling of specific errors -->
+        <MissingReturnType errorLevel="info" />
+        <MixedArgument errorLevel="info" />
+    </issueHandlers>
+	
+</psalm>
