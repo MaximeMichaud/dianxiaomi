@@ -33,7 +33,7 @@
         "szepeviktor/phpstan-wordpress": "^1.3",
         "php-stubs/woocommerce-stubs": "^10.3",
         "php-stubs/wordpress-stubs": "^6.0",
-        "vimeo/psalm": "^5.0",
+        "vimeo/psalm": "^6.13",
         "humanmade/psalm-plugin-wordpress": "^3.0"
     }
 }
