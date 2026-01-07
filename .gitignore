@@ -92,8 +92,10 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm+all
 /vendor/
 
-# Custom 
+# Custom
 .DS_Store
 
 **/composer.lock
 **/vendor
+**/.php-cs-fixer.cache
+**/.phpunit.result.cache
