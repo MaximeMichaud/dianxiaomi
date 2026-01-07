@@ -52,6 +52,8 @@
         <UndefinedInterfaceMethod errorLevel="suppress" />
         <UndefinedConstant errorLevel="suppress" />
         <DuplicateArrayKey errorLevel="suppress" />
+        <DuplicateClass errorLevel="suppress" />
+        <MissingOverrideAttribute errorLevel="suppress" />
     </issueHandlers>
 
 </psalm>
