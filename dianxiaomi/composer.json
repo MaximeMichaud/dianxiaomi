@@ -1,4 +1,5 @@
 {
+    "_comment": "wordpress-stubs pinned to ~6.8.0: v6.9 crashes Psalm (vimeo/psalm#11588)",
     "name": "dianxiaomi/dianxiaomi",
     "description": "WordPress Plugin",
     "type": "project",
