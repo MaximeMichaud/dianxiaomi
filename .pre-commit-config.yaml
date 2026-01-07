@@ -1,0 +1,56 @@
+repos:
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^dianxiaomi/(vendor|assets)/
+      - id: end-of-file-fixer
+        exclude: ^dianxiaomi/(vendor|assets)/
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-json
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # PHP CodeSniffer (code style)
+  - repo: local
+    hooks:
+      - id: phpcs
+        name: PHP_CodeSniffer
+        entry: bash -c 'cd dianxiaomi && php vendor/bin/phpcs --standard=phpcs.xml -n'
+        language: system
+        types: [php]
+        pass_filenames: false
+
+  # PHPStan (static analysis)
+  - repo: local
+    hooks:
+      - id: phpstan
+        name: PHPStan
+        entry: bash -c 'cd dianxiaomi && php vendor/bin/phpstan analyse --memory-limit=1G --no-progress'
+        language: system
+        types: [php]
+        pass_filenames: false
+
+  # Psalm (static analysis)
+  - repo: local
+    hooks:
+      - id: psalm
+        name: Psalm
+        entry: bash -c 'cd dianxiaomi && php vendor/bin/psalm --no-progress'
+        language: system
+        types: [php]
+        pass_filenames: false
+
+  # Composer validation
+  - repo: local
+    hooks:
+      - id: composer-validate
+        name: Composer Validate
+        entry: bash -c 'cd dianxiaomi && composer validate --no-interaction 2>&1 | grep -q "is valid" && echo "composer.json is valid"'
+        language: system
+        files: dianxiaomi/composer\.json$
+        pass_filenames: false
