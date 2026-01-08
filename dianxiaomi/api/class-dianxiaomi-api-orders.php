@@ -46,9 +46,9 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $routes
+	 * @param array<string, array<int, array<int, mixed>>> $routes Existing routes.
 	 *
-	 * @return array
+	 * @return array<string, array<int, array<int, mixed>>> Modified routes.
 	 */
 	public function register_routes( array $routes ): array {
 		$routes[ $this->base ] = array(
@@ -84,13 +84,13 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|null $fields
-	 * @param array       $filter
-	 * @param string|null $status
-	 * @param int         $page
-	 * @param string      $updated_at_min
+	 * @param string|null          $fields         Fields to include.
+	 * @param array<string, mixed> $filter         Query filters.
+	 * @param string|null          $status         Order status filter.
+	 * @param int                  $page           Page number.
+	 * @param string               $updated_at_min Minimum update date.
 	 *
-	 * @return array
+	 * @return array<string, mixed> Orders data.
 	 */
 	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, int $page = 1, string $updated_at_min = '' ): array {
 		if ( ! empty( $status ) ) {
@@ -107,12 +107,16 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		$orders = array();
 
+		$fields_array = null !== $fields ? explode( ',', $fields ) : null;
 		foreach ( $query->posts as $order_id ) {
 			$order_id = $order_id instanceof WP_Post ? $order_id->ID : (int) $order_id;
 			if ( ! $this->is_readable( $order_id ) ) {
 				continue;
 			}
-			$orders[] = current( $this->get_order( $order_id, $fields ) );
+			$order_result = $this->get_order( $order_id, $fields_array );
+			if ( ! is_wp_error( $order_result ) ) {
+				$orders[] = current( $order_result );
+			}
 		}
 
 		$this->server->add_pagination_headers( $query );
@@ -125,12 +129,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int        $id     the order ID
-	 * @param array|null $fields
+	 * @param int                     $id     The order ID.
+	 * @param array<int, string>|null $fields Fields to include.
 	 *
-	 * @return array
+	 * @return array<string, mixed>|WP_Error Order data or error.
 	 */
-	public function get_order( int $id, ?array $fields = null ): array {
+	public function get_order( int $id, ?array $fields = null ): array|WP_Error {
 		$id = $this->validate_request( $id, 'shop_order', 'read' );
 
 		if ( is_wp_error( $id ) ) {
@@ -200,7 +204,11 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		// Ajout des articles de la commande
 		foreach ( $order->get_items() as $item_id => $item ) {
-			$product                    = $item->get_product();
+			if ( ! $item instanceof WC_Order_Item_Product ) {
+				continue;
+			}
+			$product      = $item->get_product();
+			$has_product  = $product instanceof WC_Product;
 			$order_data['line_items'][] = array(
 				'id'               => $item_id,
 				'subtotal'         => wc_format_decimal( $order->get_line_subtotal( $item, false ), 2 ),
@@ -212,9 +220,9 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 				'name'             => $item->get_name(),
 				'variation_id'     => $item->get_variation_id(),
 				'product_id'       => $item->get_product_id(),
-				'sku'              => $product ? $product->get_sku() : null,
-				'images'           => $product ? $product->get_image() : null,
-				'view_product_url' => $product ? get_permalink( $product->get_id() ) : null,
+				'sku'              => $has_product ? $product->get_sku() : null,
+				'images'           => $has_product ? $product->get_image() : null,
+				'view_product_url' => $has_product ? get_permalink( $product->get_id() ) : null,
 			);
 		}
 
@@ -240,12 +248,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int   $id   the order ID
-	 * @param array $data
+	 * @param int                  $id   The order ID.
+	 * @param array<string, mixed> $data Order data to update.
 	 *
-	 * @return array
+	 * @return array<string, mixed>|WP_Error Updated order data or error.
 	 */
-	public function edit_order( int $id, array $data ): array {
+	public function edit_order( int $id, array $data ): array|WP_Error {
 		$id = $this->validate_request( $id, 'shop_order', 'edit' );
 		if ( is_wp_error( $id ) ) {
 			return $id;
@@ -281,12 +289,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|null $status Optional status to filter the count.
-	 * @param array       $filter Additional filters for the query.
+	 * @param string|null          $status Optional status to filter the count.
+	 * @param array<string, mixed> $filter Additional filters for the query.
 	 *
-	 * @return array|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
+	 * @return array<string, int>|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
 	 */
-	public function get_orders_count( ?string $status = null, array $filter = array() ) {
+	public function get_orders_count( ?string $status = null, array $filter = array() ): array|WP_Error {
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
@@ -301,22 +309,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int   $id   the order ID
-	 * @param array $data
+	 * @param int                  $id   The order ID.
+	 * @param array<string, mixed> $data Data containing shipping and order status information.
 	 *
-	 * @return array
+	 * @return array<string, mixed>|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
 	 */
-	/**
-	 * Ship an order.
-	 *
-	 * @since 2.1
-	 *
-	 * @param int   $id   the order ID
-	 * @param array $data Data containing shipping and order status information.
-	 *
-	 * @return array|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
-	 */
-	public function ship_order( int $id, array $data ) {
+	public function ship_order( int $id, array $data ): array|WP_Error {
 		$validated_id = $this->validate_request( $id, 'shop_order', 'edit' );
 
 		if ( is_wp_error( $validated_id ) ) {
@@ -357,12 +355,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @TODO enable along with POST in 2.2
 	 *
-	 * @param int  $id    the order ID
-	 * @param bool $force true to permanently delete order, false to move to trash
+	 * @param int  $id    The order ID.
+	 * @param bool $force True to permanently delete order, false to move to trash.
 	 *
-	 * @return array|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
+	 * @return array<string, string>|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
 	 */
-	public function delete_order( int $id, bool $force = false ) {
+	public function delete_order( int $id, bool $force = false ): array|WP_Error {
 		$validated_id = $this->validate_request( $id, 'shop_order', 'delete' );
 
 		if ( is_wp_error( $validated_id ) ) {
@@ -377,9 +375,9 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int $id the order ID
+	 * @param int $id The order ID.
 	 *
-	 * @return array
+	 * @return array<string, array<int, array<string, mixed>>> Order notes data.
 	 */
 	public function get_order_notes( int $id ): array {
 		$args = array(
@@ -399,11 +397,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			if ( ! $note instanceof WP_Comment ) {
 				continue;
 			}
+			$comment_id    = (int) $note->comment_ID;
 			$order_notes[] = array(
-				'id'            => $note->comment_ID,
+				'id'            => $comment_id,
 				'created_at'    => $this->server->format_datetime( $note->comment_date_gmt ),
 				'note'          => $note->comment_content,
-				'customer_note' => get_comment_meta( $note->comment_ID, 'is_customer_note', true ) ? true : false,
+				'customer_note' => (bool) get_comment_meta( $comment_id, 'is_customer_note', true ),
 			);
 		}
 
@@ -415,7 +414,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $args request arguments for filtering query
+	 * @param array<string, mixed> $args Request arguments for filtering query.
 	 *
 	 * @return WP_Query
 	 */
@@ -480,7 +479,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	/**
 	 * Ping method to check API status.
 	 *
-	 * @return array
+	 * @return array<string, string> Status response.
 	 */
 	public function ping(): array {
 		return array(

@@ -3,6 +3,24 @@
 final class Dianxiaomi {
 	protected static ?Dianxiaomi $_instance = null;
 
+	/** @var Dianxiaomi_API API instance */
+	public Dianxiaomi_API $api;
+
+	/** @var array<string, mixed> Dianxiaomi fields configuration */
+	public array $dianxiaomi_fields;
+
+	/** @var string Plugin identifier */
+	public string $plugin = '';
+
+	/** @var bool Whether to use track button */
+	public bool $use_track_button = false;
+
+	/** @var string Custom domain for tracking */
+	public string $custom_domain = '';
+
+	/** @var array<int, string> Available couriers */
+	public array $couriers = array();
+
 	/**
 	 * Singleton instance method.
 	 */
@@ -123,7 +141,8 @@ final class Dianxiaomi {
 		echo '</select>';
 		echo '<br><a href="options-general.php?page=dianxiaomi-setting-admin">' . esc_html__( 'Update carrier list', 'wc_dianxiaomi' ) . '</a>';
 		echo '<input type="hidden" id="dianxiaomi_tracking_provider_hidden" value="' . esc_attr( $selected_provider ) . '"/>';
-		echo '<input type="hidden" id="dianxiaomi_couriers_selected" value="' . esc_attr( $this->couriers ) . '"/>';
+		$couriers_json = wp_json_encode( $this->couriers );
+		echo '<input type="hidden" id="dianxiaomi_couriers_selected" value="' . esc_attr( $couriers_json !== false ? $couriers_json : '[]' ) . '"/>';
 
 		foreach ( $this->dianxiaomi_fields as $field ) {
 			if ( $field['type'] === 'date' ) {
@@ -135,7 +154,7 @@ final class Dianxiaomi {
 						'placeholder' => $field['placeholder'],
 						'description' => $field['description'],
 						'class'       => $field['class'],
-						'value'       => $date ? wpdate( 'Y-m-d', $date ) : '',
+						'value'       => $date ? dianxiaomi_wpdate( 'Y-m-d', $date ) : '',
 					)
 				);
 			} else {

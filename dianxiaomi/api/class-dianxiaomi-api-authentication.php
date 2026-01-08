@@ -23,12 +23,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 if ( ! function_exists( 'getallheaders' ) ) {
+	/**
+	 * Get all HTTP headers.
+	 *
+	 * @return array<string, string> HTTP headers.
+	 */
 	function getallheaders(): array {
 		$headers = array();
 		foreach ( $_SERVER as $name => $value ) {
 			if ( substr( $name, 0, 5 ) === 'HTTP_' ) {
 				$header_key             = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', substr( $name, 5 ) ) ) ) );
-				$headers[ $header_key ] = $value;
+				$headers[ $header_key ] = (string) $value;
 			}
 		}
 		return $headers;

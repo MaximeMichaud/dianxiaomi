@@ -97,10 +97,10 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $base_args    required arguments for the query (e.g. `post_type`, etc)
-	 * @param array $request_args arguments provided in the request
+	 * @param array<string, mixed> $base_args    Required arguments for the query (e.g. `post_type`, etc).
+	 * @param array<string, mixed> $request_args Arguments provided in the request.
 	 *
-	 * @return array
+	 * @return array<string, mixed> Merged query arguments.
 	 */
 	protected function merge_query_args( array $base_args, array $request_args ): array {
 		$args = $base_args;
@@ -160,10 +160,10 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array  $data the resource data
-	 * @param object $res  the resource object (e.g WC_Order)
+	 * @param array<string, mixed> $data The resource data.
+	 * @param object               $res  The resource object (e.g WC_Order).
 	 *
-	 * @return array
+	 * @return array<string, mixed> Resource data with optional meta.
 	 */
 	public function maybe_add_meta( array $data, object $res ): array {
 		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) && method_exists( $res, 'get_id' ) ) {
@@ -191,13 +191,13 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array  $data   the full data array for the resource
-	 * @param object $res    the object that provided the response data, e.g. WC_Coupon or WC_Order
-	 * @param array  $fields list of fields requested to be returned
+	 * @param array<string, mixed>    $data   The full data array for the resource.
+	 * @param object                  $res    The object that provided the response data, e.g. WC_Coupon or WC_Order.
+	 * @param array<int, string>|null $fields List of fields requested to be returned.
 	 *
-	 * @return array tableau de données filtré
+	 * @return array<string, mixed> Filtered data array.
 	 */
-	public function filter_response_fields( array $data, object $res, ?array $fields ) {
+	public function filter_response_fields( array $data, object $res, ?array $fields ): array {
 		if ( empty( $fields ) ) {
 			return $data;
 		}
@@ -209,7 +209,10 @@ class Dianxiaomi_API_Resource {
 		foreach ( $fields as $field ) {
 			if ( strpos( $field, '.' ) !== false ) {
 				list( $name, $value ) = explode( '.', $field );
-				$sub_fields[ $name ] = $value;
+				if ( ! isset( $sub_fields[ $name ] ) ) {
+					$sub_fields[ $name ] = array();
+				}
+				$sub_fields[ $name ][] = $value;
 			}
 		}
 
@@ -265,7 +268,7 @@ class Dianxiaomi_API_Resource {
 				return array( 'message' => sprintf( __( 'Permanently deleted %s', 'dianxiaomi' ), $resource_name ) );
 			} else {
 				// translators: %s: resource name
-				$this->server->send_status( '202' );
+				$this->server->send_status( 202 );
 				// translators: %s: resource name
 				return array( 'message' => sprintf( __( 'Deleted %s', 'dianxiaomi' ), $resource_name ) );
 			}

@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.0
  */
+#[AllowDynamicProperties]
 class Dianxiaomi_API {
 	/** This is the major version for the REST API and takes
 	 * first-order position in endpoint URLs.
@@ -29,6 +30,9 @@ class Dianxiaomi_API {
 
 	/** @var Dianxiaomi_API_Server the REST API server */
 	public Dianxiaomi_API_Server $server;
+
+	/** @var Dianxiaomi_API_Authentication Authentication handler */
+	public Dianxiaomi_API_Authentication $authentication;
 
 	/**
 	 * Setup class.

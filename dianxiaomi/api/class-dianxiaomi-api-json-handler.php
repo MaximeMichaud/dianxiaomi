@@ -44,21 +44,25 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	/**
 	 * Parses the JSON body.
 	 *
+	 * @since 2.1
+	 *
 	 * @param string $data JSON string to be parsed.
 	 *
-	 * @return array Parsed data as an associative array.
+	 * @return array<string, mixed> Parsed data as an associative array.
 	 */
 	public function parse_body( string $data ): array {
-		return json_decode( $data, true );
+		$decoded = json_decode( $data, true );
+		return is_array( $decoded ) ? $decoded : array();
 	}
+
 	/**
 	 * Generate a JSON response given an array of data.
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $data the response data
+	 * @param array<string, mixed> $data The response data.
 	 *
-	 * @return string
+	 * @return string JSON encoded response.
 	 */
 	public function generate_response( array $data ): string {
 		if ( isset( $_GET['_jsonp'] ) ) {
@@ -98,7 +102,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	 *
 	 * @since 1.40
 	 *
-	 * @param array $data Data to encode.
+	 * @param array<int|string, mixed> $data Data to encode.
 	 *
 	 * @return string JSON string.
 	 */

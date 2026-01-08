@@ -332,10 +332,11 @@ class Dianxiaomi_API_Server {
 	 */
 	public function add_pagination_headers( $query ): void {
 		if ( $query instanceof WP_User_Query ) {
-			$page        = $query->page;
+			$page        = isset( $query->query_vars['paged'] ) ? (int) $query->query_vars['paged'] : 1;
 			$single      = count( $query->get_results() ) > 1;
 			$total       = $query->get_total();
-			$total_pages = $query->total_pages;
+			$per_page    = isset( $query->query_vars['number'] ) ? (int) $query->query_vars['number'] : 10;
+			$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
 		} else {
 			$page        = $query->get( 'paged' );
 			$single      = $query->is_single();

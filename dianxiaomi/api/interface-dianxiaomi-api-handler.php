@@ -34,9 +34,9 @@ interface Dianxiaomi_API_Handler {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string $data
+	 * @param string $data Raw request body.
 	 *
-	 * @return array
+	 * @return array<string, mixed> Parsed request data.
 	 */
 	public function parse_body( string $data ): array;
 
@@ -45,9 +45,9 @@ interface Dianxiaomi_API_Handler {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $data
+	 * @param array<string, mixed> $data Response data.
 	 *
-	 * @return string
+	 * @return string Generated response.
 	 */
 	public function generate_response( array $data ): string;
 }
