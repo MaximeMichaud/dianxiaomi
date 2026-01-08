@@ -7,7 +7,7 @@ Enhances WooCommerce by adding tracking numbers and carrier names to orders, wit
 This is our maintained version of the Dianxiaomi plugin. We are releasing it as open source to share our work with the community and benefit from collaborative improvements.
 
 **What we maintain:**
-- PHP 8.1+ compatibility (8.2, 8.3 untested)
+- PHP 8.1+ compatibility
 - WooCommerce 10.x compatibility
 - HPOS (High-Performance Order Storage) support
 
@@ -17,7 +17,19 @@ This is our maintained version of the Dianxiaomi plugin. We are releasing it as 
 |--------------|------------------------------|
 | WordPress    | 5.8+                         |
 | WooCommerce  | 8.0+ (tested up to 10.x)     |
-| PHP          | 8.1+ (8.2, 8.3 untested)     |
+| PHP          | 8.1+                         |
+
+### PHP Version Compatibility
+
+| PHP Version | CI Tests | Production Tested |
+|-------------|----------|-------------------|
+| 8.1         | ✅        | ✅                 |
+| 8.2         | ✅        | ✅                 |
+| 8.3         | ✅        | ✅                 |
+| 8.4         | ✅        | ❌                 |
+| 8.5         | ✅        | ❌                 |
+
+> **Note:** PHP 8.4 and 8.5 pass all CI tests (PHPCS, PHPStan, Psalm, PHPUnit) but have not been tested in a production environment.
 
 ## Installation
 
