@@ -89,7 +89,8 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 			return;
 		}
 		$version = '1.0.0';
-		wp_enqueue_style( 'dianxiaomi_settings_chosen', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.min.css', array(), $version );
+		// Use WooCommerce's SelectWoo/Select2 styles (already bundled).
+		wp_enqueue_style( 'select2' );
 		wp_enqueue_style( 'dianxiaomi_settings_styles', plugins_url( basename( __DIR__ ) ) . '/assets/css/admin.css', array(), $version );
 	}
 
@@ -101,11 +102,11 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 			return;
 		}
 		$version = '1.0.0';
-		wp_enqueue_script( 'dianxiaomi_settings_chosen_jquery', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_settings_chosen_proto', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
+		// Use WooCommerce's SelectWoo (already bundled).
+		wp_enqueue_script( 'selectWoo' );
 		wp_enqueue_script( 'dianxiaomi_settings_util', plugins_url( basename( __DIR__ ) ) . '/assets/js/util.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_settings_couriers', plugins_url( basename( __DIR__ ) ) . '/assets/js/couriers.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_settings_script', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_script', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array( 'selectWoo' ), $version, true );
 	}
 
 	public function add_plugin_page(): void {
@@ -227,7 +228,7 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 
 	public function couriers_callback(): void {
 		$couriers = isset( $this->options['couriers'] ) ? explode( ',', $this->options['couriers'] ) : array();
-		echo '<select data-placeholder="Please select couriers" id="couriers_select" class="chosen-select" multiple style="width:100%">';
+		echo '<select data-placeholder="Please select couriers" id="couriers_select" class="wc-enhanced-select" multiple style="width:100%">';
 		echo '</select>';
 		echo '<input type="hidden" id="couriers" name="dianxiaomi_option_name[couriers]" value="' . esc_attr( implode( ',', $couriers ) ) . '"/>';
 		echo '<br><a href="https://www.dianxiaomi.com/settings/courier" target="_blank">' . esc_html__( 'Update carrier list', 'dianxiaomi' ) . '</a>';

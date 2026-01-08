@@ -28,7 +28,7 @@ var dianxiaomi_woocommerce_tracking_onload = function () {
 
 	function set_dianxiaomi_tracking_provider() {
 
-		jQuery('#dianxiaomi_tracking_provider').change(function () {
+		jQuery('#dianxiaomi_tracking_provider').on('change', function () {
 			jQuery.each(fields_id, function (index, item) {
 				hide_input_and_label(item);
 			});
@@ -88,9 +88,12 @@ var dianxiaomi_woocommerce_tracking_onload = function () {
 			str += '>' + courier['name'] + '</option>';
 			jQuery('#dianxiaomi_tracking_provider').append(str);
 		});
-//		jQuery('#dianxiaomi_tracking_provider').val(selected_provider);
-		jQuery('#dianxiaomi_tracking_provider').trigger("chosen:updated");
-		jQuery('#dianxiaomi_tracking_provider_chosen').css({width: '100%'});
+		// Initialize SelectWoo on the dropdown.
+		jQuery('#dianxiaomi_tracking_provider').selectWoo({
+			width: '100%',
+			allowClear: true,
+			placeholder: jQuery('#dianxiaomi_tracking_provider').data('placeholder') || ''
+		});
 
 		providers = {};
 		jQuery.each(couriers, function (index, courier) {

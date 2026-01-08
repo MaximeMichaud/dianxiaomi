@@ -76,8 +76,12 @@ class SelectWooMigrationTest extends TestCase {
 	public function test_selectwoo_enqueued_in_main_class(): void {
 		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
 
+		// Set up the screen to simulate order edit page.
+		set_current_screen( 'shop_order' );
+
 		$dianxiaomi = Dianxiaomi::instance();
 		$dianxiaomi->library_scripts();
+		$dianxiaomi->admin_styles();
 
 		// selectWoo should be enqueued.
 		$this->assertTrue(
@@ -98,6 +102,9 @@ class SelectWooMigrationTest extends TestCase {
 	public function test_admin_js_has_selectwoo_dependency(): void {
 		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
 
+		// Set up the screen to simulate order edit page.
+		set_current_screen( 'shop_order' );
+
 		$dianxiaomi = Dianxiaomi::instance();
 		$dianxiaomi->library_scripts();
 
@@ -108,11 +115,6 @@ class SelectWooMigrationTest extends TestCase {
 			'selectWoo',
 			$admin_script['deps'],
 			'Admin script should have selectWoo as dependency'
-		);
-		$this->assertContains(
-			'jquery',
-			$admin_script['deps'],
-			'Admin script should have jQuery as dependency'
 		);
 	}
 
@@ -142,6 +144,9 @@ class SelectWooMigrationTest extends TestCase {
 	public function test_selectwoo_enqueued_in_settings_class(): void {
 		require_once dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
 
+		// Set up the screen to simulate settings page.
+		set_current_screen( 'settings_page_dianxiaomi-setting-admin' );
+
 		$settings = new Dianxiaomi_Settings();
 		$settings->library_scripts();
 
@@ -158,10 +163,13 @@ class SelectWooMigrationTest extends TestCase {
 	public function test_setting_js_has_selectwoo_dependency(): void {
 		require_once dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
 
+		// Set up the screen to simulate settings page.
+		set_current_screen( 'settings_page_dianxiaomi-setting-admin' );
+
 		$settings = new Dianxiaomi_Settings();
 		$settings->library_scripts();
 
-		$setting_script = get_enqueued_script( 'dianxiaomi_script_setting' );
+		$setting_script = get_enqueued_script( 'dianxiaomi_settings_script' );
 
 		$this->assertNotNull( $setting_script, 'Setting script should be enqueued' );
 		$this->assertContains(

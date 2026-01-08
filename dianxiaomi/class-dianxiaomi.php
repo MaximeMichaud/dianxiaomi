@@ -140,7 +140,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 		$version = '1.40'; // plugin version
-		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.min.css', array(), $version );
+		// Use WooCommerce's SelectWoo/Select2 styles (already bundled).
+		wp_enqueue_style( 'select2' );
 		wp_enqueue_style( 'dianxiaomi_styles', plugin_dir_url( __FILE__ ) . 'assets/css/admin.css', array(), $version );
 	}
 
@@ -152,11 +153,11 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 		$version = '1.40'; // plugin version
-		wp_enqueue_script( 'dianxiaomi_script_chosen_jquery', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_chosen_proto', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
+		// Use WooCommerce's SelectWoo (already bundled).
+		wp_enqueue_script( 'selectWoo' );
 		wp_enqueue_script( 'dianxiaomi_script_util', plugin_dir_url( __FILE__ ) . 'assets/js/util.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_script_couriers', plugin_dir_url( __FILE__ ) . 'assets/js/couriers.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_admin', plugin_dir_url( __FILE__ ) . 'assets/js/admin.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_script_admin', plugin_dir_url( __FILE__ ) . 'assets/js/admin.js', array( 'selectWoo' ), $version, true );
 	}
 
 	/**
@@ -194,7 +195,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		wp_nonce_field( 'dianxiaomi_save_meta_box', 'dianxiaomi_nonce' );
 
 		echo '<div id="dianxiaomi_wrapper">';
-		echo '<p class="form-field"><label for="dianxiaomi_tracking_provider">' . esc_html__( 'Carrier:', 'wc_dianxiaomi' ) . '</label><br/><select id="dianxiaomi_tracking_provider" name="dianxiaomi_tracking_provider" class="chosen_select" style="width:100%">';
+		echo '<p class="form-field"><label for="dianxiaomi_tracking_provider">' . esc_html__( 'Carrier:', 'wc_dianxiaomi' ) . '</label><br/><select id="dianxiaomi_tracking_provider" name="dianxiaomi_tracking_provider" class="wc-enhanced-select" style="width:100%">';
 		if ( $selected_provider === '' ) {
 			$selected_text = 'selected="selected"';
 		} else {

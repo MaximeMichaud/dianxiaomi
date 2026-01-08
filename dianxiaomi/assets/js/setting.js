@@ -16,8 +16,11 @@ jQuery(function () {
         });
 
         jQuery('#couriers_select').val(selected_couriers);
-        jQuery('#couriers_select').chosen();
-	    jQuery('#couriers_select').trigger('chosen:updated');
+        // Initialize SelectWoo on the multi-select dropdown.
+        jQuery('#couriers_select').selectWoo({
+            width: '100%',
+            placeholder: jQuery('#couriers_select').data('placeholder') || 'Please select couriers'
+        });
     }
 
     function set_track_message_demo(){
@@ -28,13 +31,13 @@ jQuery(function () {
         );
     }
 
-    jQuery('#couriers_select').change(function () {
+    jQuery('#couriers_select').on('change', function () {
         var couriers_select = jQuery('#couriers_select').val();
         var value = (couriers_select) ? couriers_select.join(',') : '';
         jQuery('#couriers').val(value);
     });
 
-    jQuery('#plugin').change(function () {
+    jQuery('#plugin').on('change', function () {
         if (jQuery(this).val() == 'dianxiaomi') {
             jQuery('#couriers').parent().parent().show();
             jQuery('#track_message_demo_1').parent().parent().show();
@@ -62,11 +65,11 @@ jQuery(function () {
         }
     }
 
-    jQuery('#track_message_1').keyup(function () {
+    jQuery('#track_message_1').on('keyup', function () {
         set_track_message_demo();
     });
 
-    jQuery('#track_message_2').keyup(function () {
+    jQuery('#track_message_2').on('keyup', function () {
         set_track_message_demo();
     });
 });
