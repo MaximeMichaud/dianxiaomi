@@ -33,9 +33,9 @@ if ( ! function_exists( 'getallheaders' ) ) {
 	function getallheaders(): array {
 		$headers = array();
 		foreach ( $_SERVER as $name => $value ) {
-			if ( substr( $name, 0, 5 ) === 'HTTP_' ) {
+			if ( is_string( $name ) && substr( $name, 0, 5 ) === 'HTTP_' ) {
 				$header_key             = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', substr( $name, 5 ) ) ) ) );
-				$headers[ $header_key ] = (string) $value;
+				$headers[ $header_key ] = is_string( $value ) ? $value : '';
 			}
 		}
 		return $headers;
@@ -51,7 +51,7 @@ if ( ! function_exists( 'getallheaders' ) ) {
  *
  * @since       1
  */
-class Dianxiaomi_API_Authentication {
+final class Dianxiaomi_API_Authentication {
 
 	public function __construct() {
 		add_filter( 'dianxiaomi_api_check_authentication', array( $this, 'authenticate' ), 0 );
@@ -78,7 +78,7 @@ class Dianxiaomi_API_Authentication {
 		$key     = 'AFTERSHIP_WP_KEY';
 		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
 		$key2    = 'DIANXIAOMI-WP-KEY';
-		$qskey   = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;  // Sanitize input
+		$qskey   = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;
 		// Vérification de la clé API
 		$api_key = $headers[ $key ] ?? $headers[ $key1 ] ?? $headers[ $key2 ] ?? $qskey;
 		if ( empty( $api_key ) ) {
@@ -87,12 +87,17 @@ class Dianxiaomi_API_Authentication {
 		// Valider la clé API et obtenir l'utilisateur
 		$user = $this->get_user_by_api_key( $api_key );
 		// Génération du nonce si la clé API est valide
-		$nonce             = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
+		$nonce             = isset( $_REQUEST['_wpnonce'] ) && is_string( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
 		$_GET['_wpnonce']  = $nonce;
 		$_POST['_wpnonce'] = $nonce;
 		// Vérification du nonce pour les requêtes GET et POST
 		// Vérification du nonce
-		$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : ( isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '' );
+		$wpnonce = '';
+		if ( isset( $_GET['_wpnonce'] ) && is_string( $_GET['_wpnonce'] ) ) {
+			$wpnonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+		} elseif ( isset( $_POST['_wpnonce'] ) && is_string( $_POST['_wpnonce'] ) ) {
+			$wpnonce = sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) );
+		}
 		if ( ! wp_verify_nonce( $wpnonce, 'dianxiaomi_action' ) ) {
 			throw new Exception( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 		}

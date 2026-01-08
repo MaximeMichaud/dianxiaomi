@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 1.10
  */
-class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
+final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	/** @var string the route base */
 	protected string $base = '/orders';
 
@@ -149,29 +149,31 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
-		$date_created  = $order->get_date_created();
-		$date_modified = $order->get_date_modified();
+		$date_created   = $order->get_date_created();
+		$date_modified  = $order->get_date_modified();
+		$date_completed = $order->get_date_completed();
+		$date_paid      = $order->get_date_paid();
 
 		$order_data = array(
 			'id'                        => $order->get_id(),
 			'order_number'              => $order->get_order_number(),
 			'created_at'                => $date_created ? $this->server->format_datetime( $date_created->date( 'Y-m-d H:i:s' ) ) : '',
 			'updated_at'                => $date_modified ? $this->server->format_datetime( $date_modified->date( 'Y-m-d H:i:s' ) ) : '',
-			'completed_at'              => $order->get_date_completed() ? $this->server->format_datetime( $order->get_date_completed()->date( 'Y-m-d H:i:s' ) ) : '',
+			'completed_at'              => $date_completed ? $this->server->format_datetime( $date_completed->date( 'Y-m-d H:i:s' ) ) : '',
 			'status'                    => $order->get_status(),
 			'currency'                  => $order->get_currency(),
 			'total'                     => wc_format_decimal( $order->get_total(), 2 ),
 			'subtotal'                  => wc_format_decimal( $this->get_order_subtotal( $order ), 2 ),
 			'total_line_items_quantity' => $order->get_item_count(),
 			'total_tax'                 => wc_format_decimal( $order->get_total_tax(), 2 ),
-			'total_shipping'            => wc_format_decimal( $order->get_total_shipping(), 2 ),
+			'total_shipping'            => wc_format_decimal( $order->get_shipping_total(), 2 ),
 			'shipping_tax'              => wc_format_decimal( $order->get_shipping_tax(), 2 ),
 			'total_discount'            => wc_format_decimal( $order->get_total_discount(), 2 ),
 			'shipping_methods'          => $order->get_shipping_method(),
 			'payment_details'           => array(
 				'method_id'    => $order->get_payment_method(),
 				'method_title' => $order->get_payment_method_title(),
-				'paid'         => $order->get_date_paid() ? $order->get_date_paid()->date( 'Y-m-d H:i:s' ) : null,
+				'paid'         => $date_paid ? $date_paid->date( 'Y-m-d H:i:s' ) : null,
 			),
 			'billing_address'           => array(
 				'first_name' => $order->get_billing_first_name(),

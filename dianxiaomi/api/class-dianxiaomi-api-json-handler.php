@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0
  */
-class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
+final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	/**
 	 * Get the content type for the response.
 	 *
@@ -69,7 +69,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	public function generate_response( array $data ): string {
 		if ( isset( $_GET['_jsonp'] ) ) {
 			// Vérification du nonce
-			$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+			$wpnonce = isset( $_GET['_wpnonce'] ) && is_string( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 			if ( ! $wpnonce || ! wp_verify_nonce( $wpnonce, 'dianxiaomi_jsonp' ) ) {
 				status_header( 400 );
 				$data = array(
@@ -92,7 +92,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 				);
 				return $this->encode_json( $data );
 			}
-			$jsonp_callback = sanitize_text_field( wp_unslash( $_GET['_jsonp'] ) );
+			$jsonp_callback = is_string( $_GET['_jsonp'] ) ? sanitize_text_field( wp_unslash( $_GET['_jsonp'] ) ) : '';
 			return htmlspecialchars( $jsonp_callback ) . '(' . $this->encode_json( $data ) . ')';
 		}
 
