@@ -26,6 +26,3 @@ parameters:
         - '#Instanceof between .* and WP_Error will always evaluate to false#'
         - '#Call to function is_wp_error\(\) with array will always evaluate to false#'
         - '#is_wp_error\(array\) will always evaluate to false#'
-        # WooCommerce API access (deprecated but still used) - TODO: refactor to modern API
-        - '#Access to private property WooCommerce::\$api#'
-        - '#Access to property .* on an unknown class WC_API#'

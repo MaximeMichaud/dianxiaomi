@@ -71,7 +71,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 			// Vérification du nonce
 			$wpnonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 			if ( ! $wpnonce || ! wp_verify_nonce( $wpnonce, 'dianxiaomi_jsonp' ) ) {
-				WC()->api->server->send_status( 400 );
+				status_header( 400 );
 				$data = array(
 					array(
 						'code'    => 'dianxiaomi_api_nonce_invalid',
@@ -83,7 +83,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 
 			// JSONP enabled by default
 			if ( ! apply_filters( 'dianxiaomi_api_jsonp_enabled', true ) ) {
-				WC()->api->server->send_status( 400 );
+				status_header( 400 );
 				$data = array(
 					array(
 						'code'    => 'dianxiaomi_api_jsonp_disabled',
