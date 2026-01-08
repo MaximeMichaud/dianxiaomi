@@ -1,6 +1,8 @@
 <?php
 
-final class Dianxiaomi {
+use Dianxiaomi\Interfaces\Subscriber_Interface;
+
+final class Dianxiaomi implements Subscriber_Interface {
 	protected static ?Dianxiaomi $_instance = null;
 
 	/** @var Dianxiaomi_API API instance */
@@ -75,17 +77,31 @@ final class Dianxiaomi {
 	}
 
 	/**
-	 * Register hooks and actions.
+	 * Get subscribed events for the Event Manager.
+	 *
+	 * @return array<string, string|array<int, int|string>>
+	 */
+	public static function get_subscribed_events(): array {
+		return array(
+			'admin_print_scripts'              => 'library_scripts',
+			'in_admin_footer'                  => 'include_footer_script',
+			'admin_print_styles'               => 'admin_styles',
+			'add_meta_boxes'                   => 'add_meta_box',
+			'woocommerce_process_shop_order_meta' => array( 'save_meta_box', 0, 2 ),
+			'plugins_loaded'                   => 'load_plugin_textdomain',
+			'woocommerce_view_order'           => 'display_tracking_info',
+			'woocommerce_email_before_order_table' => 'email_display',
+		);
+	}
+
+	/**
+	 * Register hooks using Event Manager.
+	 *
+	 * @deprecated 1.41 Use Event_Manager::add_subscriber() instead.
 	 */
 	private function register_hooks(): void {
-		add_action( 'admin_print_scripts', array( $this, 'library_scripts' ) );
-		add_action( 'in_admin_footer', array( $this, 'include_footer_script' ) );
-		add_action( 'admin_print_styles', array( $this, 'admin_styles' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
-		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_meta_box' ), 0, 2 );
-		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
-		add_action( 'woocommerce_view_order', array( $this, 'display_tracking_info' ) );
-		add_action( 'woocommerce_email_before_order_table', array( $this, 'email_display' ) );
+		$event_manager = new \Dianxiaomi\EventManagement\Event_Manager();
+		$event_manager->add_subscriber( $this );
 	}
 
 	/**

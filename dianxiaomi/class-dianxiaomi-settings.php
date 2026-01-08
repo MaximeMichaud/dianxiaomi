@@ -20,7 +20,9 @@ if ( ! class_exists( 'Dianxiaomi_Dependencies' ) ) {
 	require_once 'class-dianxiaomi-dependencies.php';
 }
 
-class Dianxiaomi_Settings {
+use Dianxiaomi\Interfaces\Subscriber_Interface;
+
+class Dianxiaomi_Settings implements Subscriber_Interface {
 	/**
 	 * Settings page slug.
 	 */
@@ -46,10 +48,22 @@ class Dianxiaomi_Settings {
 			),
 		);
 
-		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
-		add_action( 'admin_init', array( $this, 'page_init' ) );
-		add_action( 'admin_print_styles', array( $this, 'admin_styles' ) );
-		add_action( 'admin_print_scripts', array( $this, 'library_scripts' ) );
+		$event_manager = new \Dianxiaomi\EventManagement\Event_Manager();
+		$event_manager->add_subscriber( $this );
+	}
+
+	/**
+	 * Get subscribed events for the Event Manager.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function get_subscribed_events(): array {
+		return array(
+			'admin_menu'          => 'add_plugin_page',
+			'admin_init'          => 'page_init',
+			'admin_print_styles'  => 'admin_styles',
+			'admin_print_scripts' => 'library_scripts',
+		);
 	}
 
 	/**
