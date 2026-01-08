@@ -72,7 +72,7 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 						'message' => __( 'Nonce verification failed', 'dianxiaomi' ),
 					),
 				);
-				return wp_json_encode( $data );
+				return $this->encode_json( $data );
 			}
 
 			// JSONP enabled by default
@@ -84,12 +84,26 @@ class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 						'message' => __( 'JSONP support is disabled on this site', 'dianxiaomi' ),
 					),
 				);
-				return wp_json_encode( $data );
+				return $this->encode_json( $data );
 			}
 			$jsonp_callback = sanitize_text_field( wp_unslash( $_GET['_jsonp'] ) );
-			return htmlspecialchars( $jsonp_callback ) . '(' . wp_json_encode( $data ) . ')';
+			return htmlspecialchars( $jsonp_callback ) . '(' . $this->encode_json( $data ) . ')';
 		}
 
-		return wp_json_encode( $data );
+		return $this->encode_json( $data );
+	}
+
+	/**
+	 * Encode data as JSON with fallback to empty object.
+	 *
+	 * @since 1.40
+	 *
+	 * @param array $data Data to encode.
+	 *
+	 * @return string JSON string.
+	 */
+	private function encode_json( array $data ): string {
+		$json = wp_json_encode( $data );
+		return false !== $json ? $json : '{}';
 	}
 }

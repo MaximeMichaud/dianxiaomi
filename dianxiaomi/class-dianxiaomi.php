@@ -173,7 +173,7 @@ final class Dianxiaomi {
 			foreach ( $this->dianxiaomi_fields as $field ) {
 				$field_value = isset( $_POST[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) : '';
 				if ( $field['type'] === 'date' ) {
-					$field_value = strtotime( $field_value );
+					$field_value = (string) strtotime( $field_value );
 				}
 				update_post_meta( $post_id, '_' . $field['id'], sanitize_text_field( $field_value ) );
 			}
@@ -225,6 +225,9 @@ final class Dianxiaomi {
 			return;
 		}
 		$user = get_userdata( $user_id );
+		if ( ! $user ) {
+			return;
+		}
 		if ( isset( $_POST['dianxiaomi_wp_generate_api_key'] ) ) {
 			if ( empty( $user->dianxiaomi_wp_api_key ) ) {
 				$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
@@ -251,7 +254,7 @@ final class Dianxiaomi {
 
 	private function display_order_dianxiaomi( int $order_id, bool $for_email ): void {
 		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( ! $order instanceof WC_Order ) {
 			return;
 		}
 
@@ -304,7 +307,7 @@ final class Dianxiaomi {
 		}
 
 		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( ! $order instanceof WC_Order ) {
 			return;
 		}
 

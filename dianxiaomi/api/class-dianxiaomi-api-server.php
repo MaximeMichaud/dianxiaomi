@@ -80,7 +80,7 @@ class Dianxiaomi_API_Server {
 	);
 	public array $headers = array();
 	public array $files   = array();
-	public object $handler;
+	public Dianxiaomi_API_Handler $handler;
 	public function __construct( string $path ) {
 		if ( ! isset( $_REQUEST['_wpnonce'] ) ) {
 			$_REQUEST['_wpnonce'] = wp_create_nonce( 'dianxiaomi_action' );
@@ -94,7 +94,8 @@ class Dianxiaomi_API_Server {
 				wp_die( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 			}
 		}
-		$this->path           = $path ? $path : ( filter_input( INPUT_SERVER, 'PATH_INFO', FILTER_SANITIZE_STRING ) ?? '/' );
+		$path_info            = filter_input( INPUT_SERVER, 'PATH_INFO', FILTER_SANITIZE_STRING );
+		$this->path           = $path ? $path : ( $path_info ? $path_info : '/' );
 		$this->method         = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
 		$this->params['GET']  = $_GET;
 		$this->params['POST'] = $_POST;
@@ -103,7 +104,9 @@ class Dianxiaomi_API_Server {
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
-		$this->handler = new $handler_class();
+		$handler       = new $handler_class();
+		assert( $handler instanceof Dianxiaomi_API_Handler );
+		$this->handler = $handler;
 	}
 	public function check_authentication(): WP_User|WP_Error {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
@@ -430,8 +433,9 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return string
 	 */
-	public function get_raw_data() {
-		return file_get_contents( 'php://input' );
+	public function get_raw_data(): string {
+		$raw = file_get_contents( 'php://input' );
+		return false !== $raw ? $raw : '';
 	}
 
 	/**
@@ -547,11 +551,13 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @return array
 	 */
-	protected function sort_callback_params( $callback, $provided ) {
+	protected function sort_callback_params( $callback, array $provided ): array {
 		if ( is_array( $callback ) ) {
 			$ref_func = new ReflectionMethod( $callback[0], $callback[1] );
-		} else {
+		} elseif ( $callback instanceof Closure || is_string( $callback ) ) {
 			$ref_func = new ReflectionFunction( $callback );
+		} else {
+			return array();
 		}
 
 		$wanted             = $ref_func->getParameters();

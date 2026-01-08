@@ -108,6 +108,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$orders = array();
 
 		foreach ( $query->posts as $order_id ) {
+			$order_id = $order_id instanceof WP_Post ? $order_id->ID : (int) $order_id;
 			if ( ! $this->is_readable( $order_id ) ) {
 				continue;
 			}
@@ -138,7 +139,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		$order = wc_get_order( $id );
 
-		if ( ! $order ) {
+		if ( ! $order instanceof WC_Order ) {
 			return new WP_Error( 'woocommerce_api_invalid_order', 'Invalid Order', array( 'status' => 404 ) );
 		}
 
@@ -249,6 +250,10 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		$order = wc_get_order( $id );
 
+		if ( ! $order instanceof WC_Order ) {
+			return new WP_Error( 'woocommerce_api_invalid_order', 'Invalid Order', array( 'status' => 404 ) );
+		}
+
 		if ( ! empty( $data['status'] ) ) {
 			$order->update_status( $data['status'], isset( $data['note'] ) ? $data['note'] : '' );
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
@@ -318,7 +323,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		// Obtenir l'objet de commande
 		$order = wc_get_order( $validated_id );
 
-		if ( ! $order ) {
+		if ( ! $order instanceof WC_Order ) {
 			return new WP_Error( 'invalid_order', 'La commande n\'existe pas', array( 'status' => 404 ) );
 		}
 
@@ -383,7 +388,14 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$notes       = get_comments( $args );
 		$order_notes = array();
 
+		if ( ! is_array( $notes ) ) {
+			return array( 'order_notes' => array() );
+		}
+
 		foreach ( $notes as $note ) {
+			if ( ! $note instanceof WP_Comment ) {
+				continue;
+			}
 			$order_notes[] = array(
 				'id'            => $note->comment_ID,
 				'created_at'    => $this->server->format_datetime( $note->comment_date_gmt ),

@@ -65,8 +65,9 @@ class Dianxiaomi_API_Authentication {
 	}
 
 	private function perform_authentication(): WP_User {
-		$headers = getallheaders();
-		$headers = json_decode( wp_json_encode( $headers ), true );
+		$headers      = getallheaders();
+		$headers_json = wp_json_encode( $headers );
+		$headers      = $headers_json ? json_decode( $headers_json, true ) : $headers;
 		$key     = 'AFTERSHIP_WP_KEY';
 		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
 		$key2    = 'DIANXIAOMI-WP-KEY';

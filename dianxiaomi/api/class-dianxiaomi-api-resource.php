@@ -45,6 +45,7 @@ class Dianxiaomi_API_Resource {
 	 */
 	public function __construct( Dianxiaomi_API_Server $server ) {
 		$this->server = $server;
+		/** @phpstan-ignore argument.type */
 		add_filter( 'dianxiaomi_api_endpoints', array( $this, 'register_routes' ) );
 		foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
 			add_filter( "dianxiaomi_api_{$resource}_response", array( $this, 'maybe_add_meta' ), 15, 2 );
@@ -157,8 +158,8 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return array
 	 */
-	public function maybe_add_meta( array $data, object $res ) {
-		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) ) {
+	public function maybe_add_meta( array $data, object $res ): array {
+		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) && method_exists( $res, 'get_id' ) ) {
 			switch ( get_class( $res ) ) {
 				case 'WC_Order':
 					$meta_name = 'order_meta';
@@ -313,8 +314,8 @@ class Dianxiaomi_API_Resource {
 	 *
 	 * @return bool true if the current user has the permissions to perform the context on the post
 	 */
-	private function check_permission( $post, string $context ) {
-		if ( ! is_a( $post, 'WP_Post' ) ) {
+	private function check_permission( $post, string $context ): bool {
+		if ( ! $post instanceof WP_Post ) {
 			$post = get_post( $post );
 		}
 		if ( is_null( $post ) ) {

@@ -2,7 +2,7 @@ includes:
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
     # - vendor/phpstan/phpstan/conf/bleedingEdge.neon  # TODO: Re-enable once all errors are fixed
 parameters:
-    level: 6
+    level: 7
     paths:
         - .
     excludePaths:
