@@ -146,7 +146,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$order = wc_get_order( $id );
 
 		if ( ! $order instanceof WC_Order ) {
-			return new WP_Error( 'woocommerce_api_invalid_order', 'Invalid Order', array( 'status' => 404 ) );
+			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
 		$date_created  = $order->get_date_created();
@@ -264,7 +264,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$order = wc_get_order( $id );
 
 		if ( ! $order instanceof WC_Order ) {
-			return new WP_Error( 'woocommerce_api_invalid_order', 'Invalid Order', array( 'status' => 404 ) );
+			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
 		if ( ! empty( $data['status'] ) ) {
@@ -302,7 +302,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 		$query = $this->query_orders( $filter );
 		if ( ! current_user_can( 'read_private_shop_orders' ) ) {
-			return new WP_Error( 'dianxiaomi_api_user_cannot_read_orders_count', __( 'You do not have permission to read the orders count', 'dianxiaomi' ), array( 'status' => 401 ) );
+			return $this->forbidden( __( 'You do not have permission to read the orders count', 'dianxiaomi' ) );
 		}
 		return array( 'count' => (int) $query->found_posts );
 	}
@@ -327,7 +327,7 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$order = wc_get_order( $validated_id );
 
 		if ( ! $order instanceof WC_Order ) {
-			return new WP_Error( 'invalid_order', 'La commande n\'existe pas', array( 'status' => 404 ) );
+			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
 		// Mettre à jour les métadonnées si elles sont fournies

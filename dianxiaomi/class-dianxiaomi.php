@@ -182,7 +182,13 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 */
 	public function meta_box(): void {
 		global $post;
-		$selected_provider = get_post_meta( $post->ID, '_dianxiaomi_tracking_provider', true );
+		// HPOS compatible: get order object.
+		$order = wc_get_order( $post->ID );
+		if ( ! $order instanceof WC_Order ) {
+			return;
+		}
+
+		$selected_provider = $order->get_meta( '_dianxiaomi_tracking_provider', true );
 
 		// Security nonce for save_meta_box().
 		wp_nonce_field( 'dianxiaomi_save_meta_box', 'dianxiaomi_nonce' );
@@ -203,7 +209,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 
 		foreach ( $this->dianxiaomi_fields as $field ) {
 			if ( $field['type'] === 'date' ) {
-				$date = get_post_meta( $post->ID, '_' . $field['id'], true );
+				$date = $order->get_meta( '_' . $field['id'], true );
 				woocommerce_wp_text_input(
 					array(
 						'id'          => $field['id'],
@@ -222,7 +228,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 						'placeholder' => $field['placeholder'],
 						'description' => $field['description'],
 						'class'       => $field['class'],
-						'value'       => get_post_meta( $post->ID, '_' . $field['id'], true ),
+						'value'       => $order->get_meta( '_' . $field['id'], true ),
 					)
 				);
 			}
@@ -242,17 +248,26 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 
+		// HPOS compatible: get order object.
+		$order = wc_get_order( $post_id );
+		if ( ! $order instanceof WC_Order ) {
+			return;
+		}
+
 		if ( isset( $_POST['dianxiaomi_tracking_number'] ) ) {
 			$tracking_provider = isset( $_POST['dianxiaomi_tracking_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_tracking_provider'] ) ) : '';
-			update_post_meta( $post_id, '_dianxiaomi_tracking_provider', $tracking_provider );
+			$order->update_meta_data( '_dianxiaomi_tracking_provider', $tracking_provider );
 
 			foreach ( $this->dianxiaomi_fields as $field ) {
 				$field_value = isset( $_POST[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) : '';
 				if ( $field['type'] === 'date' ) {
 					$field_value = (string) strtotime( $field_value );
 				}
-				update_post_meta( $post_id, '_' . $field['id'], sanitize_text_field( $field_value ) );
+				$order->update_meta_data( '_' . $field['id'], sanitize_text_field( $field_value ) );
 			}
+
+			// HPOS: save all meta changes at once (more efficient).
+			$order->save();
 		}
 	}
 

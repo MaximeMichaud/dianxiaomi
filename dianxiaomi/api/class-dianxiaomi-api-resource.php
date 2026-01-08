@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 use Dianxiaomi\Interfaces\Subscriber_Interface;
+use Dianxiaomi\Traits\API_Response;
 use Dianxiaomi\Traits\WooCommerce_Helper;
 
 /**
@@ -35,6 +36,7 @@ use Dianxiaomi\Traits\WooCommerce_Helper;
  * @since       1.0
  */
 class Dianxiaomi_API_Resource implements Subscriber_Interface {
+	use API_Response;
 	use WooCommerce_Helper;
 
 	/** @var Dianxiaomi_API_Server the API server */
@@ -206,7 +208,21 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 					$meta_name = 'resource_meta';
 					break;
 			}
-			$data[ $meta_name ] = get_post_meta( $res->get_id() );
+			// HPOS compatible: use get_meta_data() for WC objects, fallback to get_post_meta for others.
+			if ( method_exists( $res, 'get_meta_data' ) ) {
+				$meta_objects      = $res->get_meta_data();
+				$meta_array        = array();
+				foreach ( $meta_objects as $meta ) {
+					$key = $meta->key;
+					if ( ! isset( $meta_array[ $key ] ) ) {
+						$meta_array[ $key ] = array();
+					}
+					$meta_array[ $key ][] = $meta->value;
+				}
+				$data[ $meta_name ] = $meta_array;
+			} else {
+				$data[ $meta_name ] = get_post_meta( $res->get_id() );
+			}
 		}
 		return $data;
 	}
