@@ -143,11 +143,14 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return new WP_Error( 'woocommerce_api_invalid_order', 'Invalid Order', array( 'status' => 404 ) );
 		}
 
+		$date_created  = $order->get_date_created();
+		$date_modified = $order->get_date_modified();
+
 		$order_data = array(
 			'id'                        => $order->get_id(),
 			'order_number'              => $order->get_order_number(),
-			'created_at'                => $this->server->format_datetime( $order->get_date_created()->date( 'Y-m-d H:i:s' ) ),
-			'updated_at'                => $this->server->format_datetime( $order->get_date_modified()->date( 'Y-m-d H:i:s' ) ),
+			'created_at'                => $date_created ? $this->server->format_datetime( $date_created->date( 'Y-m-d H:i:s' ) ) : '',
+			'updated_at'                => $date_modified ? $this->server->format_datetime( $date_modified->date( 'Y-m-d H:i:s' ) ) : '',
 			'completed_at'              => $order->get_date_completed() ? $this->server->format_datetime( $order->get_date_completed()->date( 'Y-m-d H:i:s' ) ) : '',
 			'status'                    => $order->get_status(),
 			'currency'                  => $order->get_currency(),

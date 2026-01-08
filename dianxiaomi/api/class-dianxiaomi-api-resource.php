@@ -81,8 +81,15 @@ class Dianxiaomi_API_Resource {
 			return new WP_Error( "dianxiaomi_api_invalid_{$resource_name}", sprintf( __( 'Invalid %s', 'dianxiaomi' ), $resource_name ), array( 'status' => 404 ) );
 		}
 
+		// For customer type, use ID; for other types, use the post object (which is validated above).
+		$permission_target = 'customer' === $type ? $id : $post;
+		if ( null === $permission_target ) {
+			// translators: %s: resource name
+			return new WP_Error( "dianxiaomi_api_invalid_{$resource_name}", sprintf( __( 'Invalid %s', 'dianxiaomi' ), $resource_name ), array( 'status' => 404 ) );
+		}
+
 		// translators: %1$s: context, %2$s: resource name
-		return $this->check_permission( $post, $context ) ? $id : new WP_Error( "dianxiaomi_api_user_cannot_{$context}_{$resource_name}", sprintf( __( 'You do not have permission to %1$s this %2$s', 'dianxiaomi' ), $context, $resource_name ), array( 'status' => 401 ) );
+		return $this->check_permission( $permission_target, $context ) ? $id : new WP_Error( "dianxiaomi_api_user_cannot_{$context}_{$resource_name}", sprintf( __( 'You do not have permission to %1$s this %2$s', 'dianxiaomi' ), $context, $resource_name ), array( 'status' => 401 ) );
 	}
 
 	/**
@@ -322,6 +329,9 @@ class Dianxiaomi_API_Resource {
 			return false;
 		}
 		$post_type = get_post_type_object( $post->post_type );
+		if ( null === $post_type ) {
+			return false;
+		}
 		switch ( $context ) {
 			case 'read':
 				return current_user_can( $post_type->cap->read_private_posts, $post->ID );

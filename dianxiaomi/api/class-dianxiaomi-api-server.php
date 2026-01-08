@@ -294,6 +294,9 @@ class Dianxiaomi_API_Server {
 		foreach ( $this->get_routes() as $route => $callbacks ) {
 			$data    = array();
 			$route   = preg_replace( '#\(\?P<\w+?>.*?\)#', '$1', $route );
+			if ( null === $route ) {
+				continue;
+			}
 			$methods = array();
 			foreach ( self::$method_map as $name => $bitmask ) {
 				foreach ( $callbacks as $callback ) {
@@ -451,10 +454,16 @@ class Dianxiaomi_API_Server {
 	 */
 	public function parse_datetime( $datetime ) {
 		if ( strpos( $datetime, '.' ) !== false ) {
-			$datetime = preg_replace( '/\.\d+/', '', $datetime );
+			$result = preg_replace( '/\.\d+/', '', $datetime );
+			if ( null !== $result ) {
+				$datetime = $result;
+			}
 		}
 
-		$datetime = preg_replace( '/[+-]\d+:+\d+$/', '+00:00', $datetime );
+		$result = preg_replace( '/[+-]\d+:+\d+$/', '+00:00', $datetime );
+		if ( null !== $result ) {
+			$datetime = $result;
+		}
 
 		try {
 			$datetime = new DateTime( $datetime, new DateTimeZone( 'UTC' ) );
