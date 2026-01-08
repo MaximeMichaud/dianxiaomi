@@ -22,7 +22,7 @@ repos:
         name: PHP_CodeSniffer
         entry: bash -c 'cd dianxiaomi && php vendor/bin/phpcs --standard=phpcs.xml -n'
         language: system
-        types: [php]
+        always_run: true
         pass_filenames: false
 
   # PHPStan (static analysis)
@@ -32,7 +32,7 @@ repos:
         name: PHPStan
         entry: bash -c 'cd dianxiaomi && php vendor/bin/phpstan analyse --memory-limit=1G --no-progress'
         language: system
-        types: [php]
+        always_run: true
         pass_filenames: false
 
   # Psalm (static analysis)
@@ -42,7 +42,7 @@ repos:
         name: Psalm
         entry: bash -c 'cd dianxiaomi && php vendor/bin/psalm --no-progress'
         language: system
-        types: [php]
+        always_run: true
         pass_filenames: false
 
   # Composer validation
@@ -52,5 +52,5 @@ repos:
         name: Composer Validate
         entry: bash -c 'cd dianxiaomi && composer validate --no-interaction 2>&1 | grep -q "is valid" && echo "composer.json is valid"'
         language: system
-        files: dianxiaomi/composer\.json$
+        always_run: true
         pass_filenames: false
