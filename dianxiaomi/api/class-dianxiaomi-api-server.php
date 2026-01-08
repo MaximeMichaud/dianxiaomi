@@ -80,7 +80,7 @@ class Dianxiaomi_API_Server {
 	);
 	public array $headers = array();
 	public array $files   = array();
-	public $handler;
+	public object $handler;
 	public function __construct( string $path ) {
 		if ( ! isset( $_REQUEST['_wpnonce'] ) ) {
 			$_REQUEST['_wpnonce'] = wp_create_nonce( 'dianxiaomi_action' );
@@ -105,7 +105,7 @@ class Dianxiaomi_API_Server {
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
 		$this->handler = new $handler_class();
 	}
-	public function check_authentication() {
+	public function check_authentication(): WP_User|WP_Error {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
 		if ( is_a( $user, 'WP_User' ) ) {
 			wp_set_current_user( $user->ID );
@@ -185,7 +185,7 @@ class Dianxiaomi_API_Server {
 		return $endpoints;
 	}
 
-	public function dispatch() {
+	public function dispatch(): mixed {
 		$method = null;
 		switch ( $this->method ) {
 			case 'HEAD':
@@ -374,7 +374,7 @@ class Dianxiaomi_API_Server {
 	 * @param string $value   Header value
 	 * @param bool   $replace Should we replace the existing header?
 	 */
-	public function header( $key, $value, $replace = true ) {
+	public function header( string $key, string $value, bool $replace = true ): void {
 		header( sprintf( '%s: %s', $key, $value ), $replace );
 	}
 
@@ -391,7 +391,7 @@ class Dianxiaomi_API_Server {
 	 * @param string $link  Target IRI for the link
 	 * @param array  $other Other parameters to send, as an associative array
 	 */
-	public function link_header( $rel, $link, $other = array() ) {
+	public function link_header( string $rel, string $link, array $other = array() ): void {
 		$header = sprintf( '<%s>; rel="%s"', $link, esc_attr( $rel ) );
 
 		foreach ( $other as $key => $value ) {
@@ -594,7 +594,7 @@ class Dianxiaomi_API_Server {
 	 * @since 2.1
 	 * @param int $code HTTP status
 	 */
-	public function send_status( $code ) {
+	public function send_status( int $code ): void {
 		status_header( $code );
 	}
 }

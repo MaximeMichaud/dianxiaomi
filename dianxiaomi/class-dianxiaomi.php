@@ -159,7 +159,7 @@ final class Dianxiaomi {
 	 *
 	 * Function for processing and storing all order downloads.
 	 */
-	public function save_meta_box( $post_id, $post ) {
+	public function save_meta_box( int $post_id, WP_Post $post ): void {
 		// Vérifier le nonce pour la sécurité
 		$dianxiaomi_nonce = isset( $_POST['dianxiaomi_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_nonce'] ) ) : '';
 		if ( ! $dianxiaomi_nonce || ! wp_verify_nonce( $dianxiaomi_nonce, 'dianxiaomi_save_meta_box' ) ) {
@@ -185,7 +185,7 @@ final class Dianxiaomi {
 	 *
 	 * @param WP_User $user
 	 */
-	public function add_api_key_field( $user ) {
+	public function add_api_key_field( WP_User $user ): void {
 		if ( ! current_user_can( 'manage_dianxiaomi' ) || ! current_user_can( 'edit_user', $user->ID ) ) {
 			return;
 		}
@@ -215,7 +215,7 @@ final class Dianxiaomi {
 	 *
 	 * @param int $user_id
 	 */
-	public function generate_api_key( $user_id ) {
+	public function generate_api_key( int $user_id ): void {
 		if ( ! current_user_can( 'edit_user', $user_id ) ) {
 			return;
 		}
@@ -241,7 +241,7 @@ final class Dianxiaomi {
 	 * @param int  $order_id
 	 * @param bool $for_email
 	 */
-	public function display_tracking_info( $order_id, $for_email = false ) {
+	public function display_tracking_info( int $order_id, bool $for_email = false ): void {
 		if ( $this->plugin === 'dianxiaomi' ) {
 			$this->display_order_dianxiaomi( $order_id, $for_email );
 		} elseif ( $this->plugin === 'wc-shipment-tracking' ) {
@@ -249,7 +249,7 @@ final class Dianxiaomi {
 		}
 	}
 
-	private function display_order_dianxiaomi( $order_id, $for_email ) {
+	private function display_order_dianxiaomi( int $order_id, bool $for_email ): void {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			return;
@@ -298,7 +298,7 @@ final class Dianxiaomi {
 		}
 	}
 
-	private function display_order_wc_shipment_tracking( $order_id, $for_email ) {
+	private function display_order_wc_shipment_tracking( int $order_id, bool $for_email ): void {
 		if ( $for_email || ! $this->use_track_button ) {
 			return;
 		}
@@ -339,11 +339,11 @@ final class Dianxiaomi {
 	 *
 	 * @access public
 	 */
-	public function email_display( $order ) {
-		$this->display_tracking_info( $order->id, true );
+	public function email_display( WC_Order $order ): void {
+		$this->display_tracking_info( $order->get_id(), true );
 	}
 
-	private function display_track_button( $tracking_provider, $tracking_number, $required_fields_values ) {
+	private function display_track_button( string $tracking_provider, string $tracking_number, array $required_fields_values ): void {
 		$js = '(function(e,t,n){})(document,"script","trackdog-jssdk")';
 
 		if ( function_exists( 'wc_enqueue_js' ) ) {
@@ -370,7 +370,7 @@ final class Dianxiaomi {
 	}
 
 
-	private function display_track_button_html( $custom_domain, $tracking_number, $tracking_provider ) {
+	private function display_track_button_html( string $custom_domain, string $tracking_number, string $tracking_provider ): void {
 		$css = '<style>.btn{position:relative; border-radius: 4px;text-decoration: none !important; border:2px solid #1e88e5;text-align:left;background-color:#1e88e5;color:#fff !important;font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;} .btn:hover{border-color: #1c95ff;background-color: #1c95ff;} .btn span{font-size: 16px;vertical-align: middle;}.btn.a:focus,.btn.a:hover{border-color:#1c95ff;background-color:#1c95ff;}.btn.a{padding:10px 6px 12px;border-radius:4px;outline:0} .btn.a{background-color:transparent}.btn.a:active,.btn.a:hover{outline:0}*,:after,:before{box-sizing:border-box}.tracking-widget .fluid-input-wrapper{display:block;overflow:hidden}.-has-tracking-number .fluid-input-wrapper{float:left}.tracking-widget input{padding:2px 6px 3px;width:100%}.tracking-widget .btn{float:right;padding:4px 10px 3px 36px;margin-left:7px}.tracking-widget .-has-tracking-number .btn,.tracking-widget .-hidden-tracking-number .btn{float:none}.tracking-widget .text-large{font-size:17.5px;padding:10px 6px 12px}.tracking-widget .btn-large{font-size:17.5px;padding:10px 20px 12px 58px}.tracking-widget .text-small{padding:2px 6px 3px;font-size:12px}.tracking-widget .btn-small{padding:2px 10px 3px 32px;font-size:12px}.icon-trackdog{left:9px;top:7px;width:17px;height:19px}.tracking-widget .btn-small .icon-trackdog{left:9px;top:7px;height:19px;width:16px}.icon-trackdog,.icon-trackdog.-large{height:28px;width:24px}.tracking-widget .btn-large .icon-trackdog{left:20px;top:7px;height:28px;width:24px}.ie9 .tracking-widget .btn-small .icon-trackdog{top:0}.-hidden-tracking-number .btn{margin-left:0}.tracking-widget+.tracking-widget{margin-top:20px}.icon-trackdog{position:absolute;display:inline-block;background-repeat:no-repeat;background-position:0 0}.tracking-widget .icon-trackdog{height:21px}.tracking-copyright{font-size:12px;padding:3px 3px 0;text-align:left}.tracking-preset{line-height:28px}.tracking-preset.large{line-height:47px}.tracking-preset.small{font-size:14px;line-height:24px} .tracking-widget .btn{padding: 1px 20px;}</style>';
 
 		echo wp_kses_post( $css );

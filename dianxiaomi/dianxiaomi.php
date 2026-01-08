@@ -53,7 +53,7 @@ if ( is_woocommerce_active() ) {
 		 * Register this class globally.
 		 */
 		if ( ! function_exists( 'get_dianxiaomi_instance' ) ) {
-			function get_dianxiaomi_instance() {
+			function get_dianxiaomi_instance(): Dianxiaomi {
 				return Dianxiaomi::Instance();
 			}
 		}

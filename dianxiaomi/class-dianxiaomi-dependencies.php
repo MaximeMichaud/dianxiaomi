@@ -6,7 +6,7 @@ class Dianxiaomi_Dependencies {
 	/**
 	 * Initialize the class by fetching active plugins.
 	 */
-	public static function init() {
+	public static function init(): void {
 		self::$active_plugins = (array) get_option( 'active_plugins', array() );
 
 		if ( is_multisite() ) {

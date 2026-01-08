@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 if ( ! function_exists( 'getallheaders' ) ) {
-	function getallheaders() {
+	function getallheaders(): array {
 		$headers = array();
 		foreach ( $_SERVER as $name => $value ) {
 			if ( substr( $name, 0, 5 ) === 'HTTP_' ) {
@@ -50,7 +50,7 @@ class Dianxiaomi_API_Authentication {
 		add_filter( 'dianxiaomi_api_check_authentication', array( $this, 'authenticate' ), 0 );
 	}
 
-	public function authenticate( $user ) {
+	public function authenticate( mixed $user ): WP_User|WP_Error {
 		if ( '/' === get_dianxiaomi_instance()->api->server->path ) {
 			return new WP_User( 0 );
 		}
@@ -64,7 +64,7 @@ class Dianxiaomi_API_Authentication {
 		return $user;
 	}
 
-	private function perform_authentication() {
+	private function perform_authentication(): WP_User {
 		$headers = getallheaders();
 		$headers = json_decode( wp_json_encode( $headers ), true );
 		$key     = 'AFTERSHIP_WP_KEY';
@@ -91,7 +91,7 @@ class Dianxiaomi_API_Authentication {
 		return $user;
 	}
 
-	private function get_user_by_api_key( $api_key ) {
+	private function get_user_by_api_key( string $api_key ): WP_User {
 		global $wpdb;
 		$cache_key = 'dianxiaomi_user_' . md5( $api_key );
 		$user_id   = wp_cache_get( $cache_key );

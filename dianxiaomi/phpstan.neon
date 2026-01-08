@@ -2,7 +2,7 @@ includes:
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
     # - vendor/phpstan/phpstan/conf/bleedingEdge.neon  # TODO: Re-enable once all errors are fixed
 parameters:
-    level: 5
+    level: 6
     paths:
         - .
     excludePaths:
@@ -16,6 +16,8 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     # Ignore known issues from inherited code - TODO: fix these properly
     ignoreErrors:
+        # Array value types - TODO: add proper array<key, value> types later
+        - '#no value type specified in iterable type array#'
         # Dynamic properties (common in WordPress plugins)
         - '#Access to an undefined property#'
         - '#Variable \$dianxiaomi_fields might not be defined#'
