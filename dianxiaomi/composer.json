@@ -44,7 +44,17 @@
     "scripts": {
         "test": "phpunit",
         "phpcs": "phpcs .",
-        "phpstan": "phpstan analyse",
-        "psalm": "psalm"
+        "phpcbf": "phpcbf .",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "psalm": "psalm",
+        "lint": [
+            "@phpcs",
+            "@phpstan",
+            "@psalm"
+        ],
+        "check-all": [
+            "@lint",
+            "@test"
+        ]
     }
 }
