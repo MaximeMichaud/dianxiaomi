@@ -97,16 +97,23 @@ class Dianxiaomi_API {
 	public function handle_api_requests(): void {
 		global $wp;
 
-		if ( ! empty( $_GET['dianxiaomi-api'] ) ) {
+		// Get sanitized API parameter.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked below.
+		$api_param = isset( $_GET['dianxiaomi-api'] ) ? sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api'] ) ) : '';
+		if ( ! empty( $api_param ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized above with sanitize_text_field.
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 			if ( ! wp_verify_nonce( $nonce, 'dianxiaomi_api_nonce' ) ) {
 				wp_die( 'Nonce verification failed', 'Error', array( 'response' => 403 ) );
 			}
-			$wp->query_vars['dianxiaomi-api'] = sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api'] ) );
+			$wp->query_vars['dianxiaomi-api'] = $api_param;
 		}
 
-		if ( ! empty( $_GET['dianxiaomi-api-route'] ) ) {
-			$wp->query_vars['dianxiaomi-api-route'] = sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api-route'] ) );
+		// Get sanitized API route parameter.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Route parsing before authentication.
+		$api_route = isset( $_GET['dianxiaomi-api-route'] ) ? sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api-route'] ) ) : '';
+		if ( ! empty( $api_route ) ) {
+			$wp->query_vars['dianxiaomi-api-route'] = $api_route;
 		}
 
 		// REST API request

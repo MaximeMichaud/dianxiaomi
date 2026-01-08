@@ -7,8 +7,9 @@
 
 declare(strict_types=1);
 
-class Dianxiaomi_Dependencies {
-	private static array $active_plugins = array(); // Initialisation avec un tableau vide
+final class Dianxiaomi_Dependencies {
+	/** @var array<int|string, string> Active plugins list. */
+	private static array $active_plugins = array();
 
 	/**
 	 * Initialize the class by fetching active plugins.
@@ -24,11 +25,11 @@ class Dianxiaomi_Dependencies {
 	/**
 	 * Check if a plugin is active.
 	 *
-	 * @param string|array $plugin Path to the plugin file relative to the plugins directory or array of such paths.
+	 * @param string|array<int, string> $plugin Path to the plugin file relative to the plugins directory or array of such paths.
 	 *
 	 * @return bool True if the plugin is active, false otherwise.
 	 */
-	public static function plugin_active_check( $plugin ) {
+	public static function plugin_active_check( string|array $plugin ): bool {
 		if ( ! self::$active_plugins ) {
 			self::init();
 		}
@@ -49,7 +50,7 @@ class Dianxiaomi_Dependencies {
 	 *
 	 * @return bool True if WooCommerce is active, false otherwise.
 	 */
-	public static function woocommerce_active_check() {
+	public static function woocommerce_active_check(): bool {
 		return self::plugin_active_check( 'woocommerce/woocommerce.php' );
 	}
 }

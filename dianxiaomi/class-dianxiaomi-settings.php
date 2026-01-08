@@ -261,14 +261,12 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 			'<input type="text" id="track_message_1" name="dianxiaomi_option_name[track_message_1]" value="%s" style="width:100%%">',
 			isset( $this->options['track_message_1'] ) ? esc_attr( $this->options['track_message_1'] ) : 'Your order was shipped via '
 		);
-		printf( '<br/>' );
+		echo '<br/>';
 		printf(
 			'<input type="text" id="track_message_2" name="dianxiaomi_option_name[track_message_2]" value="%s" style="width:100%%">',
 			isset( $this->options['track_message_2'] ) ? esc_attr( $this->options['track_message_2'] ) : 'Tracking number is '
 		);
-		printf( '<br/>' );
-		printf( '<br/>' );
-		printf( '<b>Demo:</b>' );
+		echo '<br/><br/><b>Demo:</b>';
 		printf(
 			'<div id="track_message_demo_1" style="width:100%%"></div>'
 		);

@@ -16,7 +16,7 @@ use Dianxiaomi\Interfaces\Subscriber_Interface;
  *
  * @since 1.41
  */
-class Event_Manager {
+final class Event_Manager {
 	/**
 	 * Registered subscribers.
 	 *
