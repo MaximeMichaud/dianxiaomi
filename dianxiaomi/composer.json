@@ -39,7 +39,7 @@
         "php-stubs/wordpress-stubs": "~6.8.0",
         "vimeo/psalm": "^6.14",
         "humanmade/psalm-plugin-wordpress": "^3.0",
-        "phpunit/phpunit": "^10.0"
+        "phpunit/phpunit": "^12.5"
     },
     "scripts": {
         "test": "phpunit",
