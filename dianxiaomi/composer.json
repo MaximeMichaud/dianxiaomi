@@ -12,9 +12,11 @@
     },
     "license": "GPL",
     "autoload": {
+        "classmap": [
+            "inc/"
+        ],
         "psr-4": {
-            "dianxiaomi\\dianxiaomi\\": "src/",
-            "App\\": "src/"
+            "Dianxiaomi\\Tests\\": "tests/"
         }
     },
     "authors": [

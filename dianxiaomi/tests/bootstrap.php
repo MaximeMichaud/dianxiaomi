@@ -913,6 +913,23 @@ if ( ! function_exists( 'add_filter' ) ) {
 	}
 }
 
+if ( ! function_exists( 'remove_filter' ) ) {
+	function remove_filter( string $hook_name, $callback, int $priority = 10 ): bool {
+		global $wp_filters;
+		if ( ! isset( $wp_filters[ $hook_name ] ) ) {
+			return false;
+		}
+		foreach ( $wp_filters[ $hook_name ] as $index => $filter ) {
+			if ( $filter['callback'] === $callback && $filter['priority'] === $priority ) {
+				unset( $wp_filters[ $hook_name ][ $index ] );
+				$wp_filters[ $hook_name ] = array_values( $wp_filters[ $hook_name ] );
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( string $hook_name, ...$args ): void {
 		global $wp_actions;
