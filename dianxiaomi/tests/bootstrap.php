@@ -998,6 +998,39 @@ if ( ! function_exists( 'is_admin' ) ) {
 	}
 }
 
+/**
+ * Mock get_current_screen() - returns null by default in tests.
+ * Tests can override this by setting $GLOBALS['current_screen'].
+ */
+if ( ! function_exists( 'get_current_screen' ) ) {
+	function get_current_screen(): ?object {
+		if ( isset( $GLOBALS['current_screen'] ) ) {
+			return $GLOBALS['current_screen'];
+		}
+		return null;
+	}
+}
+
+/**
+ * Helper to set current screen for testing.
+ *
+ * @param string $screen_id The screen ID to simulate.
+ * @return object The mock screen object.
+ */
+function set_current_screen( string $screen_id ): object {
+	$screen     = new stdClass();
+	$screen->id = $screen_id;
+	$GLOBALS['current_screen'] = $screen;
+	return $screen;
+}
+
+/**
+ * Reset current screen.
+ */
+function reset_current_screen(): void {
+	unset( $GLOBALS['current_screen'] );
+}
+
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( string $capability, ...$args ): bool {
 		return true;
@@ -1099,6 +1132,7 @@ function reset_all(): void {
 	reset_wc_data();
 	reset_wp_options();
 	reset_wp_post_meta();
+	reset_current_screen();
 }
 
 /**

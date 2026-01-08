@@ -45,7 +45,8 @@ final class Dianxiaomi {
 	 */
 	private function includes(): void {
 		include_once 'dianxiaomi-fields.php';
-		$this->dianxiaomi_fields = $dianxiaomi_fields;
+		// phpcs:ignore WordPress.PHP.DontExtract.extract_undefined
+		$this->dianxiaomi_fields = isset( $dianxiaomi_fields ) && is_array( $dianxiaomi_fields ) ? $dianxiaomi_fields : array();
 
 		include_once 'class-dianxiaomi-api.php';
 		include_once 'class-dianxiaomi-settings.php';
@@ -60,7 +61,14 @@ final class Dianxiaomi {
 			$this->plugin           = $options['plugin'] ?? '';
 			$this->use_track_button = $options['use_track_button'] ?? false;
 			$this->custom_domain    = $options['custom_domain'] ?? '';
-			$this->couriers         = $options['couriers'] ?? array();
+
+			// Handle couriers as string (comma-separated) or array.
+			$couriers = $options['couriers'] ?? array();
+			if ( is_string( $couriers ) ) {
+				$this->couriers = array_filter( array_map( 'trim', explode( ',', $couriers ) ) );
+			} else {
+				$this->couriers = is_array( $couriers ) ? $couriers : array();
+			}
 
 			$this->register_hooks();
 		}
@@ -88,18 +96,38 @@ final class Dianxiaomi {
 	}
 
 	/**
-	 * Enqueue admin styles.
+	 * Check if current screen is a WooCommerce order page.
+	 *
+	 * @return bool True if on order edit screen.
+	 */
+	private function is_order_screen(): bool {
+		$screen = get_current_screen();
+		if ( null === $screen ) {
+			return false;
+		}
+		// Support both legacy (shop_order) and HPOS (woocommerce_page_wc-orders) screens.
+		return in_array( $screen->id, array( 'shop_order', 'woocommerce_page_wc-orders' ), true );
+	}
+
+	/**
+	 * Enqueue admin styles for order pages only.
 	 */
 	public function admin_styles(): void {
+		if ( ! $this->is_order_screen() ) {
+			return;
+		}
 		$version = '1.40'; // plugin version
 		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.min.css', array(), $version );
 		wp_enqueue_style( 'dianxiaomi_styles', plugin_dir_url( __FILE__ ) . 'assets/css/admin.css', array(), $version );
 	}
 
 	/**
-	 * Enqueue scripts for the admin panel.
+	 * Enqueue scripts for order pages only.
 	 */
 	public function library_scripts(): void {
+		if ( ! $this->is_order_screen() ) {
+			return;
+		}
 		$version = '1.40'; // plugin version
 		wp_enqueue_script( 'dianxiaomi_script_chosen_jquery', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_script_chosen_proto', plugin_dir_url( __FILE__ ) . 'assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
@@ -109,9 +137,12 @@ final class Dianxiaomi {
 	}
 
 	/**
-	 * Enqueue footer scripts.
+	 * Enqueue footer scripts for order pages only.
 	 */
 	public function include_footer_script(): void {
+		if ( ! $this->is_order_screen() ) {
+			return;
+		}
 		$version = '1.40'; // Version de votre plugin
 		wp_enqueue_script( 'dianxiaomi_script_footer', plugin_dir_url( __FILE__ ) . 'assets/js/footer.js', array(), $version, true );
 	}
@@ -129,6 +160,9 @@ final class Dianxiaomi {
 	public function meta_box(): void {
 		global $post;
 		$selected_provider = get_post_meta( $post->ID, '_dianxiaomi_tracking_provider', true );
+
+		// Security nonce for save_meta_box().
+		wp_nonce_field( 'dianxiaomi_save_meta_box', 'dianxiaomi_nonce' );
 
 		echo '<div id="dianxiaomi_wrapper">';
 		echo '<p class="form-field"><label for="dianxiaomi_tracking_provider">' . esc_html__( 'Carrier:', 'wc_dianxiaomi' ) . '</label><br/><select id="dianxiaomi_tracking_provider" name="dianxiaomi_tracking_provider" class="chosen_select" style="width:100%">';
@@ -397,15 +431,20 @@ final class Dianxiaomi {
 
 		echo wp_kses_post( $css );
 
-		$go_url = esc_url( $custom_domain );
+		// Build tracking URL.
+		$go_url = $custom_domain;
 
-		// check is 17track add params
-		if ( strpos( $custom_domain, '17track' ) > -1 ) {
+		// Check if 17track and add tracking params.
+		if ( strpos( $custom_domain, '17track' ) !== false ) {
 			$go_url = $custom_domain . $tracking_number . '&pf=wc_d&pf_c=' . rawurlencode( $tracking_provider );
 		}
 
-		// show track button
-		$html = '<div class="tracking-widget"><div class="tracking-widget -has-tracking-number"><a class="btn" href="//' . $go_url . '" target="_blank"><span class="btn_text">' . esc_html__( 'Track', 'wc_dianxiaomi' ) . '</span></a></div></div>';
+		// Only add protocol prefix if URL doesn't already have a scheme.
+		$has_scheme = preg_match( '#^https?://#i', $go_url ) === 1;
+		$href       = $has_scheme ? esc_url( $go_url ) : '//' . esc_url( $go_url );
+
+		// Show track button.
+		$html = '<div class="tracking-widget"><div class="tracking-widget -has-tracking-number"><a class="btn" href="' . $href . '" target="_blank"><span class="btn_text">' . esc_html__( 'Track', 'wc_dianxiaomi' ) . '</span></a></div></div>';
 		echo wp_kses_post( $html );
 	}
 }

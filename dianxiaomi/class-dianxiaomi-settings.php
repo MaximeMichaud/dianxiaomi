@@ -21,7 +21,15 @@ if ( ! class_exists( 'Dianxiaomi_Dependencies' ) ) {
 }
 
 class Dianxiaomi_Settings {
+	/**
+	 * Settings page slug.
+	 */
+	private const PAGE_SLUG = 'dianxiaomi-setting-admin';
+
+	/** @var array<string, mixed> */
 	private array $options;
+
+	/** @var array<int, array<string, mixed>> */
 	private array $plugins;
 
 	public function __construct() {
@@ -44,19 +52,44 @@ class Dianxiaomi_Settings {
 		add_action( 'admin_print_scripts', array( $this, 'library_scripts' ) );
 	}
 
-	public function admin_styles(): void {
-		$version = '1.0.0'; // Définir la version de la ressource
-		wp_enqueue_style( 'dianxiaomi_styles_chosen', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.min.css', array(), $version );
-		wp_enqueue_style( 'dianxiaomi_styles', plugins_url( basename( __DIR__ ) ) . '/assets/css/admin.css', array(), $version );
+	/**
+	 * Check if current screen is the settings page.
+	 *
+	 * @return bool True if on settings page.
+	 */
+	private function is_settings_screen(): bool {
+		$screen = get_current_screen();
+		if ( null === $screen ) {
+			return false;
+		}
+		return 'settings_page_' . self::PAGE_SLUG === $screen->id;
 	}
 
+	/**
+	 * Enqueue admin styles for settings page only.
+	 */
+	public function admin_styles(): void {
+		if ( ! $this->is_settings_screen() ) {
+			return;
+		}
+		$version = '1.0.0';
+		wp_enqueue_style( 'dianxiaomi_settings_chosen', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.min.css', array(), $version );
+		wp_enqueue_style( 'dianxiaomi_settings_styles', plugins_url( basename( __DIR__ ) ) . '/assets/css/admin.css', array(), $version );
+	}
+
+	/**
+	 * Enqueue scripts for settings page only.
+	 */
 	public function library_scripts(): void {
-		$version = '1.0.0'; // Définir la version de la ressource
-		wp_enqueue_script( 'dianxiaomi_styles_chosen_jquery', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_styles_chosen_proto', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_util', plugins_url( basename( __DIR__ ) ) . '/assets/js/util.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_couriers', plugins_url( basename( __DIR__ ) ) . '/assets/js/couriers.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_script_setting', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array(), $version, true );
+		if ( ! $this->is_settings_screen() ) {
+			return;
+		}
+		$version = '1.0.0';
+		wp_enqueue_script( 'dianxiaomi_settings_chosen_jquery', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.jquery.min.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_chosen_proto', plugins_url( basename( __DIR__ ) ) . '/assets/plugin/chosen/chosen.proto.min.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_util', plugins_url( basename( __DIR__ ) ) . '/assets/js/util.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_couriers', plugins_url( basename( __DIR__ ) ) . '/assets/js/couriers.js', array(), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_script', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array(), $version, true );
 	}
 
 	public function add_plugin_page(): void {
