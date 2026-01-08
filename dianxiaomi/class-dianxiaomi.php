@@ -1,4 +1,11 @@
 <?php
+/**
+ * Main Dianxiaomi class.
+ *
+ * @package Dianxiaomi
+ */
+
+declare(strict_types=1);
 
 use Dianxiaomi\Interfaces\Subscriber_Interface;
 

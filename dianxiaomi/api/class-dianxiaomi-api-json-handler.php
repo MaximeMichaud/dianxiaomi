@@ -20,6 +20,8 @@
  * Gestion des erreurs : Amélioration de la gestion des erreurs pour les réponses JSONP.
  */
 
+declare(strict_types=1);
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly

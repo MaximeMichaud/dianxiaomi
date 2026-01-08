@@ -23,6 +23,8 @@
  * 5. Documentation : Mise à jour des commentaires et de la documentation inline pour refléter les changements.
  */
 
+declare(strict_types=1);
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly

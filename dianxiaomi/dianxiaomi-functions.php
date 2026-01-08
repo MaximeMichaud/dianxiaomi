@@ -5,6 +5,8 @@
  * @package dianxiaomi
  */
 
+declare(strict_types=1);
+
 if ( ! class_exists( 'Dianxiaomi_Dependencies' ) ) {
 	require_once 'class-dianxiaomi-dependencies.php';
 }

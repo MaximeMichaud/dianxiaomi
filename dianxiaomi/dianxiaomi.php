@@ -16,6 +16,8 @@
  * @package dianxiaomi
  */
 
+declare(strict_types=1);
+
 /**
  * Security Note: Prevent direct access to the file.
  */

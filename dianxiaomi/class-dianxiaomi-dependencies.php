@@ -1,4 +1,11 @@
 <?php
+/**
+ * Dianxiaomi Dependencies.
+ *
+ * @package Dianxiaomi
+ */
+
+declare(strict_types=1);
 
 class Dianxiaomi_Dependencies {
 	private static array $active_plugins = array(); // Initialisation avec un tableau vide

@@ -11,6 +11,8 @@
  * @version     1.30
  */
 
+declare(strict_types=1);
+
 /** Alex 02/03/2024
  * Utilisation de tableaux courts :
  * Remplacement des array() par [] pour une syntaxe plus moderne et concise.

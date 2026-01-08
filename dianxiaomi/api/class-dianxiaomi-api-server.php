@@ -40,6 +40,8 @@
  *    - Mise à jour des commentaires et annotations pour mieux documenter les changements et les attentes.
  */
 
+declare(strict_types=1);
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
