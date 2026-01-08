@@ -14,6 +14,9 @@
     <!-- Exclude node_modules if present -->
     <exclude-pattern>*/node_modules/*</exclude-pattern>
 
+    <!-- Exclude tests directory (uses PHPUnit, not WordPress standards) -->
+    <exclude-pattern>*/tests/*</exclude-pattern>
+
     <!-- Show sniff codes in all reports -->
     <arg value="ps"/>
     <arg name="colors"/>
