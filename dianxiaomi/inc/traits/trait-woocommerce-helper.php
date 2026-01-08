@@ -36,7 +36,7 @@ trait WooCommerce_Helper {
 	 *
 	 * @return WC_Order|null Order object or null if not found.
 	 */
-	protected function get_order( int $order_id ): ?WC_Order {
+	protected function get_wc_order( int $order_id ): ?WC_Order {
 		if ( ! $this->is_woocommerce_active() ) {
 			return null;
 		}
@@ -115,7 +115,7 @@ trait WooCommerce_Helper {
 	 */
 	protected function get_order_meta( WC_Order|int $order, string $meta_key, bool $single = true ): mixed {
 		if ( is_int( $order ) ) {
-			$order = $this->get_order( $order );
+			$order = $this->get_wc_order( $order );
 		}
 
 		if ( ! $order instanceof WC_Order ) {
@@ -136,7 +136,7 @@ trait WooCommerce_Helper {
 	 */
 	protected function update_order_meta( WC_Order|int $order, string $meta_key, mixed $meta_value ): bool {
 		if ( is_int( $order ) ) {
-			$order = $this->get_order( $order );
+			$order = $this->get_wc_order( $order );
 		}
 
 		if ( ! $order instanceof WC_Order ) {

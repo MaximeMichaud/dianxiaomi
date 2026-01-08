@@ -19,6 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
 
+use Dianxiaomi\Interfaces\Subscriber_Interface;
+use Dianxiaomi\Traits\WooCommerce_Helper;
+
 /**
  * Dianxiaomi API Resource class.
  *
@@ -31,12 +34,32 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since       1.0
  */
-class Dianxiaomi_API_Resource {
+class Dianxiaomi_API_Resource implements Subscriber_Interface {
+	use WooCommerce_Helper;
+
 	/** @var Dianxiaomi_API_Server the API server */
 	protected Dianxiaomi_API_Server $server;
 
 	/** @var string sub-classes override this to set a resource-specific base route */
 	protected string $base;
+
+	/**
+	 * Get subscribed events for this class.
+	 *
+	 * @since 1.41
+	 *
+	 * @return array<string, string|array{0: string, 1: int}|array{0: string, 1: int, 2: int}> Array of event subscriptions.
+	 */
+	public static function get_subscribed_events(): array {
+		return array(
+			'dianxiaomi_api_endpoints'          => 'register_routes',
+			'dianxiaomi_api_order_response'     => array( 'maybe_add_meta', 15, 2 ),
+			'dianxiaomi_api_coupon_response'    => array( 'maybe_add_meta', 15, 2 ),
+			'dianxiaomi_api_customer_response'  => array( 'maybe_add_meta', 15, 2 ),
+			'dianxiaomi_api_product_response'   => array( 'maybe_add_meta', 15, 2 ),
+			'dianxiaomi_api_report_response'    => array( 'maybe_add_meta', 15, 2 ),
+		);
+	}
 
 	/**
 	 * Setup class.

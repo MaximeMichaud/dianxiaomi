@@ -421,12 +421,12 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @return WP_Query
 	 */
 	private function query_orders( array $args ): WP_Query {
-		$woo_version = $this->get_woocommerce_version_number();
+		$woo_version = $this->get_woocommerce_version();
 
 		$query_args = array(
 			'fields'      => 'ids',
 			'post_type'   => 'shop_order',
-			'post_status' => $woo_version >= '2.2' ? array_keys( wc_get_order_statuses() ) : 'publish',
+			'post_status' => version_compare( $woo_version, '2.2', '>=' ) ? array_keys( wc_get_order_statuses() ) : 'publish',
 		);
 
 		if ( ! empty( $args['status'] ) ) {
@@ -443,22 +443,6 @@ class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$query_args = array_merge( $query_args, $args );
 
 		return new WP_Query( $query_args );
-	}
-
-	/**
-	 * Helper method to get the WooCommerce version number.
-	 *
-	 * @return string|null
-	 */
-	private function get_woocommerce_version_number(): ?string {
-		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-
-		$plugin_folder = get_plugins( '/woocommerce' );
-		$plugin_file   = 'woocommerce.php';
-
-		return $plugin_folder[ $plugin_file ]['Version'] ?? null;
 	}
 
 	/**
