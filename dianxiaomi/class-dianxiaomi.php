@@ -241,16 +241,19 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * Order Downloads Save.
 	 *
 	 * Function for processing and storing all order downloads.
+	 *
+	 * @param int              $post_id Order/Post ID.
+	 * @param WP_Post|WC_Order $post    Post object (legacy) or Order object (HPOS).
 	 */
-	public function save_meta_box( int $post_id, WP_Post $post ): void {
+	public function save_meta_box( int $post_id, object $post ): void {
 		// Vérifier le nonce pour la sécurité
 		$dianxiaomi_nonce = isset( $_POST['dianxiaomi_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_nonce'] ) ) : '';
 		if ( ! $dianxiaomi_nonce || ! wp_verify_nonce( $dianxiaomi_nonce, 'dianxiaomi_save_meta_box' ) ) {
 			return;
 		}
 
-		// HPOS compatible: get order object.
-		$order = wc_get_order( $post_id );
+		// HPOS compatible: get order object (works for both WP_Post and WC_Order).
+		$order = $post instanceof WC_Order ? $post : wc_get_order( $post_id );
 		if ( ! $order instanceof WC_Order ) {
 			return;
 		}

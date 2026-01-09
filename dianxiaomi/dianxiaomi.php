@@ -46,6 +46,12 @@ function before_woocommerce_hpos(): void {
  */
 if ( is_woocommerce_active() ) {
 	/**
+	 * Load required interfaces and classes.
+	 */
+	require_once __DIR__ . '/inc/interfaces/interface-subscriber.php';
+	require_once __DIR__ . '/inc/event-management/class-event-manager.php';
+
+	/**
 	 * Define the Dianxiaomi class if it hasn't been defined.
 	 */
 	if ( ! class_exists( 'Dianxiaomi' ) ) {
