@@ -40,6 +40,51 @@ $wc_orders              = array();
 $wc_products            = array();
 
 // =============================================================================
+// WORDPRESS CLASSES
+// =============================================================================
+
+/**
+ * Mock WP_Post class for HPOS compatibility testing.
+ */
+if ( ! class_exists( 'WP_Post' ) ) {
+	class WP_Post {
+		public int $ID;
+		public string $post_type = 'shop_order';
+		public string $post_status = 'wc-processing';
+		public string $post_title = '';
+		public string $post_content = '';
+
+		public function __construct( int $id = 0 ) {
+			$this->ID = $id;
+		}
+
+		public static function get_instance( int $id ): ?WP_Post {
+			if ( $id <= 0 ) {
+				return null;
+			}
+			return new self( $id );
+		}
+	}
+}
+
+/**
+ * Mock WP_User class.
+ */
+if ( ! class_exists( 'WP_User' ) ) {
+	class WP_User {
+		public int $ID;
+		public string $user_login = 'admin';
+		public string $user_email = 'admin@example.com';
+		public string $display_name = 'Admin User';
+		public ?string $dianxiaomi_wp_api_key = null;
+
+		public function __construct( int $id = 1 ) {
+			$this->ID = $id;
+		}
+	}
+}
+
+// =============================================================================
 // WOOCOMMERCE CLASSES
 // =============================================================================
 
@@ -1085,25 +1130,6 @@ if ( ! function_exists( 'wp_die' ) ) {
 }
 
 // =============================================================================
-// MOCK HELPER CLASS
-// =============================================================================
-
-/**
- * Mock Dianxiaomi_Dependencies class.
- */
-if ( ! class_exists( 'Dianxiaomi_Dependencies' ) ) {
-	class Dianxiaomi_Dependencies {
-		public static function woocommerce_active_check(): bool {
-			return true;
-		}
-
-		public static function plugin_active_check( $paths ): bool {
-			return true;
-		}
-	}
-}
-
-// =============================================================================
 // TEST HELPER FUNCTIONS
 // =============================================================================
 
@@ -1224,5 +1250,20 @@ function set_post_meta( int $post_id, string $key, $value ): void {
 wp_register_script( 'selectWoo', 'https://example.com/wp-content/plugins/woocommerce/assets/js/selectWoo/selectWoo.full.min.js', array( 'jquery' ), '1.0.9' );
 wp_register_style( 'select2', 'https://example.com/wp-content/plugins/woocommerce/assets/css/select2.css', array(), '4.0.3' );
 
-// Load Composer autoloader.
+// Load Composer autoloader (handles namespaced classes).
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
+
+// =============================================================================
+// LOAD PLUGIN CLASSES (simulates production loading order)
+// =============================================================================
+
+// Load plugin classes in the same order as dianxiaomi.php does in production.
+// This ensures tests verify the actual production loading behavior.
+$plugin_dir = dirname( __DIR__ );
+
+require_once $plugin_dir . '/dianxiaomi-functions.php';
+require_once $plugin_dir . '/inc/interfaces/interface-subscriber.php';
+require_once $plugin_dir . '/inc/event-management/class-event-manager.php';
+require_once $plugin_dir . '/class-dianxiaomi-dependencies.php';
+require_once $plugin_dir . '/class-dianxiaomi.php';
+require_once $plugin_dir . '/class-dianxiaomi-settings.php';
