@@ -1,17 +1,23 @@
 <?php
 /**
  * Plugin Name: Dianxiaomi Enhanced for WooCommerce
- * Plugin URI: http://dianxiaomi.com/
+ * Plugin URI: https://github.com/MaximeMichaud/dianxiaomi
  * Description: Enhances WooCommerce by adding tracking numbers, carrier names and automating tracking number imports to Dianxiaomi.
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Dianxiaomi & Maxime Michaud
  * Author URI: https://github.com/MaximeMichaud/dianxiaomi
  * Requires at least: 5.8
- * Requires PHP: 8.0
- * WC requires at least: 4.0
- * WC tested up to: 9.3
+ * Tested up to: 6.9
+ * Requires PHP: 8.1
+ * WC requires at least: 8.0
+ * WC tested up to: 10.4
  * Requires Plugins: woocommerce
- * Copyright: © Dianxiaomi, Maxime Michaud
+ * Text Domain: dianxiaomi
+ * Domain Path: /languages
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * Copyright 2015-2026 Dianxiaomi, Maxime Michaud
  *
  * @package dianxiaomi
  */
@@ -22,6 +28,17 @@ declare(strict_types=1);
  * Security Note: Prevent direct access to the file.
  */
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
+
+// Plugin version constants.
+define( 'DIANXIAOMI_VERSION', '1.5.2' );
+define( 'DIANXIAOMI_WP_VERSION', '5.8' );
+define( 'DIANXIAOMI_WP_VERSION_TESTED', '6.9' );
+define( 'DIANXIAOMI_PHP_VERSION', '8.1' );
+define( 'DIANXIAOMI_WC_VERSION', '8.0' );
+define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.4' );
+define( 'DIANXIAOMI_FILE', __FILE__ );
+define( 'DIANXIAOMI_PATH', plugin_dir_path( DIANXIAOMI_FILE ) );
+define( 'DIANXIAOMI_URL', plugin_dir_url( DIANXIAOMI_FILE ) );
 
 /**
  * Include required functions if they are not already defined.
