@@ -10,7 +10,13 @@
 
 declare(strict_types=1);
 
+namespace Dianxiaomi\Tests\Integration;
+
 use PHPUnit\Framework\TestCase;
+use Dianxiaomi;
+use ReflectionMethod;
+use WC_Order;
+use WP_Post;
 
 /**
  * Test class for HPOS compatibility.

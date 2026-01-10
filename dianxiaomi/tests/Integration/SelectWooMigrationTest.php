@@ -7,7 +7,11 @@
 
 declare(strict_types=1);
 
+namespace Dianxiaomi\Tests\Integration;
+
 use PHPUnit\Framework\TestCase;
+use Dianxiaomi;
+use Dianxiaomi_Settings;
 
 /**
  * Test class for SelectWoo migration.
@@ -38,7 +42,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that Chosen scripts are NOT enqueued in main class.
 	 */
 	public function test_chosen_scripts_not_enqueued_in_main_class(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 
 		$dianxiaomi = Dianxiaomi::instance();
 		$dianxiaomi->library_scripts();
@@ -58,7 +62,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that Chosen styles are NOT enqueued in main class.
 	 */
 	public function test_chosen_styles_not_enqueued_in_main_class(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 
 		$dianxiaomi = Dianxiaomi::instance();
 		$dianxiaomi->admin_styles();
@@ -74,7 +78,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that selectWoo is enqueued in main class.
 	 */
 	public function test_selectwoo_enqueued_in_main_class(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 
 		// Set up the screen to simulate order edit page.
 		set_current_screen( 'shop_order' );
@@ -100,7 +104,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that admin.js has selectWoo as dependency.
 	 */
 	public function test_admin_js_has_selectwoo_dependency(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 
 		// Set up the screen to simulate order edit page.
 		set_current_screen( 'shop_order' );
@@ -122,7 +126,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that Chosen scripts are NOT enqueued in settings class.
 	 */
 	public function test_chosen_scripts_not_enqueued_in_settings_class(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi-settings.php';
 
 		$settings = new Dianxiaomi_Settings();
 		$settings->library_scripts();
@@ -142,7 +146,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that selectWoo is enqueued in settings class.
 	 */
 	public function test_selectwoo_enqueued_in_settings_class(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi-settings.php';
 
 		// Set up the screen to simulate settings page.
 		set_current_screen( 'settings_page_dianxiaomi-setting-admin' );
@@ -161,7 +165,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that setting.js has selectWoo as dependency.
 	 */
 	public function test_setting_js_has_selectwoo_dependency(): void {
-		require_once dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
+		require_once dirname( __DIR__, 2 ) . '/class-dianxiaomi-settings.php';
 
 		// Set up the screen to simulate settings page.
 		set_current_screen( 'settings_page_dianxiaomi-setting-admin' );
@@ -183,7 +187,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that chosen folder has been removed.
 	 */
 	public function test_chosen_folder_removed(): void {
-		$chosen_path = dirname( __DIR__ ) . '/assets/plugin/chosen';
+		$chosen_path = dirname( __DIR__, 2 ) . '/assets/plugin/chosen';
 
 		$this->assertDirectoryDoesNotExist(
 			$chosen_path,
@@ -195,7 +199,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that admin.js file contains selectWoo initialization.
 	 */
 	public function test_admin_js_contains_selectwoo(): void {
-		$admin_js_path = dirname( __DIR__ ) . '/assets/js/admin.js';
+		$admin_js_path = dirname( __DIR__, 2 ) . '/assets/js/admin.js';
 		$content       = file_get_contents( $admin_js_path );
 
 		$this->assertStringContainsString(
@@ -219,7 +223,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that setting.js file contains selectWoo initialization.
 	 */
 	public function test_setting_js_contains_selectwoo(): void {
-		$setting_js_path = dirname( __DIR__ ) . '/assets/js/setting.js';
+		$setting_js_path = dirname( __DIR__, 2 ) . '/assets/js/setting.js';
 		$content         = file_get_contents( $setting_js_path );
 
 		$this->assertStringContainsString(
@@ -243,7 +247,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that PHP files use wc-enhanced-select class instead of chosen classes.
 	 */
 	public function test_php_uses_wc_enhanced_select_class(): void {
-		$main_class_path = dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		$main_class_path = dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 		$content         = file_get_contents( $main_class_path );
 
 		$this->assertStringContainsString(
@@ -262,7 +266,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that settings PHP file uses wc-enhanced-select class.
 	 */
 	public function test_settings_php_uses_wc_enhanced_select_class(): void {
-		$settings_path = dirname( __DIR__ ) . '/class-dianxiaomi-settings.php';
+		$settings_path = dirname( __DIR__, 2 ) . '/class-dianxiaomi-settings.php';
 		$content       = file_get_contents( $settings_path );
 
 		$this->assertStringContainsString(
@@ -281,7 +285,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that duplicate link has been removed from meta_box.
 	 */
 	public function test_duplicate_link_removed(): void {
-		$main_class_path = dirname( __DIR__ ) . '/class-dianxiaomi.php';
+		$main_class_path = dirname( __DIR__, 2 ) . '/class-dianxiaomi.php';
 		$content         = file_get_contents( $main_class_path );
 
 		// Count occurrences of the update carrier list link in meta_box section.
@@ -301,7 +305,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test selectWoo initialization options in admin.js.
 	 */
 	public function test_admin_js_selectwoo_options(): void {
-		$admin_js_path = dirname( __DIR__ ) . '/assets/js/admin.js';
+		$admin_js_path = dirname( __DIR__, 2 ) . '/assets/js/admin.js';
 		$content       = file_get_contents( $admin_js_path );
 
 		// Check for proper selectWoo options.
@@ -321,7 +325,7 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test selectWoo initialization options in setting.js.
 	 */
 	public function test_setting_js_selectwoo_options(): void {
-		$setting_js_path = dirname( __DIR__ ) . '/assets/js/setting.js';
+		$setting_js_path = dirname( __DIR__, 2 ) . '/assets/js/setting.js';
 		$content         = file_get_contents( $setting_js_path );
 
 		// Check for proper selectWoo options.
@@ -341,8 +345,8 @@ class SelectWooMigrationTest extends TestCase {
 	 * Test that JavaScript uses modern event binding.
 	 */
 	public function test_js_uses_modern_event_binding(): void {
-		$admin_js_path   = dirname( __DIR__ ) . '/assets/js/admin.js';
-		$setting_js_path = dirname( __DIR__ ) . '/assets/js/setting.js';
+		$admin_js_path   = dirname( __DIR__, 2 ) . '/assets/js/admin.js';
+		$setting_js_path = dirname( __DIR__, 2 ) . '/assets/js/setting.js';
 
 		$admin_content   = file_get_contents( $admin_js_path );
 		$setting_content = file_get_contents( $setting_js_path );

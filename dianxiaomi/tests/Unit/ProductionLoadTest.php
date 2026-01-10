@@ -10,7 +10,10 @@
 
 declare(strict_types=1);
 
+namespace Dianxiaomi\Tests\Unit;
+
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 /**
  * Test class for production-like loading scenarios.
@@ -23,7 +26,7 @@ class ProductionLoadTest extends TestCase {
 	 * This simulates production where Composer autoload is not available.
 	 */
 	public function test_plugin_files_can_be_loaded_without_autoload(): void {
-		$plugin_dir = dirname( __DIR__ );
+		$plugin_dir = dirname( __DIR__, 2 );
 
 		// Core files that must be loadable.
 		$required_files = array(
@@ -47,7 +50,7 @@ class ProductionLoadTest extends TestCase {
 	 * before class-dianxiaomi.php to avoid "Interface not found" errors.
 	 */
 	public function test_interface_loaded_before_main_class(): void {
-		$plugin_file = dirname( __DIR__ ) . '/dianxiaomi.php';
+		$plugin_file = dirname( __DIR__, 2 ) . '/dianxiaomi.php';
 		$content     = file_get_contents( $plugin_file );
 
 		// Check that interface-subscriber.php is required before class-dianxiaomi.php.
@@ -63,7 +66,7 @@ class ProductionLoadTest extends TestCase {
 	 * Test that Event_Manager is loaded before main class.
 	 */
 	public function test_event_manager_loaded_before_main_class(): void {
-		$plugin_file = dirname( __DIR__ ) . '/dianxiaomi.php';
+		$plugin_file = dirname( __DIR__, 2 ) . '/dianxiaomi.php';
 		$content     = file_get_contents( $plugin_file );
 
 		$event_manager_pos = strpos( $content, 'class-event-manager.php' );
@@ -116,7 +119,7 @@ class ProductionLoadTest extends TestCase {
 	 * Test that API trait files exist.
 	 */
 	public function test_api_trait_files_exist(): void {
-		$plugin_dir = dirname( __DIR__ );
+		$plugin_dir = dirname( __DIR__, 2 );
 
 		$trait_files = array(
 			'/inc/traits/trait-api-response.php',
@@ -136,7 +139,7 @@ class ProductionLoadTest extends TestCase {
 	 * to avoid "Trait not found" errors in production (where Composer autoload is not used).
 	 */
 	public function test_api_traits_loaded_before_api_resource(): void {
-		$api_file = dirname( __DIR__ ) . '/class-dianxiaomi-api.php';
+		$api_file = dirname( __DIR__, 2 ) . '/class-dianxiaomi-api.php';
 		$content  = file_get_contents( $api_file );
 
 		// Check that trait files are included.

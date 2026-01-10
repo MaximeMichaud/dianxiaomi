@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-namespace Dianxiaomi\Tests;
+namespace Dianxiaomi\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Dianxiaomi\EventManagement\Event_Manager;
