@@ -171,6 +171,10 @@ class Dianxiaomi_API {
 		include_once 'api/class-dianxiaomi-api-authentication.php';
 		$this->authentication = new Dianxiaomi_API_Authentication();
 
+		// Traits required by API Resource class (must be loaded before the class that uses them)
+		include_once __DIR__ . '/inc/traits/trait-api-response.php';
+		include_once __DIR__ . '/inc/traits/trait-woocommerce-helper.php';
+
 		include_once 'api/class-dianxiaomi-api-resource.php';
 
 		// self api

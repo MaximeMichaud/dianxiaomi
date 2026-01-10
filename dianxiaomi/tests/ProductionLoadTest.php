@@ -111,4 +111,73 @@ class ProductionLoadTest extends TestCase {
 			'Event_Manager must exist in the Dianxiaomi\EventManagement namespace'
 		);
 	}
+
+	/**
+	 * Test that API trait files exist.
+	 */
+	public function test_api_trait_files_exist(): void {
+		$plugin_dir = dirname( __DIR__ );
+
+		$trait_files = array(
+			'/inc/traits/trait-api-response.php',
+			'/inc/traits/trait-woocommerce-helper.php',
+		);
+
+		foreach ( $trait_files as $file ) {
+			$full_path = $plugin_dir . $file;
+			$this->assertFileExists( $full_path, "Required trait file missing: {$file}" );
+		}
+	}
+
+	/**
+	 * Test that API traits are loaded before API Resource class.
+	 *
+	 * The class-dianxiaomi-api.php must load traits before class-dianxiaomi-api-resource.php
+	 * to avoid "Trait not found" errors in production (where Composer autoload is not used).
+	 */
+	public function test_api_traits_loaded_before_api_resource(): void {
+		$api_file = dirname( __DIR__ ) . '/class-dianxiaomi-api.php';
+		$content  = file_get_contents( $api_file );
+
+		// Check that trait files are included.
+		$api_response_pos       = strpos( $content, 'trait-api-response.php' );
+		$woocommerce_helper_pos = strpos( $content, 'trait-woocommerce-helper.php' );
+		$api_resource_pos       = strpos( $content, 'class-dianxiaomi-api-resource.php' );
+
+		$this->assertNotFalse( $api_response_pos, 'trait-api-response.php must be included in class-dianxiaomi-api.php' );
+		$this->assertNotFalse( $woocommerce_helper_pos, 'trait-woocommerce-helper.php must be included in class-dianxiaomi-api.php' );
+		$this->assertNotFalse( $api_resource_pos, 'class-dianxiaomi-api-resource.php must be included in class-dianxiaomi-api.php' );
+
+		// Verify loading order: traits BEFORE resource class.
+		$this->assertLessThan(
+			$api_resource_pos,
+			$api_response_pos,
+			'trait-api-response.php must be loaded BEFORE class-dianxiaomi-api-resource.php'
+		);
+		$this->assertLessThan(
+			$api_resource_pos,
+			$woocommerce_helper_pos,
+			'trait-woocommerce-helper.php must be loaded BEFORE class-dianxiaomi-api-resource.php'
+		);
+	}
+
+	/**
+	 * Test that API_Response trait exists and is properly defined.
+	 */
+	public function test_api_response_trait_exists(): void {
+		$this->assertTrue(
+			trait_exists( 'Dianxiaomi\Traits\API_Response' ),
+			'API_Response trait must exist in the Dianxiaomi\Traits namespace'
+		);
+	}
+
+	/**
+	 * Test that WooCommerce_Helper trait exists and is properly defined.
+	 */
+	public function test_woocommerce_helper_trait_exists(): void {
+		$this->assertTrue(
+			trait_exists( 'Dianxiaomi\Traits\WooCommerce_Helper' ),
+			'WooCommerce_Helper trait must exist in the Dianxiaomi\Traits namespace'
+		);
+	}
 }
