@@ -25,22 +25,23 @@ trait OrderTestTrait {
 	 */
 	protected function create_test_order( int $id = 1, array $props = array() ): \WC_Order {
 		$defaults = array(
-			'status'          => 'processing',
-			'billing_email'   => 'test@example.com',
-			'tracking_number' => '',
+			'status'            => 'processing',
+			'billing_email'     => 'test@example.com',
+			'tracking_number'   => '',
 			'tracking_provider' => '',
 		);
 
 		$props = array_merge( $defaults, $props );
 		$order = new \WC_Order( $id );
 		$order->set_status( $props['status'] );
+		$order->set_billing_email( $props['billing_email'] );
 
 		if ( ! empty( $props['tracking_number'] ) ) {
-			$order->update_meta_data( '_aftership_tracking_number', $props['tracking_number'] );
+			$order->update_meta_data( '_dianxiaomi_tracking_number', $props['tracking_number'] );
 		}
 
 		if ( ! empty( $props['tracking_provider'] ) ) {
-			$order->update_meta_data( '_aftership_tracking_provider_name', $props['tracking_provider'] );
+			$order->update_meta_data( '_dianxiaomi_tracking_provider', $props['tracking_provider'] );
 		}
 
 		return $order;
@@ -56,14 +57,14 @@ trait OrderTestTrait {
 	protected function assert_tracking_saved( \WC_Order $order, string $tracking_number, string $provider = '' ): void {
 		$this->assertSame(
 			$tracking_number,
-			$order->get_meta( '_aftership_tracking_number' ),
+			$order->get_meta( '_dianxiaomi_tracking_number' ),
 			'Tracking number should be saved'
 		);
 
 		if ( ! empty( $provider ) ) {
 			$this->assertSame(
 				$provider,
-				$order->get_meta( '_aftership_tracking_provider_name' ),
+				$order->get_meta( '_dianxiaomi_tracking_provider' ),
 				'Tracking provider should be saved'
 			);
 		}

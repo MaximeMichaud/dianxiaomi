@@ -45,7 +45,7 @@ class HPOSCompatibilityTest extends TestCase {
 		try {
 			$dianxiaomi->save_meta_box( 123, $order );
 			$this->assertTrue( true, 'save_meta_box accepts WC_Order without error' );
-		} catch ( TypeError $e ) {
+		} catch ( \TypeError $e ) {
 			$this->fail( 'save_meta_box should accept WC_Order object: ' . $e->getMessage() );
 		}
 
@@ -74,7 +74,7 @@ class HPOSCompatibilityTest extends TestCase {
 		try {
 			$dianxiaomi->save_meta_box( 456, $post );
 			$this->assertTrue( true, 'save_meta_box accepts WP_Post without error' );
-		} catch ( TypeError $e ) {
+		} catch ( \TypeError $e ) {
 			$this->fail( 'save_meta_box should accept WP_Post object: ' . $e->getMessage() );
 		}
 

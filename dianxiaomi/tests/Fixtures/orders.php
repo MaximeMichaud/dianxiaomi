@@ -39,8 +39,8 @@ return array(
 		'id'     => 1001,
 		'status' => 'on-hold',
 		'meta'   => array(
-			'_aftership_tracking_number'        => 'HPOS123',
-			'_aftership_tracking_provider_name' => 'fedex',
+			'_dianxiaomi_tracking_number'   => 'HPOS123',
+			'_dianxiaomi_tracking_provider' => 'fedex',
 		),
 	),
 );
