@@ -1,0 +1,19 @@
+{
+  "name": "dianxiaomi",
+  "version": "1.5.2",
+  "description": "WooCommerce tracking number plugin",
+  "scripts": {
+    "wp-env": "wp-env",
+    "test": "wp-env run tests-cli --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
+    "test:watch": "wp-env run tests-cli --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit --filter",
+    "start": "wp-env start",
+    "stop": "wp-env stop",
+    "destroy": "wp-env destroy"
+  },
+  "devDependencies": {
+    "@wordpress/env": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

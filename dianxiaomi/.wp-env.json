@@ -1,0 +1,23 @@
+{
+  "core": "WordPress/WordPress#6.8",
+  "phpVersion": "8.2",
+  "plugins": [
+    "https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip",
+    "."
+  ],
+  "config": {
+    "WP_DEBUG": true,
+    "SCRIPT_DEBUG": true
+  },
+  "env": {
+    "tests": {
+      "phpVersion": "8.2",
+      "config": {
+        "WP_DEBUG": true,
+        "WP_TESTS_DOMAIN": "localhost",
+        "WP_TESTS_EMAIL": "admin@example.org",
+        "WP_TESTS_TITLE": "Test Blog"
+      }
+    }
+  }
+}
