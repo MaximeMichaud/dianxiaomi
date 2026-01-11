@@ -321,4 +321,168 @@ class EventManagerTest extends TestCase {
 		// Count should still be 1.
 		$this->assertSame( 1, $callback_count );
 	}
+
+	/**
+	 * Test removing subscriber with priority callbacks.
+	 */
+	public function test_remove_subscriber_with_priority(): void {
+		$subscriber = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array(
+					'my_action' => array( 'handler', 15 ),
+				);
+			}
+
+			public function handler(): void {}
+		};
+
+		$this->event_manager->add_subscriber( $subscriber );
+		$this->assertTrue( $this->event_manager->has_subscriber( $subscriber::class ) );
+
+		$this->event_manager->remove_subscriber( $subscriber );
+		$this->assertFalse( $this->event_manager->has_subscriber( $subscriber::class ) );
+	}
+
+	/**
+	 * Test removing subscriber with multiple callbacks on same hook.
+	 */
+	public function test_remove_subscriber_with_multiple_callbacks(): void {
+		$subscriber = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array(
+					'content_filter' => array(
+						array( 'first_handler', 5 ),
+						array( 'second_handler', 15 ),
+					),
+				);
+			}
+
+			public function first_handler( $c ): mixed { return $c; }
+			public function second_handler( $c ): mixed { return $c; }
+		};
+
+		$this->event_manager->add_subscriber( $subscriber );
+		$this->assertTrue( $this->event_manager->has_subscriber( $subscriber::class ) );
+
+		$this->event_manager->remove_subscriber( $subscriber );
+		$this->assertFalse( $this->event_manager->has_subscriber( $subscriber::class ) );
+		$this->assertCount( 0, $this->event_manager->get_subscribers() );
+	}
+
+	/**
+	 * Test add_callback with custom priority.
+	 */
+	public function test_add_callback_with_priority(): void {
+		$called = false;
+		$callback = function( $value ) use ( &$called ) {
+			$called = true;
+			return $value;
+		};
+
+		$this->event_manager->add_callback( 'priority_test', $callback, 99 );
+
+		apply_filters( 'priority_test', 'test' );
+
+		$this->assertTrue( $called );
+	}
+
+	/**
+	 * Test add_callback with custom accepted_args.
+	 */
+	public function test_add_callback_with_accepted_args(): void {
+		$received_args = array();
+		$callback = function( $a, $b, $c ) use ( &$received_args ) {
+			$received_args = array( $a, $b, $c );
+			return $a;
+		};
+
+		$this->event_manager->add_callback( 'args_test', $callback, 10, 3 );
+
+		apply_filters( 'args_test', 'first', 'second', 'third' );
+
+		$this->assertEquals( array( 'first', 'second', 'third' ), $received_args );
+	}
+
+	/**
+	 * Test remove_callback with custom priority.
+	 */
+	public function test_remove_callback_with_priority(): void {
+		$called_count = 0;
+		$callback = function( $value ) use ( &$called_count ) {
+			++$called_count;
+			return $value;
+		};
+
+		$this->event_manager->add_callback( 'remove_priority_test', $callback, 25 );
+		apply_filters( 'remove_priority_test', 'test' );
+		$this->assertEquals( 1, $called_count );
+
+		$this->event_manager->remove_callback( 'remove_priority_test', $callback, 25 );
+		apply_filters( 'remove_priority_test', 'test' );
+		$this->assertEquals( 1, $called_count ); // Still 1, callback was removed.
+	}
+
+	/**
+	 * Test get_subscribers returns subscriber objects.
+	 */
+	public function test_get_subscribers_returns_objects(): void {
+		$subscriber = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array( 'hook' => 'method' );
+			}
+			public function method(): void {}
+		};
+
+		$this->event_manager->add_subscriber( $subscriber );
+		$subscribers = $this->event_manager->get_subscribers();
+
+		$this->assertCount( 1, $subscribers );
+		$this->assertSame( $subscriber, reset( $subscribers ) );
+	}
+
+	/**
+	 * Test multiple subscribers can be added.
+	 */
+	public function test_multiple_subscribers(): void {
+		$subscriber1 = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array( 'hook1' => 'method' );
+			}
+			public function method(): void {}
+		};
+
+		$subscriber2 = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array( 'hook2' => 'method' );
+			}
+			public function method(): void {}
+		};
+
+		$this->event_manager->add_subscriber( $subscriber1 );
+		$this->event_manager->add_subscriber( $subscriber2 );
+
+		$this->assertCount( 2, $this->event_manager->get_subscribers() );
+		$this->assertTrue( $this->event_manager->has_subscriber( $subscriber1::class ) );
+		$this->assertTrue( $this->event_manager->has_subscriber( $subscriber2::class ) );
+	}
+
+	/**
+	 * Test subscriber callbacks are actually registered with WordPress.
+	 */
+	public function test_subscriber_callbacks_are_registered(): void {
+		global $wp_filters;
+
+		$subscriber = new class() implements Subscriber_Interface {
+			public static function get_subscribed_events(): array {
+				return array(
+					'test_hook_registration' => 'my_handler',
+				);
+			}
+			public function my_handler(): void {}
+		};
+
+		$this->event_manager->add_subscriber( $subscriber );
+
+		$this->assertArrayHasKey( 'test_hook_registration', $wp_filters );
+	}
 }

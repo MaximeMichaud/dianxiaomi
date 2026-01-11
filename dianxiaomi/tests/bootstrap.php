@@ -5,6 +5,9 @@
  * @package Dianxiaomi
  */
 
+// Load namespaced mocks first.
+require_once __DIR__ . '/mocks/OrderUtil.php';
+
 // Mock WordPress constants.
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__ ) . '/' );
@@ -81,6 +84,54 @@ if ( ! class_exists( 'WP_User' ) ) {
 		public function __construct( int $id = 1 ) {
 			$this->ID = $id;
 		}
+	}
+}
+
+/**
+ * Mock WP_Error class.
+ */
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		private string $code;
+		private string $message;
+		private array $data;
+
+		public function __construct( string $code = '', string $message = '', $data = array() ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = is_array( $data ) ? $data : array( 'data' => $data );
+		}
+
+		public function get_error_code(): string {
+			return $this->code;
+		}
+
+		public function get_error_message(): string {
+			return $this->message;
+		}
+
+		public function get_error_data( string $code = '' ): array {
+			return $this->data;
+		}
+
+		public function has_errors(): bool {
+			return ! empty( $this->code );
+		}
+
+		public function add( string $code, string $message, $data = array() ): void {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = is_array( $data ) ? $data : array( 'data' => $data );
+		}
+	}
+}
+
+/**
+ * is_wp_error() - Check if a value is a WP_Error.
+ */
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $thing ): bool {
+		return $thing instanceof WP_Error;
 	}
 }
 
@@ -443,6 +494,32 @@ if ( ! class_exists( 'WC_Data_Store' ) ) {
 }
 
 // =============================================================================
+// MOCK API CLASSES
+// =============================================================================
+
+/**
+ * Mock Dianxiaomi_API_Server class.
+ */
+if ( ! class_exists( 'Dianxiaomi_API_Server' ) ) {
+	class Dianxiaomi_API_Server {
+		public const READABLE   = 1;
+		public const EDITABLE   = 2;
+		public const ACCEPT_DATA = 8;
+
+		public string $path = '/';
+
+		public function format_datetime( string $datetime ): string {
+			return $datetime;
+		}
+
+		public function add_pagination_headers( $query ): void {
+			// Mock.
+		}
+	}
+}
+
+
+// =============================================================================
 // WOOCOMMERCE FUNCTIONS
 // =============================================================================
 
@@ -611,6 +688,19 @@ if ( ! function_exists( 'wc_bool_to_string' ) ) {
 }
 
 /**
+ * wc_enqueue_js() - Enqueue JavaScript.
+ */
+global $wc_enqueued_js;
+$wc_enqueued_js = array();
+
+if ( ! function_exists( 'wc_enqueue_js' ) ) {
+	function wc_enqueue_js( string $js ): void {
+		global $wc_enqueued_js;
+		$wc_enqueued_js[] = $js;
+	}
+}
+
+/**
  * is_woocommerce() - Check if on a WooCommerce page.
  */
 if ( ! function_exists( 'is_woocommerce' ) ) {
@@ -758,9 +848,46 @@ if ( ! function_exists( 'plugins_url' ) ) {
 }
 
 if ( ! function_exists( 'home_url' ) ) {
-	function home_url( string $path = '' ): string {
+	function home_url( string $path = '', string $scheme = null ): string {
 		return 'https://example.com' . $path;
 	}
+}
+
+if ( ! function_exists( 'wp_date' ) ) {
+	function wp_date( string $format, ?int $timestamp = null, ?DateTimeZone $timezone = null ): string|false {
+		if ( null === $timestamp ) {
+			$timestamp = time();
+		}
+		return date( $format, $timestamp );
+	}
+}
+
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite(): bool {
+		global $mock_returns;
+		if ( isset( $mock_returns['is_multisite'] ) ) {
+			return $mock_returns['is_multisite'];
+		}
+		return false;
+	}
+}
+
+global $wp_site_options;
+$wp_site_options = array();
+
+if ( ! function_exists( 'get_site_option' ) ) {
+	function get_site_option( string $option, $default = false ) {
+		global $wp_site_options;
+		return $wp_site_options[ $option ] ?? $default;
+	}
+}
+
+/**
+ * Set a site option for multisite testing.
+ */
+function set_site_option( string $option, $value ): void {
+	global $wp_site_options;
+	$wp_site_options[ $option ] = $value;
 }
 
 if ( ! function_exists( 'admin_url' ) ) {
@@ -975,6 +1102,24 @@ if ( ! function_exists( 'remove_filter' ) ) {
 	}
 }
 
+if ( ! function_exists( 'has_filter' ) ) {
+	function has_filter( string $hook_name, $callback = false ) {
+		global $wp_filters;
+		if ( ! isset( $wp_filters[ $hook_name ] ) ) {
+			return false;
+		}
+		if ( $callback === false ) {
+			return ! empty( $wp_filters[ $hook_name ] );
+		}
+		foreach ( $wp_filters[ $hook_name ] as $filter ) {
+			if ( $filter['callback'] === $callback ) {
+				return $filter['priority'];
+			}
+		}
+		return false;
+	}
+}
+
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( string $hook_name, ...$args ): void {
 		global $wp_actions;
@@ -1101,13 +1246,37 @@ if ( ! function_exists( 'current_user_can' ) ) {
 
 if ( ! function_exists( 'wp_verify_nonce' ) ) {
 	function wp_verify_nonce( $nonce, $action = -1 ): bool {
-		return true; // Always valid in tests.
+		global $mock_returns;
+		if ( isset( $mock_returns['wp_verify_nonce'] ) ) {
+			return $mock_returns['wp_verify_nonce'];
+		}
+		return true; // Always valid in tests by default.
 	}
 }
 
 if ( ! function_exists( 'wp_create_nonce' ) ) {
 	function wp_create_nonce( $action = -1 ): string {
 		return 'mock_nonce_' . md5( (string) $action );
+	}
+}
+
+if ( ! function_exists( 'wp_nonce_field' ) ) {
+	function wp_nonce_field( $action = -1, string $name = '_wpnonce', bool $referer = true, bool $display = true ): string {
+		$nonce = wp_create_nonce( $action );
+		$field = '<input type="hidden" id="' . $name . '" name="' . $name . '" value="' . $nonce . '" />';
+		if ( $display ) {
+			echo $field;
+		}
+		return $field;
+	}
+}
+
+if ( ! function_exists( 'date_i18n' ) ) {
+	function date_i18n( string $format, $timestamp = false, bool $gmt = false ): string {
+		if ( false === $timestamp ) {
+			$timestamp = time();
+		}
+		return date( $format, (int) $timestamp );
 	}
 }
 
@@ -1127,6 +1296,315 @@ if ( ! function_exists( 'wp_die' ) ) {
 	function wp_die( $message = '', $title = '', $args = array() ): void {
 		throw new Exception( $message );
 	}
+}
+
+// =============================================================================
+// REWRITE FUNCTIONS
+// =============================================================================
+
+// WordPress endpoint mask constants.
+if ( ! defined( 'EP_NONE' ) ) {
+	define( 'EP_NONE', 0 );
+}
+if ( ! defined( 'EP_PERMALINK' ) ) {
+	define( 'EP_PERMALINK', 1 );
+}
+if ( ! defined( 'EP_ATTACHMENT' ) ) {
+	define( 'EP_ATTACHMENT', 2 );
+}
+if ( ! defined( 'EP_DATE' ) ) {
+	define( 'EP_DATE', 4 );
+}
+if ( ! defined( 'EP_YEAR' ) ) {
+	define( 'EP_YEAR', 8 );
+}
+if ( ! defined( 'EP_MONTH' ) ) {
+	define( 'EP_MONTH', 16 );
+}
+if ( ! defined( 'EP_DAY' ) ) {
+	define( 'EP_DAY', 32 );
+}
+if ( ! defined( 'EP_ROOT' ) ) {
+	define( 'EP_ROOT', 64 );
+}
+if ( ! defined( 'EP_COMMENTS' ) ) {
+	define( 'EP_COMMENTS', 128 );
+}
+if ( ! defined( 'EP_SEARCH' ) ) {
+	define( 'EP_SEARCH', 256 );
+}
+if ( ! defined( 'EP_CATEGORIES' ) ) {
+	define( 'EP_CATEGORIES', 512 );
+}
+if ( ! defined( 'EP_TAGS' ) ) {
+	define( 'EP_TAGS', 1024 );
+}
+if ( ! defined( 'EP_AUTHORS' ) ) {
+	define( 'EP_AUTHORS', 2048 );
+}
+if ( ! defined( 'EP_PAGES' ) ) {
+	define( 'EP_PAGES', 4096 );
+}
+if ( ! defined( 'EP_ALL_ARCHIVES' ) ) {
+	define( 'EP_ALL_ARCHIVES', EP_DATE | EP_YEAR | EP_MONTH | EP_DAY | EP_CATEGORIES | EP_TAGS | EP_AUTHORS );
+}
+if ( ! defined( 'EP_ALL' ) ) {
+	define( 'EP_ALL', EP_PERMALINK | EP_ATTACHMENT | EP_ROOT | EP_COMMENTS | EP_SEARCH | EP_PAGES | EP_ALL_ARCHIVES );
+}
+
+global $wp_rewrite_rules;
+$wp_rewrite_rules = array();
+
+if ( ! function_exists( 'add_rewrite_rule' ) ) {
+	function add_rewrite_rule( string $regex, $query, string $after = 'bottom' ): void {
+		global $wp_rewrite_rules;
+		$wp_rewrite_rules[ $regex ] = array(
+			'regex' => $regex,
+			'query' => $query,
+			'after' => $after,
+		);
+	}
+}
+
+if ( ! function_exists( 'add_rewrite_endpoint' ) ) {
+	function add_rewrite_endpoint( string $name, int $places, $query_var = true ): void {
+		global $wp_rewrite_rules;
+		$wp_rewrite_rules[ 'endpoint_' . $name ] = array(
+			'name'      => $name,
+			'places'    => $places,
+			'query_var' => $query_var,
+		);
+	}
+}
+
+if ( ! function_exists( 'flush_rewrite_rules' ) ) {
+	function flush_rewrite_rules( bool $hard = true ): void {
+		// Mock.
+	}
+}
+
+/**
+ * Reset rewrite rules for testing.
+ */
+function reset_rewrite_rules(): void {
+	global $wp_rewrite_rules;
+	$wp_rewrite_rules = array();
+}
+
+/**
+ * Get rewrite rules for testing.
+ */
+function get_rewrite_rules(): array {
+	global $wp_rewrite_rules;
+	return $wp_rewrite_rules;
+}
+
+// =============================================================================
+// CACHE FUNCTIONS
+// =============================================================================
+
+global $wp_cache;
+$wp_cache = array();
+
+if ( ! function_exists( 'wp_cache_get' ) ) {
+	function wp_cache_get( $key, string $group = '', bool $force = false, &$found = null ) {
+		global $wp_cache;
+		$cache_key = $group . ':' . $key;
+		if ( isset( $wp_cache[ $cache_key ] ) ) {
+			$found = true;
+			return $wp_cache[ $cache_key ];
+		}
+		$found = false;
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wp_cache_set' ) ) {
+	function wp_cache_set( $key, $data, string $group = '', int $expire = 0 ): bool {
+		global $wp_cache;
+		$cache_key                = $group . ':' . $key;
+		$wp_cache[ $cache_key ] = $data;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_cache_delete' ) ) {
+	function wp_cache_delete( $key, string $group = '' ): bool {
+		global $wp_cache;
+		$cache_key = $group . ':' . $key;
+		unset( $wp_cache[ $cache_key ] );
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_cache_flush' ) ) {
+	function wp_cache_flush(): bool {
+		global $wp_cache;
+		$wp_cache = array();
+		return true;
+	}
+}
+
+// =============================================================================
+// USER FUNCTIONS
+// =============================================================================
+
+global $wp_users;
+$wp_users = array();
+
+if ( ! function_exists( 'get_users' ) ) {
+	function get_users( array $args = array() ): array {
+		global $wp_users, $mock_returns;
+		// Check for mock return.
+		if ( isset( $mock_returns['get_users'] ) ) {
+			return $mock_returns['get_users'];
+		}
+		return array_values( $wp_users );
+	}
+}
+
+if ( ! function_exists( 'get_user_by' ) ) {
+	function get_user_by( string $field, $value ): ?WP_User {
+		global $wp_users;
+		foreach ( $wp_users as $user ) {
+			if ( $user->$field === $value ) {
+				return $user;
+			}
+		}
+		return null;
+	}
+}
+
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id(): int {
+		return 1;
+	}
+}
+
+if ( ! function_exists( 'wp_get_current_user' ) ) {
+	function wp_get_current_user(): WP_User {
+		return new WP_User( 1 );
+	}
+}
+
+global $wp_user_meta;
+$wp_user_meta = array();
+
+if ( ! function_exists( 'get_userdata' ) ) {
+	function get_userdata( int $user_id ): ?WP_User {
+		global $wp_users, $wp_user_meta;
+		if ( isset( $wp_users[ $user_id ] ) ) {
+			$user = $wp_users[ $user_id ];
+			// Apply user meta as properties.
+			if ( isset( $wp_user_meta[ $user_id ] ) ) {
+				foreach ( $wp_user_meta[ $user_id ] as $key => $value ) {
+					$user->$key = $value;
+				}
+			}
+			return $user;
+		}
+		if ( $user_id > 0 ) {
+			$user = new WP_User( $user_id );
+			// Apply user meta as properties.
+			if ( isset( $wp_user_meta[ $user_id ] ) ) {
+				foreach ( $wp_user_meta[ $user_id ] as $key => $value ) {
+					$user->$key = $value;
+				}
+			}
+			return $user;
+		}
+		return null;
+	}
+}
+
+if ( ! function_exists( 'get_user_meta' ) ) {
+	function get_user_meta( int $user_id, string $key = '', bool $single = false ) {
+		global $wp_user_meta;
+		if ( empty( $key ) ) {
+			return $wp_user_meta[ $user_id ] ?? array();
+		}
+		$value = $wp_user_meta[ $user_id ][ $key ] ?? null;
+		return $single ? ( $value ?? '' ) : ( $value !== null ? array( $value ) : array() );
+	}
+}
+
+if ( ! function_exists( 'update_user_meta' ) ) {
+	function update_user_meta( int $user_id, string $meta_key, $meta_value, $prev_value = '' ): bool {
+		global $wp_user_meta;
+		if ( ! isset( $wp_user_meta[ $user_id ] ) ) {
+			$wp_user_meta[ $user_id ] = array();
+		}
+		$wp_user_meta[ $user_id ][ $meta_key ] = $meta_value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'delete_user_meta' ) ) {
+	function delete_user_meta( int $user_id, string $meta_key, $meta_value = '' ): bool {
+		global $wp_user_meta;
+		if ( isset( $wp_user_meta[ $user_id ][ $meta_key ] ) ) {
+			unset( $wp_user_meta[ $user_id ][ $meta_key ] );
+		}
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_rand' ) ) {
+	function wp_rand( int $min = 0, int $max = 0 ): int {
+		if ( $max === 0 ) {
+			$max = PHP_INT_MAX;
+		}
+		return random_int( $min, $max );
+	}
+}
+
+// =============================================================================
+// JSON FUNCTIONS
+// =============================================================================
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data, int $options = 0, int $depth = 512 ) {
+		return json_encode( $data, $options, $depth );
+	}
+}
+
+// =============================================================================
+// MOCK RETURN MANAGEMENT
+// =============================================================================
+
+global $mock_returns;
+$mock_returns = array();
+
+/**
+ * Set a mock return value for a function.
+ */
+function set_mock_return( string $function, $value ): void {
+	global $mock_returns;
+	$mock_returns[ $function ] = $value;
+}
+
+/**
+ * Clear a mock return value.
+ */
+function clear_mock_return( string $function ): void {
+	global $mock_returns;
+	unset( $mock_returns[ $function ] );
+}
+
+/**
+ * Clear all mock return values.
+ */
+function clear_all_mock_returns(): void {
+	global $mock_returns;
+	$mock_returns = array();
+}
+
+/**
+ * Reset cache.
+ */
+function reset_wp_cache(): void {
+	global $wp_cache;
+	$wp_cache = array();
 }
 
 // =============================================================================
@@ -1168,6 +1646,23 @@ function reset_wp_post_meta(): void {
 }
 
 /**
+ * Reset user meta for testing.
+ */
+function reset_user_meta(): void {
+	global $wp_user_meta, $wp_users;
+	$wp_user_meta = array();
+	$wp_users     = array();
+}
+
+/**
+ * Reset site options for multisite testing.
+ */
+function reset_site_options(): void {
+	global $wp_site_options;
+	$wp_site_options = array();
+}
+
+/**
  * Reset everything for a clean test.
  */
 function reset_all(): void {
@@ -1176,6 +1671,20 @@ function reset_all(): void {
 	reset_wp_options();
 	reset_wp_post_meta();
 	reset_current_screen();
+	reset_wp_cache();
+	reset_rewrite_rules();
+	clear_all_mock_returns();
+	reset_user_meta();
+	reset_site_options();
+	// Reset WC enqueued JS.
+	global $wc_enqueued_js;
+	$wc_enqueued_js = array();
+	// Reset global filters and actions.
+	global $wp_filters, $wp_actions;
+	$wp_filters = array();
+	$wp_actions = array();
+	// Reset HPOS state.
+	\Automattic\WooCommerce\Utilities\OrderUtil::set_hpos_enabled( false );
 }
 
 /**
@@ -1224,6 +1733,21 @@ function create_mock_order( int $id = 1, array $meta = array() ): WC_Order {
 }
 
 /**
+ * Create a mock user for testing.
+ */
+function create_mock_user( int $id = 1, array $meta = array() ): WP_User {
+	global $wp_users, $wp_user_meta;
+	$user                   = new WP_User( $id );
+	$wp_users[ $id ]        = $user;
+	$wp_user_meta[ $id ] = $meta;
+	// Apply meta as properties.
+	foreach ( $meta as $key => $value ) {
+		$user->$key = $value;
+	}
+	return $user;
+}
+
+/**
  * Set WordPress options for testing.
  */
 function set_wp_option( string $key, $value ): void {
@@ -1264,6 +1788,28 @@ $plugin_dir = dirname( __DIR__ );
 require_once $plugin_dir . '/dianxiaomi-functions.php';
 require_once $plugin_dir . '/inc/interfaces/interface-subscriber.php';
 require_once $plugin_dir . '/inc/event-management/class-event-manager.php';
+require_once $plugin_dir . '/inc/traits/trait-api-response.php';
+require_once $plugin_dir . '/inc/traits/trait-woocommerce-helper.php';
 require_once $plugin_dir . '/class-dianxiaomi-dependencies.php';
 require_once $plugin_dir . '/class-dianxiaomi.php';
 require_once $plugin_dir . '/class-dianxiaomi-settings.php';
+
+// Load API classes.
+require_once $plugin_dir . '/class-dianxiaomi-api.php';
+require_once $plugin_dir . '/api/class-dianxiaomi-api-authentication.php';
+
+// =============================================================================
+// MOCK DIANXIAOMI INSTANCE
+// =============================================================================
+
+/**
+ * Mock Dianxiaomi singleton for testing.
+ */
+if ( ! function_exists( 'get_dianxiaomi_instance' ) ) {
+	function get_dianxiaomi_instance(): Dianxiaomi {
+		return Dianxiaomi::instance();
+	}
+}
+
+// Initialize the singleton.
+$GLOBALS['dianxiaomi'] = get_dianxiaomi_instance();
