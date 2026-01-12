@@ -14,19 +14,22 @@ on:
 jobs:
   phpunit:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: dianxiaomi/package-lock.json
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.2'
           tools: composer:v2
           coverage: none
 
@@ -35,18 +38,47 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
         working-directory: dianxiaomi
 
-      - name: Cache dependencies
+      - name: Cache Composer dependencies
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('dianxiaomi/composer.lock', 'dianxiaomi/composer.json') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('dianxiaomi/composer.lock', 'dianxiaomi/composer.json') }}
           restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+            ${{ runner.os }}-composer-
 
-      - name: Install dependencies
+      - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
         working-directory: dianxiaomi
 
+      - name: Install npm dependencies
+        run: npm ci
+        working-directory: dianxiaomi
+
+      - name: Start wp-env
+        run: npm run start
+        working-directory: dianxiaomi
+
+      - name: Wait for WordPress to be ready
+        run: |
+          for i in {1..30}; do
+            if npx wp-env run tests-cli wp core version 2>/dev/null; then
+              echo "WordPress is ready"
+              break
+            fi
+            echo "Waiting for WordPress... ($i/30)"
+            sleep 2
+          done
+        working-directory: dianxiaomi
+
+      - name: Activate plugins
+        run: npx wp-env run tests-cli wp plugin activate woocommerce dianxiaomi
+        working-directory: dianxiaomi
+
       - name: Run PHPUnit tests
-        run: composer test
+        run: npm run test
+        working-directory: dianxiaomi
+
+      - name: Stop wp-env
+        if: always()
+        run: npm run stop
         working-directory: dianxiaomi
