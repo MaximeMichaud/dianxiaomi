@@ -239,7 +239,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$key_meta      = $order->get_meta( '_dianxiaomi_tracking_key' );
 		$country_meta  = $order->get_meta( '_dianxiaomi_tracking_destination_country' );
 
-		$tracking_data             = array(
+		$tracking_data = array(
 			'tracking_provider'            => is_string( $provider_meta ) ? $provider_meta : '',
 			'tracking_number'              => is_string( $number_meta ) ? $number_meta : '',
 			'tracking_ship_date'           => is_string( $ship_meta ) ? $ship_meta : '',
@@ -279,8 +279,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
-		if ( ! empty( $data['status'] ) ) {
-			$status   = is_string( $data['status'] ) ? $data['status'] : '';
+		if ( isset( $data['status'] ) && is_string( $data['status'] ) && $data['status'] !== '' ) {
+			$status   = $data['status'];
 			$note     = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
 			$provider = isset( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ? $data['tracking_provider'] : '';
 			$number   = isset( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ? $data['tracking_number'] : '';

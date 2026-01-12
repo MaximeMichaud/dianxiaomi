@@ -230,8 +230,14 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function couriers_callback(): void {
-		$couriers_option = isset( $this->options['couriers'] ) && is_string( $this->options['couriers'] ) ? $this->options['couriers'] : '';
-		$couriers        = $couriers_option !== '' ? explode( ',', $couriers_option ) : array();
+		$couriers_raw = $this->options['couriers'] ?? '';
+		if ( is_array( $couriers_raw ) ) {
+			$couriers = $couriers_raw;
+		} elseif ( is_string( $couriers_raw ) && $couriers_raw !== '' ) {
+			$couriers = explode( ',', $couriers_raw );
+		} else {
+			$couriers = array();
+		}
 		echo '<select data-placeholder="Please select couriers" id="couriers_select" class="wc-enhanced-select" multiple style="width:100%">';
 		echo '</select>';
 		echo '<input type="hidden" id="couriers" name="dianxiaomi_option_name[couriers]" value="' . esc_attr( implode( ',', $couriers ) ) . '"/>';

@@ -70,7 +70,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		$options = get_option( 'dianxiaomi_option_name' );
 		if ( is_array( $options ) ) {
 			$this->plugin           = isset( $options['plugin'] ) && is_string( $options['plugin'] ) ? $options['plugin'] : '';
-			$this->use_track_button = isset( $options['use_track_button'] ) && is_bool( $options['use_track_button'] ) ? $options['use_track_button'] : false;
+			$this->use_track_button = ! empty( $options['use_track_button'] );
 			$this->custom_domain    = isset( $options['custom_domain'] ) && is_string( $options['custom_domain'] ) ? $options['custom_domain'] : '';
 
 			// Handle couriers as string (comma-separated) or array.

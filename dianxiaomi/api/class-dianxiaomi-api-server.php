@@ -389,22 +389,18 @@ class Dianxiaomi_API_Server {
 	public function add_pagination_headers( $query ): void {
 		if ( $query instanceof WP_User_Query ) {
 			$paged_var   = $query->query_vars['paged'] ?? 1;
-			$page        = is_numeric( $paged_var ) ? (int) $paged_var : 1;
+			$page        = is_numeric( $paged_var ) ? max( 1, (int) $paged_var ) : 1;
 			$single      = count( $query->get_results() ) > 1;
 			$total       = $query->get_total();
 			$number_var  = $query->query_vars['number'] ?? 10;
-			$per_page    = is_numeric( $number_var ) ? (int) $number_var : 10;
-			$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
+			$per_page    = is_numeric( $number_var ) ? max( 1, (int) $number_var ) : 10;
+			$total_pages = (int) ceil( $total / $per_page );
 		} else {
 			$paged_val   = $query->get( 'paged' );
-			$page        = is_numeric( $paged_val ) ? (int) $paged_val : 1;
+			$page        = is_numeric( $paged_val ) ? max( 1, (int) $paged_val ) : 1;
 			$single      = $query->is_single();
 			$total       = $query->found_posts;
 			$total_pages = $query->max_num_pages;
-		}
-
-		if ( ! $page ) {
-			$page = 1;
 		}
 
 		$next_page = $page + 1;
