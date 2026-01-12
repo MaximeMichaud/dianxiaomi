@@ -96,7 +96,7 @@ class Dianxiaomi_API_Server {
 				wp_die( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 			}
 		}
-		$path_info            = filter_input( INPUT_SERVER, 'PATH_INFO', FILTER_SANITIZE_STRING );
+		$path_info            = isset( $_SERVER['PATH_INFO'] ) ? sanitize_text_field( wp_unslash( $_SERVER['PATH_INFO'] ) ) : '';
 		$this->path           = $path ? $path : ( $path_info ? $path_info : '/' );
 		$this->method         = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
 		$this->params['GET']  = $_GET;
