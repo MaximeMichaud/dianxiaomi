@@ -120,7 +120,8 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function create_admin_page(): void {
-		$this->options = get_option( 'dianxiaomi_option_name' );
+		$options       = get_option( 'dianxiaomi_option_name' );
+		$this->options = is_array( $options ) ? $options : array();
 		?>
 		<div class="wrap">
 			<h2>Dianxiaomi Settings</h2>
@@ -227,7 +228,8 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function couriers_callback(): void {
-		$couriers = isset( $this->options['couriers'] ) ? explode( ',', $this->options['couriers'] ) : array();
+		$couriers_option = isset( $this->options['couriers'] ) && is_string( $this->options['couriers'] ) ? $this->options['couriers'] : '';
+		$couriers        = $couriers_option !== '' ? explode( ',', $couriers_option ) : array();
 		echo '<select data-placeholder="Please select couriers" id="couriers_select" class="wc-enhanced-select" multiple style="width:100%">';
 		echo '</select>';
 		echo '<input type="hidden" id="couriers" name="dianxiaomi_option_name[couriers]" value="' . esc_attr( implode( ',', $couriers ) ) . '"/>';
@@ -235,14 +237,18 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function plugin_callback(): void {
-		$options = '';
+		$options       = '';
+		$plugin_option = isset( $this->options['plugin'] ) && is_string( $this->options['plugin'] ) ? $this->options['plugin'] : '';
 		foreach ( $this->plugins as $plugin ) {
-			if ( Dianxiaomi_Dependencies::plugin_active_check( $plugin['path'] ) ) {
-				$option = '<option value="' . $plugin['value'] . '"';
-				if ( isset( $this->options['plugin'] ) && esc_attr( $this->options['plugin'] ) === $plugin['value'] ) {
+			$path  = isset( $plugin['path'] ) && is_string( $plugin['path'] ) ? $plugin['path'] : '';
+			$value = isset( $plugin['value'] ) && is_string( $plugin['value'] ) ? $plugin['value'] : '';
+			$label = isset( $plugin['label'] ) && is_string( $plugin['label'] ) ? $plugin['label'] : '';
+			if ( $path !== '' && Dianxiaomi_Dependencies::plugin_active_check( $path ) ) {
+				$option = '<option value="' . esc_attr( $value ) . '"';
+				if ( $plugin_option === $value ) {
 					$option .= ' selected="selected"';
 				}
-				$option  .= '>' . $plugin['label'] . '</option>';
+				$option  .= '>' . esc_html( $label ) . '</option>';
 				$options .= $option;
 			}
 		}
@@ -250,21 +256,24 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function custom_domain_callback(): void {
+		$custom_domain = isset( $this->options['custom_domain'] ) && is_string( $this->options['custom_domain'] ) ? $this->options['custom_domain'] : 'https://t.17track.net/zh-cn#nums=';
 		printf(
 			'<input type="text" id="custom_domain" name="dianxiaomi_option_name[custom_domain]" value="%s" style="width:100%%">',
-			isset( $this->options['custom_domain'] ) ? esc_attr( $this->options['custom_domain'] ) : 'https://t.17track.net/zh-cn#nums='
+			esc_attr( $custom_domain )
 		);
 	}
 
 	public function track_message_callback(): void {
+		$track_message_1 = isset( $this->options['track_message_1'] ) && is_string( $this->options['track_message_1'] ) ? $this->options['track_message_1'] : 'Your order was shipped via ';
+		$track_message_2 = isset( $this->options['track_message_2'] ) && is_string( $this->options['track_message_2'] ) ? $this->options['track_message_2'] : 'Tracking number is ';
 		printf(
 			'<input type="text" id="track_message_1" name="dianxiaomi_option_name[track_message_1]" value="%s" style="width:100%%">',
-			isset( $this->options['track_message_1'] ) ? esc_attr( $this->options['track_message_1'] ) : 'Your order was shipped via '
+			esc_attr( $track_message_1 )
 		);
 		echo '<br/>';
 		printf(
 			'<input type="text" id="track_message_2" name="dianxiaomi_option_name[track_message_2]" value="%s" style="width:100%%">',
-			isset( $this->options['track_message_2'] ) ? esc_attr( $this->options['track_message_2'] ) : 'Tracking number is '
+			esc_attr( $track_message_2 )
 		);
 		echo '<br/><br/><b>Demo:</b>';
 		printf(

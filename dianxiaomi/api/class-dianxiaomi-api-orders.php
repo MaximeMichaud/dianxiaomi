@@ -270,9 +270,13 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		if ( ! empty( $data['status'] ) ) {
-			$order->update_status( $data['status'], isset( $data['note'] ) ? $data['note'] : '' );
-			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
-			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
+			$status   = is_string( $data['status'] ) ? $data['status'] : '';
+			$note     = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
+			$provider = isset( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ? $data['tracking_provider'] : '';
+			$number   = isset( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ? $data['tracking_number'] : '';
+			$order->update_status( $status, $note );
+			$order->update_meta_data( '_dianxiaomi_tracking_provider', $provider );
+			$order->update_meta_data( '_dianxiaomi_tracking_number', $number );
 			$order->save();
 
 			// Incrémenter le compteur
@@ -333,10 +337,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		// Mettre à jour les métadonnées si elles sont fournies
-		if ( ! empty( $data['tracking_number'] ) ) {
+		if ( ! empty( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
 		}
-		if ( ! empty( $data['tracking_provider'] ) ) {
+		if ( ! empty( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
 		}
 
@@ -344,8 +348,9 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$ignore_status = get_option( 'dianxiaomi_ignore_order_status', 'no' );
 
 		// Mettre à jour le statut de la commande si nécessaire
-		if ( ! empty( $data['status'] ) && $ignore_status !== 'yes' ) {
-			$order->set_status( $data['status'], isset( $data['note'] ) ? $data['note'] : '' );
+		if ( ! empty( $data['status'] ) && is_string( $data['status'] ) && $ignore_status !== 'yes' ) {
+			$note = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
+			$order->set_status( $data['status'], $note );
 		}
 
 		// Sauvegarder les modifications
@@ -431,7 +436,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			'post_status' => version_compare( $woo_version, '2.2', '>=' ) ? array_keys( wc_get_order_statuses() ) : 'publish',
 		);
 
-		if ( ! empty( $args['status'] ) ) {
+		if ( ! empty( $args['status'] ) && is_string( $args['status'] ) ) {
 			$statuses                  = explode( ',', $args['status'] );
 			$query_args['post_status'] = array_map(
 				function ( $status ) {

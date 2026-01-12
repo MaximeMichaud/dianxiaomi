@@ -143,7 +143,9 @@ trait WooCommerce_Helper {
 			return false;
 		}
 
-		$order->update_meta_data( $meta_key, $meta_value );
+		/** @var array<mixed>|string $safe_value */
+		$safe_value = is_array( $meta_value ) ? $meta_value : ( is_scalar( $meta_value ) || $meta_value === null ? (string) $meta_value : '' );
+		$order->update_meta_data( $meta_key, $safe_value );
 		$order->save();
 		return true;
 	}

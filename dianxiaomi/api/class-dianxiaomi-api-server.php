@@ -170,7 +170,9 @@ class Dianxiaomi_API_Server {
 			if ( 'HEAD' === $this->method ) {
 				return;
 			}
-			echo esc_html( $this->handler->generate_response( $result ) );
+			/** @var array<string, mixed> $response_data */
+			$response_data = is_array( $result ) ? $result : array( 'data' => $result );
+			echo esc_html( $this->handler->generate_response( $response_data ) );
 		}
 	}
 
@@ -346,11 +348,12 @@ class Dianxiaomi_API_Server {
 			$total_pages = $query->max_num_pages;
 		}
 
-		if ( ! $page ) {
+		if ( ! $page || ! is_numeric( $page ) ) {
 			$page = 1;
 		}
+		$page = (int) $page;
 
-		$next_page = absint( $page ) + 1;
+		$next_page = $page + 1;
 
 		if ( ! $single ) {
 			if ( $page > 1 ) {

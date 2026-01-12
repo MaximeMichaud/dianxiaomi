@@ -72,16 +72,20 @@ final class Dianxiaomi_API_Authentication {
 	}
 
 	private function perform_authentication(): WP_User {
-		$headers      = getallheaders();
-		$headers_json = wp_json_encode( $headers );
-		$headers      = $headers_json ? json_decode( $headers_json, true ) : $headers;
+		$raw_headers  = getallheaders();
+		$headers_json = wp_json_encode( $raw_headers );
+		/** @var array<string, string> $headers */
+		$headers = $headers_json ? json_decode( $headers_json, true ) : $raw_headers;
+		if ( ! is_array( $headers ) ) {
+			$headers = array();
+		}
 		$key     = 'AFTERSHIP_WP_KEY';
 		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
 		$key2    = 'DIANXIAOMI-WP-KEY';
 		$qskey   = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;
 		// Vérification de la clé API
 		$api_key = $headers[ $key ] ?? $headers[ $key1 ] ?? $headers[ $key2 ] ?? $qskey;
-		if ( empty( $api_key ) ) {
+		if ( empty( $api_key ) || ! is_string( $api_key ) ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress Key is missing', 'dianxiaomi' ), 404 );
 		}
 		// Valider la clé API et obtenir l'utilisateur

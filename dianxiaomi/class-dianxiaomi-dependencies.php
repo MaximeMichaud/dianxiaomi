@@ -15,10 +15,16 @@ final class Dianxiaomi_Dependencies {
 	 * Initialize the class by fetching active plugins.
 	 */
 	public static function init(): void {
-		self::$active_plugins = (array) get_option( 'active_plugins', array() );
+		$plugins = get_option( 'active_plugins', array() );
+		/** @var array<int|string, string> $active_plugins */
+		$active_plugins       = is_array( $plugins ) ? $plugins : array();
+		self::$active_plugins = $active_plugins;
 
 		if ( is_multisite() ) {
-			self::$active_plugins = array_merge( self::$active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+			$sitewide_plugins = get_site_option( 'active_sitewide_plugins', array() );
+			/** @var array<int|string, string> $sitewide_array */
+			$sitewide_array       = is_array( $sitewide_plugins ) ? $sitewide_plugins : array();
+			self::$active_plugins = array_merge( self::$active_plugins, $sitewide_array );
 		}
 	}
 

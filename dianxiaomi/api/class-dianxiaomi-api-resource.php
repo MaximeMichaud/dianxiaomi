@@ -133,28 +133,28 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 		$args = $base_args;
 		if ( ! empty( $request_args['created_at_min'] ) || ! empty( $request_args['created_at_max'] ) || ! empty( $request_args['updated_at_min'] ) || ! empty( $request_args['updated_at_max'] ) ) {
 			$args['date_query'] = array();
-			if ( ! empty( $request_args['created_at_min'] ) ) {
+			if ( ! empty( $request_args['created_at_min'] ) && is_string( $request_args['created_at_min'] ) ) {
 				$args['date_query'][] = array(
 					'column'    => 'post_date_gmt',
 					'after'     => $this->server->parse_datetime( $request_args['created_at_min'] ),
 					'inclusive' => true,
 				);
 			}
-			if ( ! empty( $request_args['created_at_max'] ) ) {
+			if ( ! empty( $request_args['created_at_max'] ) && is_string( $request_args['created_at_max'] ) ) {
 				$args['date_query'][] = array(
 					'column'    => 'post_date_gmt',
 					'before'    => $this->server->parse_datetime( $request_args['created_at_max'] ),
 					'inclusive' => true,
 				);
 			}
-			if ( ! empty( $request_args['updated_at_min'] ) ) {
+			if ( ! empty( $request_args['updated_at_min'] ) && is_string( $request_args['updated_at_min'] ) ) {
 				$args['date_query'][] = array(
 					'column'    => 'post_modified_gmt',
 					'after'     => $this->server->parse_datetime( $request_args['updated_at_min'] ),
 					'inclusive' => true,
 				);
 			}
-			if ( ! empty( $request_args['updated_at_max'] ) ) {
+			if ( ! empty( $request_args['updated_at_max'] ) && is_string( $request_args['updated_at_max'] ) ) {
 				$args['date_query'][] = array(
 					'column'    => 'post_modified_gmt',
 					'before'    => $this->server->parse_datetime( $request_args['updated_at_max'] ),
@@ -265,7 +265,10 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 				foreach ( $data_value as $sub_field => $sub_field_value ) {
 					// Supprimer les sous-champs non correspondants
 					if ( ! in_array( $sub_field, $sub_fields[ $data_field ], true ) ) {
-						unset( $data[ $data_field ][ $sub_field ] );
+						/** @var array<string|int, mixed> $field_data */
+						$field_data = $data[ $data_field ];
+						unset( $field_data[ $sub_field ] );
+						$data[ $data_field ] = $field_data;
 					}
 				}
 			} elseif ( ! in_array( $data_field, $fields, true ) ) {

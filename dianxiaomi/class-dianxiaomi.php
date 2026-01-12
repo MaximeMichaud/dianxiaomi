@@ -66,17 +66,20 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 */
 	private function initialize_options(): void {
 		$options = get_option( 'dianxiaomi_option_name' );
-		if ( $options ) {
-			$this->plugin           = $options['plugin'] ?? '';
-			$this->use_track_button = $options['use_track_button'] ?? false;
-			$this->custom_domain    = $options['custom_domain'] ?? '';
+		if ( is_array( $options ) ) {
+			$this->plugin           = isset( $options['plugin'] ) && is_string( $options['plugin'] ) ? $options['plugin'] : '';
+			$this->use_track_button = isset( $options['use_track_button'] ) && is_bool( $options['use_track_button'] ) ? $options['use_track_button'] : false;
+			$this->custom_domain    = isset( $options['custom_domain'] ) && is_string( $options['custom_domain'] ) ? $options['custom_domain'] : '';
 
 			// Handle couriers as string (comma-separated) or array.
 			$couriers = $options['couriers'] ?? array();
 			if ( is_string( $couriers ) ) {
 				$this->couriers = array_filter( array_map( 'trim', explode( ',', $couriers ) ) );
+			} elseif ( is_array( $couriers ) ) {
+				/** @var array<int, string> $couriers */
+				$this->couriers = $couriers;
 			} else {
-				$this->couriers = is_array( $couriers ) ? $couriers : array();
+				$this->couriers = array();
 			}
 
 			$this->register_hooks();
@@ -204,32 +207,45 @@ final class Dianxiaomi implements Subscriber_Interface {
 		echo '<br><a href="options-general.php?page=dianxiaomi-setting-admin">' . esc_html__( 'Update carrier list', 'wc_dianxiaomi' ) . '</a>';
 		echo '</select>';
 		echo '<br><a href="options-general.php?page=dianxiaomi-setting-admin">' . esc_html__( 'Update carrier list', 'wc_dianxiaomi' ) . '</a>';
-		echo '<input type="hidden" id="dianxiaomi_tracking_provider_hidden" value="' . esc_attr( $selected_provider ) . '"/>';
+		$provider_value = is_string( $selected_provider ) ? $selected_provider : '';
+		echo '<input type="hidden" id="dianxiaomi_tracking_provider_hidden" value="' . esc_attr( $provider_value ) . '"/>';
 		$couriers_json = wp_json_encode( $this->couriers );
 		echo '<input type="hidden" id="dianxiaomi_couriers_selected" value="' . esc_attr( $couriers_json !== false ? $couriers_json : '[]' ) . '"/>';
 
 		foreach ( $this->dianxiaomi_fields as $field ) {
-			if ( $field['type'] === 'date' ) {
-				$date = $order->get_meta( '_' . $field['id'], true );
+			if ( ! is_array( $field ) ) {
+				continue;
+			}
+			$field_id          = isset( $field['id'] ) && is_string( $field['id'] ) ? $field['id'] : '';
+			$field_type        = isset( $field['type'] ) && is_string( $field['type'] ) ? $field['type'] : '';
+			$field_label       = isset( $field['label'] ) && is_string( $field['label'] ) ? $field['label'] : '';
+			$field_placeholder = isset( $field['placeholder'] ) && is_string( $field['placeholder'] ) ? $field['placeholder'] : '';
+			$field_description = isset( $field['description'] ) && is_string( $field['description'] ) ? $field['description'] : '';
+			$field_class       = isset( $field['class'] ) && is_string( $field['class'] ) ? $field['class'] : '';
+
+			if ( $field_type === 'date' ) {
+				$date       = $order->get_meta( '_' . $field_id, true );
+				$date_value = is_numeric( $date ) ? (int) $date : null;
 				woocommerce_wp_text_input(
 					array(
-						'id'          => $field['id'],
-						'label'       => esc_html( $field['label'] ),
-						'placeholder' => $field['placeholder'],
-						'description' => $field['description'],
-						'class'       => $field['class'],
-						'value'       => $date ? dianxiaomi_wpdate( 'Y-m-d', $date ) : '',
+						'id'          => $field_id,
+						'label'       => esc_html( $field_label ),
+						'placeholder' => $field_placeholder,
+						'description' => $field_description,
+						'class'       => $field_class,
+						'value'       => $date_value ? dianxiaomi_wpdate( 'Y-m-d', $date_value ) : '',
 					)
 				);
 			} else {
+				$meta_value = $order->get_meta( '_' . $field_id, true );
 				woocommerce_wp_text_input(
 					array(
-						'id'          => $field['id'],
-						'label'       => esc_html( $field['label'] ),
-						'placeholder' => $field['placeholder'],
-						'description' => $field['description'],
-						'class'       => $field['class'],
-						'value'       => $order->get_meta( '_' . $field['id'], true ),
+						'id'          => $field_id,
+						'label'       => esc_html( $field_label ),
+						'placeholder' => $field_placeholder,
+						'description' => $field_description,
+						'class'       => $field_class,
+						'value'       => is_string( $meta_value ) ? $meta_value : '',
 					)
 				);
 			}
@@ -263,11 +279,19 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $tracking_provider );
 
 			foreach ( $this->dianxiaomi_fields as $field ) {
-				$field_value = isset( $_POST[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) : '';
-				if ( $field['type'] === 'date' ) {
+				if ( ! is_array( $field ) ) {
+					continue;
+				}
+				$field_id   = isset( $field['id'] ) && is_string( $field['id'] ) ? $field['id'] : '';
+				$field_type = isset( $field['type'] ) && is_string( $field['type'] ) ? $field['type'] : '';
+				if ( $field_id === '' ) {
+					continue;
+				}
+				$field_value = isset( $_POST[ $field_id ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field_id ] ) ) : '';
+				if ( $field_type === 'date' ) {
 					$field_value = (string) strtotime( $field_value );
 				}
-				$order->update_meta_data( '_' . $field['id'], sanitize_text_field( $field_value ) );
+				$order->update_meta_data( '_' . $field_id, sanitize_text_field( $field_value ) );
 			}
 
 			// HPOS: save all meta changes at once (more efficient).
@@ -355,38 +379,55 @@ final class Dianxiaomi implements Subscriber_Interface {
 
 		$values = array();
 		foreach ( $this->dianxiaomi_fields as $field ) {
-			$meta_value = $order->get_meta( '_' . $field['id'] );
-			if ( $field['type'] === 'date' && $meta_value ) {
-				$values[ $field['id'] ] = date_i18n( __( 'l jS F Y', 'wc_shipment_tracking' ), strtotime( $meta_value ) );
+			if ( ! is_array( $field ) ) {
+				continue;
+			}
+			$field_id   = isset( $field['id'] ) && is_string( $field['id'] ) ? $field['id'] : '';
+			$field_type = isset( $field['type'] ) && is_string( $field['type'] ) ? $field['type'] : '';
+			if ( $field_id === '' ) {
+				continue;
+			}
+			$meta_value = $order->get_meta( '_' . $field_id );
+			$meta_str   = is_string( $meta_value ) ? $meta_value : '';
+			if ( $field_type === 'date' && $meta_str !== '' ) {
+				$values[ $field_id ] = date_i18n( __( 'l jS F Y', 'wc_shipment_tracking' ), strtotime( $meta_str ) );
 			} else {
-				$values[ $field['id'] ] = $meta_value;
+				$values[ $field_id ] = $meta_str;
 			}
 		}
 
-		$dianxiaomi_tracking_provider      = $order->get_meta( '_dianxiaomi_tracking_provider' );
-		$dianxiaomi_tracking_number        = $order->get_meta( '_dianxiaomi_tracking_number' );
-		$dianxiaomi_tracking_provider_name = $order->get_meta( '_dianxiaomi_tracking_provider_name' );
+		$tracking_provider_meta = $order->get_meta( '_dianxiaomi_tracking_provider' );
+		$tracking_number_meta   = $order->get_meta( '_dianxiaomi_tracking_number' );
+		$provider_name_meta     = $order->get_meta( '_dianxiaomi_tracking_provider_name' );
 
-		if ( ! $dianxiaomi_tracking_provider || ! $dianxiaomi_tracking_number ) {
+		$dianxiaomi_tracking_provider      = is_string( $tracking_provider_meta ) ? $tracking_provider_meta : '';
+		$dianxiaomi_tracking_number        = is_string( $tracking_number_meta ) ? $tracking_number_meta : '';
+		$dianxiaomi_tracking_provider_name = is_string( $provider_name_meta ) ? $provider_name_meta : '';
+
+		if ( $dianxiaomi_tracking_provider === '' || $dianxiaomi_tracking_number === '' ) {
 			return;
 		}
 
 		$options         = get_option( 'dianxiaomi_option_name' );
-		$track_message_1 = isset( $options['track_message_1'] ) ? $options['track_message_1'] : 'Your order was shipped via ';
-		$track_message_2 = isset( $options['track_message_2'] ) ? $options['track_message_2'] : 'Tracking number is ';
+		$track_message_1 = is_array( $options ) && isset( $options['track_message_1'] ) && is_string( $options['track_message_1'] ) ? $options['track_message_1'] : 'Your order was shipped via ';
+		$track_message_2 = is_array( $options ) && isset( $options['track_message_2'] ) && is_string( $options['track_message_2'] ) ? $options['track_message_2'] : 'Tracking number is ';
 
-		$required_fields_values   = array();
-		$provider_required_fields = explode( ',', $order->get_meta( '_dianxiaomi_tracking_required_fields' ) );
+		$required_fields_values = array();
+		$required_fields_meta   = $order->get_meta( '_dianxiaomi_tracking_required_fields' );
+		$required_fields_str    = is_string( $required_fields_meta ) ? $required_fields_meta : '';
+		if ( $required_fields_str !== '' ) {
+			$provider_required_fields = explode( ',', $required_fields_str );
 
-		foreach ( $provider_required_fields as $field ) {
-			if ( isset( $values[ $field ] ) ) {
-				$required_fields_values[] = $values[ $field ];
+			foreach ( $provider_required_fields as $field ) {
+				if ( isset( $values[ $field ] ) && is_string( $values[ $field ] ) ) {
+					$required_fields_values[] = $values[ $field ];
+				}
 			}
 		}
 
 		$required_fields_msg = ! empty( $required_fields_values ) ? ' (' . join( ', ', $required_fields_values ) . ')' : '';
 
-		$custom_domain = $this->custom_domain ? $this->custom_domain : 'https://t.17track.net/en#nums=';
+		$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
 		$tracking_url  = $custom_domain . $dianxiaomi_tracking_number;
 
 		echo esc_html( $track_message_1 ) . esc_html( $dianxiaomi_tracking_provider_name ) . '<br/>' . esc_html( $track_message_2 ) . '<a target="_blank" href="' . esc_url( $tracking_url ) . '">' . esc_html( $dianxiaomi_tracking_number ) . '</a>' . esc_html( $required_fields_msg );
@@ -406,28 +447,32 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 
-		$tracking        = $order->get_meta( '_tracking_number', true );
+		$tracking_meta   = $order->get_meta( '_tracking_number', true );
+		$tracking        = is_string( $tracking_meta ) ? $tracking_meta : '';
+		if ( $tracking === '' ) {
+			return;
+		}
 		$sharp           = strpos( $tracking, '#' );
 		$colon           = strpos( $tracking, ':' );
 		$required_fields = array();
-		if ( $sharp && $colon && $sharp >= $colon ) {
+		if ( $sharp !== false && $colon !== false && $sharp >= $colon ) {
 			return;
-		} elseif ( ! $sharp && $colon ) {
+		} elseif ( $sharp === false && $colon !== false ) {
 			return;
-		} elseif ( $sharp ) {
+		} elseif ( $sharp !== false ) {
 			$tracking_provider = substr( $tracking, 0, $sharp );
-			if ( $colon ) {
+			if ( $colon !== false ) {
 				$tracking_number = substr( $tracking, $sharp + 1, $colon - $sharp - 1 );
-				$temp            = substr( $tracking, $sharp + 1, strlen( $tracking ) );
+				$temp            = substr( $tracking, $sharp + 1 );
 				$required_fields = explode( ':', $temp );
 			} else {
-				$tracking_number = substr( $tracking, $sharp + 1, strlen( $tracking ) );
+				$tracking_number = substr( $tracking, $sharp + 1 );
 			}
 		} else {
 			$tracking_provider = '';
 			$tracking_number   = $tracking;
 		}
-		if ( $tracking_number ) {
+		if ( $tracking_number !== '' ) {
 			$this->display_track_button( $tracking_provider, $tracking_number, $required_fields );
 		}
 	}
