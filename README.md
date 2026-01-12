@@ -31,20 +31,9 @@ collaborative improvements.
 |--------------|-----------------|--------------|
 | WordPress    | 5.8             | 6.9          |
 | WooCommerce  | 8.0             | 10.4         |
-| PHP          | 8.1             | 8.5          |
+| PHP          | 8.1             | 8.4          |
 
-### PHP Version Compatibility
-
-| PHP Version | CI Tests | Production Tested |
-|-------------|----------|-------------------|
-| 8.1         | Yes      | Yes               |
-| 8.2         | Yes      | Yes               |
-| 8.3         | Yes      | Yes               |
-| 8.4         | Yes      | No                |
-| 8.5         | Yes      | No                |
-
-> **Note:** PHP 8.4 and 8.5 pass all CI tests but have not been tested in
-> production.
+> **Note:** PHP 8.4 and 8.5 pass all CI tests but have not been tested in production.
 
 ## Code Quality
 
