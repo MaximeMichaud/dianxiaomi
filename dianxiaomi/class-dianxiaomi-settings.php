@@ -120,8 +120,10 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function create_admin_page(): void {
-		$options       = get_option( 'dianxiaomi_option_name' );
-		$this->options = is_array( $options ) ? $options : array();
+		$options = get_option( 'dianxiaomi_option_name' );
+		/** @var array<string, mixed> $options_array */
+		$options_array = is_array( $options ) ? $options : array();
+		$this->options = $options_array;
 		?>
 		<div class="wrap">
 			<h2>Dianxiaomi Settings</h2>
@@ -194,24 +196,24 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	public function sanitize( array $input ): array {
 		$new_input = array();
 
-		if ( isset( $input['couriers'] ) ) {
+		if ( isset( $input['couriers'] ) && is_string( $input['couriers'] ) ) {
 			$new_input['couriers'] = sanitize_text_field( $input['couriers'] );
 		}
 
-		if ( isset( $input['custom_domain'] ) ) {
+		if ( isset( $input['custom_domain'] ) && is_string( $input['custom_domain'] ) ) {
 			$new_input['custom_domain'] = sanitize_text_field( $input['custom_domain'] );
 		}
 
-		if ( isset( $input['plugin'] ) ) {
+		if ( isset( $input['plugin'] ) && is_string( $input['plugin'] ) ) {
 			$new_input['plugin'] = sanitize_text_field( $input['plugin'] );
 		}
 
-		if ( isset( $input['track_message_1'] ) ) {
+		if ( isset( $input['track_message_1'] ) && is_string( $input['track_message_1'] ) ) {
 			$postfix                      = substr( $input['track_message_1'], -1 ) === ' ' ? ' ' : '';
 			$new_input['track_message_1'] = sanitize_text_field( $input['track_message_1'] ) . $postfix;
 		}
 
-		if ( isset( $input['track_message_2'] ) ) {
+		if ( isset( $input['track_message_2'] ) && is_string( $input['track_message_2'] ) ) {
 			$postfix                      = substr( $input['track_message_2'], -1 ) === ' ' ? ' ' : '';
 			$new_input['track_message_2'] = sanitize_text_field( $input['track_message_2'] ) . $postfix;
 		}

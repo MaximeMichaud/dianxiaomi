@@ -42,7 +42,7 @@ This plugin follows strict code quality standards:
 | Tool     | Level/Standard                    |
 |----------|-----------------------------------|
 | PHPCS    | WordPress Coding Standards (WPCS) |
-| PHPStan  | Level 9                           |
+| PHPStan  | Level 10                          |
 | Psalm    | Level 8                           |
 | PHPUnit  | Unit & Integration tests          |
 

@@ -87,18 +87,27 @@ class Dianxiaomi_API_Server {
 		if ( ! isset( $_REQUEST['_wpnonce'] ) ) {
 			$_REQUEST['_wpnonce'] = wp_create_nonce( 'dianxiaomi_action' );
 		}
-		$nonce             = sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified below, sanitized on next line.
+		$nonce_raw         = isset( $_REQUEST['_wpnonce'] ) ? wp_unslash( $_REQUEST['_wpnonce'] ) : '';
+		$nonce             = is_string( $nonce_raw ) ? sanitize_text_field( $nonce_raw ) : '';
 		$_GET['_wpnonce']  = $nonce;
 		$_POST['_wpnonce'] = $nonce;
 		// Vérification du nonce pour les requêtes GET et POST
 		if ( in_array( $this->method, array( 'GET', 'POST' ), true ) && isset( $_REQUEST['_wpnonce'] ) ) {
-			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'dianxiaomi_action' ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified here, sanitized on next line.
+			$nonce_check = isset( $_REQUEST['_wpnonce'] ) ? wp_unslash( $_REQUEST['_wpnonce'] ) : '';
+			$check_str   = is_string( $nonce_check ) ? sanitize_text_field( $nonce_check ) : '';
+			if ( ! wp_verify_nonce( $check_str, 'dianxiaomi_action' ) ) {
 				wp_die( esc_html__( 'Nonce verification failed', 'dianxiaomi' ), 403 );
 			}
 		}
-		$path_info            = isset( $_SERVER['PATH_INFO'] ) ? sanitize_text_field( wp_unslash( $_SERVER['PATH_INFO'] ) ) : '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PATH_INFO is optional server variable, sanitized on next line.
+		$path_raw             = isset( $_SERVER['PATH_INFO'] ) ? wp_unslash( $_SERVER['PATH_INFO'] ) : '';
+		$path_info            = is_string( $path_raw ) ? sanitize_text_field( $path_raw ) : '';
 		$this->path           = $path ? $path : ( $path_info ? $path_info : '/' );
-		$this->method         = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REQUEST_METHOD is always set by server, sanitized on next line.
+		$method_raw           = isset( $_SERVER['REQUEST_METHOD'] ) ? wp_unslash( $_SERVER['REQUEST_METHOD'] ) : 'GET';
+		$this->method         = is_string( $method_raw ) ? sanitize_text_field( $method_raw ) : 'GET';
 		$this->params['GET']  = $_GET;
 		$this->params['POST'] = $_POST;
 		$this->headers        = $this->get_headers( $_SERVER );
@@ -106,13 +115,15 @@ class Dianxiaomi_API_Server {
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
 				apply_filters( 'dianxiaomi_api_default_response_handler', 'Dianxiaomi_API_JSON_Handler', $this->path, $this ) );
+		/** @var class-string $handler_class */
+		$handler_class = is_string( $handler_class ) ? $handler_class : 'Dianxiaomi_API_JSON_Handler';
 		$handler       = new $handler_class();
 		assert( $handler instanceof Dianxiaomi_API_Handler );
 		$this->handler = $handler;
 	}
 	public function check_authentication(): WP_User|WP_Error {
 		$user = apply_filters( 'dianxiaomi_api_check_authentication', null, $this );
-		if ( is_a( $user, 'WP_User' ) ) {
+		if ( $user instanceof WP_User ) {
 			wp_set_current_user( $user->ID );
 		} elseif ( ! is_wp_error( $user ) ) {
 			$user = new WP_Error( 'dianxiaomi_api_authentication_error', __( 'Invalid authentication method', 'dianxiaomi' ), array( 'code' => 500 ) );
@@ -121,13 +132,19 @@ class Dianxiaomi_API_Server {
 	}
 
 	protected function error_to_array( WP_Error $error ): array {
-		$errors = array();
-		foreach ( $error->errors as $code => $messages ) {
-			foreach ( $messages as $message ) {
-				$errors[] = array(
-					'code'    => $code,
-					'message' => $message,
-				);
+		$errors      = array();
+		$error_array = $error->errors;
+		if ( is_array( $error_array ) ) {
+			foreach ( $error_array as $code => $messages ) {
+				if ( ! is_array( $messages ) ) {
+					continue;
+				}
+				foreach ( $messages as $message ) {
+					$errors[] = array(
+						'code'    => $code,
+						'message' => $message,
+					);
+				}
 			}
 		}
 		return array( 'errors' => $errors );
@@ -159,7 +176,7 @@ class Dianxiaomi_API_Server {
 
 		if ( is_wp_error( $result ) ) {
 			$data = $result->get_error_data();
-			if ( is_array( $data ) && isset( $data['status'] ) ) {
+			if ( is_array( $data ) && isset( $data['status'] ) && is_int( $data['status'] ) ) {
 				$this->send_status( $data['status'] );
 			}
 			$result = $this->error_to_array( $result );
@@ -176,19 +193,29 @@ class Dianxiaomi_API_Server {
 		}
 	}
 
+	/**
+	 * Get registered API routes.
+	 *
+	 * @return array<string, array<int, array<int, mixed>>> Routes array.
+	 */
 	public function get_routes(): array {
 		$endpoints = array(
 			'/' => array( array( $this, 'get_index' ), self::READABLE ),
 		);
 
+		/** @var array<string, array<int, mixed>> $endpoints */
 		$endpoints = apply_filters( 'dianxiaomi_api_endpoints', $endpoints );
 
 		foreach ( $endpoints as $route => &$handlers ) {
+			if ( ! is_array( $handlers ) ) {
+				continue;
+			}
 			if ( count( $handlers ) <= 2 && isset( $handlers[1] ) && ! is_array( $handlers[1] ) ) {
 				$handlers = array( $handlers );
 			}
 		}
 
+		/** @var array<string, array<int, array<int, mixed>>> $endpoints */
 		return $endpoints;
 	}
 
@@ -220,9 +247,15 @@ class Dianxiaomi_API_Server {
 		}
 
 		foreach ( $this->get_routes() as $route => $handlers ) {
+			if ( ! is_array( $handlers ) ) {
+				continue;
+			}
 			foreach ( $handlers as $handler ) {
-				$callback  = $handler[0];
-				$supported = $handler[1] ?? self::METHOD_GET;
+				if ( ! is_array( $handler ) ) {
+					continue;
+				}
+				$callback  = $handler[0] ?? null;
+				$supported = isset( $handler[1] ) && is_int( $handler[1] ) ? $handler[1] : self::METHOD_GET;
 
 				if ( ! ( $supported & $method ) ) {
 					continue;
@@ -238,7 +271,11 @@ class Dianxiaomi_API_Server {
 					return new WP_Error( 'dianxiaomi_api_invalid_handler', __( 'The handler for the route is invalid', 'dianxiaomi' ), array( 'status' => 500 ) );
 				}
 
-				$args = array_merge( $args, $this->params['GET'], $this->params['POST'] );
+				/** @var array<string, mixed> $get_params */
+				$get_params = $this->params['GET'] ?? array();
+				/** @var array<string, mixed> $post_params */
+				$post_params = $this->params['POST'] ?? array();
+				$args        = array_merge( $args, $get_params, $post_params );
 				if ( $supported & self::ACCEPT_DATA ) {
 					$data = $this->handler->parse_body( $this->get_raw_data() );
 					$args = array_merge( $args, array( 'data' => $data ) );
@@ -257,6 +294,9 @@ class Dianxiaomi_API_Server {
 
 				if ( is_wp_error( $args ) ) {
 					return $args;
+				}
+				if ( ! is_array( $args ) ) {
+					return new WP_Error( 'dianxiaomi_api_invalid_args', __( 'Invalid dispatch args', 'dianxiaomi' ), array( 'status' => 500 ) );
 				}
 
 				$params = $this->sort_callback_params( $callback, $args );
@@ -296,23 +336,33 @@ class Dianxiaomi_API_Server {
 		);
 
 		foreach ( $this->get_routes() as $route => $callbacks ) {
-			$data    = array();
-			$route   = preg_replace( '#\(\?P<\w+?>.*?\)#', '$1', $route );
+			$data  = array();
+			$route = preg_replace( '#\(\?P<\w+?>.*?\)#', '$1', $route );
 			if ( null === $route ) {
+				continue;
+			}
+			if ( ! is_array( $callbacks ) ) {
 				continue;
 			}
 			$methods = array();
 			foreach ( self::$method_map as $name => $bitmask ) {
+				if ( ! is_int( $bitmask ) ) {
+					continue;
+				}
 				foreach ( $callbacks as $callback ) {
-					if ( $callback[1] & self::HIDDEN_ENDPOINT ) {
+					if ( ! is_array( $callback ) ) {
+						continue;
+					}
+					$cb_flags = isset( $callback[1] ) && is_int( $callback[1] ) ? $callback[1] : 0;
+					if ( $cb_flags & self::HIDDEN_ENDPOINT ) {
 						continue 3;
 					}
 
-					if ( $callback[1] & $bitmask ) {
+					if ( $cb_flags & $bitmask ) {
 						$data['supports'][] = $name;
 					}
 
-					if ( $callback[1] & self::ACCEPT_DATA ) {
+					if ( $cb_flags & self::ACCEPT_DATA ) {
 						$data['accepts_data'] = true;
 					}
 
@@ -325,7 +375,9 @@ class Dianxiaomi_API_Server {
 			}
 			$available['store']['routes'][ $route ] = apply_filters( 'dianxiaomi_api_endpoints_description', $data );
 		}
-		return apply_filters( 'dianxiaomi_api_index', $available );
+		/** @var array<string, mixed> $result */
+		$result = apply_filters( 'dianxiaomi_api_index', $available );
+		return $result;
 	}
 	/**
 	 * Send pagination headers for resources.
@@ -336,22 +388,24 @@ class Dianxiaomi_API_Server {
 	 */
 	public function add_pagination_headers( $query ): void {
 		if ( $query instanceof WP_User_Query ) {
-			$page        = isset( $query->query_vars['paged'] ) ? (int) $query->query_vars['paged'] : 1;
+			$paged_var   = $query->query_vars['paged'] ?? 1;
+			$page        = is_numeric( $paged_var ) ? (int) $paged_var : 1;
 			$single      = count( $query->get_results() ) > 1;
 			$total       = $query->get_total();
-			$per_page    = isset( $query->query_vars['number'] ) ? (int) $query->query_vars['number'] : 10;
+			$number_var  = $query->query_vars['number'] ?? 10;
+			$per_page    = is_numeric( $number_var ) ? (int) $number_var : 10;
 			$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
 		} else {
-			$page        = $query->get( 'paged' );
+			$paged_val   = $query->get( 'paged' );
+			$page        = is_numeric( $paged_val ) ? (int) $paged_val : 1;
 			$single      = $query->is_single();
 			$total       = $query->found_posts;
 			$total_pages = $query->max_num_pages;
 		}
 
-		if ( ! $page || ! is_numeric( $page ) ) {
+		if ( ! $page ) {
 			$page = 1;
 		}
-		$page = (int) $page;
 
 		$next_page = $page + 1;
 
@@ -407,11 +461,13 @@ class Dianxiaomi_API_Server {
 		$header = sprintf( '<%s>; rel="%s"', $link, esc_attr( $rel ) );
 
 		foreach ( $other as $key => $value ) {
-			if ( 'title' === $key ) {
-				$value = '"' . $value . '"';
+			$key_str   = is_string( $key ) ? $key : '';
+			$value_str = is_string( $value ) ? $value : ( is_scalar( $value ) ? (string) $value : '' );
+			if ( 'title' === $key_str ) {
+				$value_str = '"' . $value_str . '"';
 			}
 
-			$header .= '; ' . $key . '=' . $value;
+			$header .= '; ' . $key_str . '=' . $value_str;
 		}
 
 		$this->header( 'Link', $header, false );
@@ -567,8 +623,12 @@ class Dianxiaomi_API_Server {
 	 * @return array
 	 */
 	protected function sort_callback_params( $callback, array $provided ): array {
-		if ( is_array( $callback ) ) {
-			$ref_func = new ReflectionMethod( $callback[0], $callback[1] );
+		if ( is_array( $callback ) && isset( $callback[0] ) && isset( $callback[1] ) ) {
+			/** @var object|class-string $object */
+			$object = $callback[0];
+			/** @var string $method */
+			$method   = is_string( $callback[1] ) ? $callback[1] : '';
+			$ref_func = new ReflectionMethod( $object, $method );
 		} elseif ( $callback instanceof Closure || is_string( $callback ) ) {
 			$ref_func = new ReflectionFunction( $callback );
 		} else {
@@ -581,8 +641,15 @@ class Dianxiaomi_API_Server {
 		foreach ( $wanted as $param ) {
 			if ( isset( $provided[ $param->getName() ] ) ) {
 				// We have this parameters in the list to choose from
-
-				$ordered_parameters[] = is_array( $provided[ $param->getName() ] ) ? array_map( 'urldecode', $provided[ $param->getName() ] ) : urldecode( $provided[ $param->getName() ] );
+				$param_value = $provided[ $param->getName() ];
+				if ( is_array( $param_value ) ) {
+					/** @var array<int|string, string> $param_value */
+					$ordered_parameters[] = array_map( 'urldecode', $param_value );
+				} elseif ( is_string( $param_value ) ) {
+					$ordered_parameters[] = urldecode( $param_value );
+				} else {
+					$ordered_parameters[] = $param_value;
+				}
 			} elseif ( $param->isDefaultValueAvailable() ) {
 				// We don't have this parameter, but it's optional
 				$ordered_parameters[] = $param->getDefaultValue();

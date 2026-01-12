@@ -55,7 +55,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 	private function includes(): void {
 		include_once 'dianxiaomi-fields.php';
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_undefined
-		$this->dianxiaomi_fields = isset( $dianxiaomi_fields ) && is_array( $dianxiaomi_fields ) ? $dianxiaomi_fields : array();
+		/** @var array<string, mixed> $fields_array */
+		$fields_array            = isset( $dianxiaomi_fields ) && is_array( $dianxiaomi_fields ) ? $dianxiaomi_fields : array();
+		$this->dianxiaomi_fields = $fields_array;
 
 		include_once 'class-dianxiaomi-api.php';
 		include_once 'class-dianxiaomi-settings.php';
@@ -187,6 +189,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 	public function meta_box(): void {
 		global $post;
 		// HPOS compatible: get order object.
+		if ( ! $post instanceof WP_Post ) {
+			return;
+		}
 		$order = wc_get_order( $post->ID );
 		if ( ! $order instanceof WC_Order ) {
 			return;
@@ -263,7 +268,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 */
 	public function save_meta_box( int $post_id, object $post ): void {
 		// Vérifier le nonce pour la sécurité
-		$dianxiaomi_nonce = isset( $_POST['dianxiaomi_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_nonce'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified below, sanitized on next line.
+		$nonce_raw        = isset( $_POST['dianxiaomi_nonce'] ) ? wp_unslash( $_POST['dianxiaomi_nonce'] ) : '';
+		$dianxiaomi_nonce = is_string( $nonce_raw ) ? sanitize_text_field( $nonce_raw ) : '';
 		if ( ! $dianxiaomi_nonce || ! wp_verify_nonce( $dianxiaomi_nonce, 'dianxiaomi_save_meta_box' ) ) {
 			return;
 		}
@@ -275,7 +282,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 		}
 
 		if ( isset( $_POST['dianxiaomi_tracking_number'] ) ) {
-			$tracking_provider = isset( $_POST['dianxiaomi_tracking_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_tracking_provider'] ) ) : '';
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized on next line.
+			$provider_raw      = isset( $_POST['dianxiaomi_tracking_provider'] ) ? wp_unslash( $_POST['dianxiaomi_tracking_provider'] ) : '';
+			$tracking_provider = is_string( $provider_raw ) ? sanitize_text_field( $provider_raw ) : '';
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $tracking_provider );
 
 			foreach ( $this->dianxiaomi_fields as $field ) {
@@ -287,7 +296,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 				if ( $field_id === '' ) {
 					continue;
 				}
-				$field_value = isset( $_POST[ $field_id ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field_id ] ) ) : '';
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized on next line.
+				$raw_value   = isset( $_POST[ $field_id ] ) ? wp_unslash( $_POST[ $field_id ] ) : '';
+				$field_value = is_string( $raw_value ) ? sanitize_text_field( $raw_value ) : '';
 				if ( $field_type === 'date' ) {
 					$field_value = (string) strtotime( $field_value );
 				}
@@ -315,11 +326,13 @@ final class Dianxiaomi implements Subscriber_Interface {
 		echo '<tr>';
 		echo '<th><label for="dianxiaomi_wp_api_key">' . esc_html__( 'Dianxiaomi\'s WordPress API Key', 'dianxiaomi' ) . '</label></th>';
 		echo '<td>';
-		if ( empty( $user->dianxiaomi_wp_api_key ) ) {
+		$api_key = $user->get( 'dianxiaomi_wp_api_key' );
+		$api_key = is_string( $api_key ) ? $api_key : '';
+		if ( empty( $api_key ) ) {
 			echo '<input name="dianxiaomi_wp_generate_api_key" type="checkbox" id="dianxiaomi_wp_generate_api_key" value="0" />';
 			echo '<span class="description">' . esc_html__( 'Generate API Key', 'dianxiaomi' ) . '</span>';
 		} else {
-			echo '<code id="dianxiaomi_wp_api_key">' . esc_html( $user->dianxiaomi_wp_api_key ) . '</code><br />';
+			echo '<code id="dianxiaomi_wp_api_key">' . esc_html( $api_key ) . '</code><br />';
 			echo '<input name="dianxiaomi_wp_generate_api_key" type="checkbox" id="dianxiaomi_wp_generate_api_key" value="0" />';
 			echo '<span class="description">' . esc_html__( 'Revoke API Key', 'dianxiaomi' ) . '</span>';
 		}
@@ -339,7 +352,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 		// Vérifier le nonce pour la sécurité
-		$dianxiaomi_nonce = isset( $_POST['dianxiaomi_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dianxiaomi_nonce'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified below, sanitized on next line.
+		$nonce_raw        = isset( $_POST['dianxiaomi_nonce'] ) ? wp_unslash( $_POST['dianxiaomi_nonce'] ) : '';
+		$dianxiaomi_nonce = is_string( $nonce_raw ) ? sanitize_text_field( $nonce_raw ) : '';
 		if ( ! $dianxiaomi_nonce || ! wp_verify_nonce( $dianxiaomi_nonce, 'dianxiaomi_generate_api_key' ) ) {
 			return;
 		}
@@ -348,7 +363,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 		if ( isset( $_POST['dianxiaomi_wp_generate_api_key'] ) ) {
-			if ( empty( $user->dianxiaomi_wp_api_key ) ) {
+			$existing_key = $user->get( 'dianxiaomi_wp_api_key' );
+			if ( empty( $existing_key ) ) {
 				$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
 				update_user_meta( $user_id, 'dianxiaomi_wp_api_key', $api_key );
 			} else {
@@ -493,7 +509,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 			wc_enqueue_js( $js );
 		} else {
 			global $woocommerce;
-			$woocommerce->add_inline_js( $js );
+			if ( is_object( $woocommerce ) && method_exists( $woocommerce, 'add_inline_js' ) ) {
+				$woocommerce->add_inline_js( $js );
+			}
 		}
 
 		if ( count( $required_fields_values ) ) {

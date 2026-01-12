@@ -97,12 +97,18 @@ class Dianxiaomi_API {
 	public function handle_api_requests(): void {
 		global $wp;
 
+		if ( ! $wp instanceof WP ) {
+			return;
+		}
+
 		// Get sanitized API parameter.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked below.
-		$api_param = isset( $_GET['dianxiaomi-api'] ) ? sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked below, sanitized on next line.
+		$api_raw   = isset( $_GET['dianxiaomi-api'] ) ? wp_unslash( $_GET['dianxiaomi-api'] ) : '';
+		$api_param = is_string( $api_raw ) ? sanitize_text_field( $api_raw ) : '';
 		if ( ! empty( $api_param ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized above with sanitize_text_field.
-			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked below, sanitized on next line.
+			$nonce_raw = isset( $_GET['_wpnonce'] ) ? wp_unslash( $_GET['_wpnonce'] ) : '';
+			$nonce     = is_string( $nonce_raw ) ? sanitize_text_field( $nonce_raw ) : '';
 			if ( ! wp_verify_nonce( $nonce, 'dianxiaomi_api_nonce' ) ) {
 				wp_die( 'Nonce verification failed', 'Error', array( 'response' => 403 ) );
 			}
@@ -110,20 +116,22 @@ class Dianxiaomi_API {
 		}
 
 		// Get sanitized API route parameter.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Route parsing before authentication.
-		$api_route = isset( $_GET['dianxiaomi-api-route'] ) ? sanitize_text_field( wp_unslash( $_GET['dianxiaomi-api-route'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Route parsing before authentication, sanitized on next line.
+		$route_raw = isset( $_GET['dianxiaomi-api-route'] ) ? wp_unslash( $_GET['dianxiaomi-api-route'] ) : '';
+		$api_route = is_string( $route_raw ) ? sanitize_text_field( $route_raw ) : '';
 		if ( ! empty( $api_route ) ) {
 			$wp->query_vars['dianxiaomi-api-route'] = $api_route;
 		}
 
 		// REST API request
-		if ( ! empty( $wp->query_vars['dianxiaomi-api-route'] ) ) {
+		$rest_route = isset( $wp->query_vars['dianxiaomi-api-route'] ) && is_string( $wp->query_vars['dianxiaomi-api-route'] ) ? $wp->query_vars['dianxiaomi-api-route'] : '';
+		if ( ! empty( $rest_route ) ) {
 			define( 'AFTERSHIP_API_REQUEST', true );
 
 			// load required files
 			$this->includes();
 
-			$this->server = new Dianxiaomi_API_Server( $wp->query_vars['dianxiaomi-api-route'] );
+			$this->server = new Dianxiaomi_API_Server( $rest_route );
 
 			// load API resource classes
 			$this->register_resources( $this->server );
@@ -135,12 +143,13 @@ class Dianxiaomi_API {
 		}
 
 		// legacy API requests
-		if ( ! empty( $wp->query_vars['dianxiaomi-api'] ) ) {
+		$legacy_api = isset( $wp->query_vars['dianxiaomi-api'] ) && is_string( $wp->query_vars['dianxiaomi-api'] ) ? $wp->query_vars['dianxiaomi-api'] : '';
+		if ( ! empty( $legacy_api ) ) {
 			// Buffer, we won't want any output here
 			ob_start();
 
 			// Get API trigger
-			$api = strtolower( esc_attr( $wp->query_vars['dianxiaomi-api'] ) );
+			$api = strtolower( esc_attr( $legacy_api ) );
 
 			// Load class if exists
 			if ( class_exists( $api ) ) {
@@ -192,6 +201,7 @@ class Dianxiaomi_API {
 	 * @param Dianxiaomi_API_Server $server the REST server
 	 */
 	public function register_resources( Dianxiaomi_API_Server $server ): void {
+		/** @var array<int, string> $api_classes */
 		$api_classes = apply_filters(
 			'dianxiaomi_api_classes',
 			array(
@@ -200,7 +210,9 @@ class Dianxiaomi_API {
 		);
 
 		foreach ( $api_classes as $api_class ) {
-			$this->$api_class = new $api_class( $server );
+			if ( is_string( $api_class ) && class_exists( $api_class ) ) {
+				$this->$api_class = new $api_class( $server );
+			}
 		}
 	}
 }

@@ -193,7 +193,11 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 	 * @return array<string, mixed> Resource data with optional meta.
 	 */
 	public function maybe_add_meta( array $data, object $res ): array {
-		if ( isset( $this->server->params['GET']['filter']['meta'] ) && 'true' === $this->server->params['GET']['filter']['meta'] && is_object( $res ) && method_exists( $res, 'get_id' ) ) {
+		$get_params = $this->server->params['GET'] ?? array();
+		$filter     = is_array( $get_params ) && isset( $get_params['filter'] ) && is_array( $get_params['filter'] ) ? $get_params['filter'] : array();
+		$meta_flag  = isset( $filter['meta'] ) ? $filter['meta'] : null;
+
+		if ( 'true' === $meta_flag && method_exists( $res, 'get_id' ) ) {
 			switch ( get_class( $res ) ) {
 				case 'WC_Order':
 					$meta_name = 'order_meta';
@@ -210,10 +214,17 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 			}
 			// HPOS compatible: use get_meta_data() for WC objects, fallback to get_post_meta for others.
 			if ( method_exists( $res, 'get_meta_data' ) ) {
-				$meta_objects      = $res->get_meta_data();
-				$meta_array        = array();
+				/** @var array<int, object> $meta_objects */
+				$meta_objects = $res->get_meta_data();
+				$meta_array   = array();
 				foreach ( $meta_objects as $meta ) {
-					$key = $meta->key;
+					if ( ! is_object( $meta ) || ! isset( $meta->key ) || ! isset( $meta->value ) ) {
+						continue;
+					}
+					$key = is_string( $meta->key ) ? $meta->key : '';
+					if ( $key === '' ) {
+						continue;
+					}
 					if ( ! isset( $meta_array[ $key ] ) ) {
 						$meta_array[ $key ] = array();
 					}
@@ -221,7 +232,9 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 				}
 				$data[ $meta_name ] = $meta_array;
 			} else {
-				$data[ $meta_name ] = get_post_meta( $res->get_id() );
+				/** @var int $res_id */
+				$res_id             = $res->get_id();
+				$data[ $meta_name ] = get_post_meta( $res_id );
 			}
 		}
 		return $data;
@@ -379,15 +392,23 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 		if ( null === $post_type ) {
 			return false;
 		}
+		$capability = '';
 		switch ( $context ) {
 			case 'read':
-				return current_user_can( $post_type->cap->read_private_posts, $post->ID );
+				$capability = is_string( $post_type->cap->read_private_posts ) ? $post_type->cap->read_private_posts : '';
+				break;
 			case 'edit':
-				return current_user_can( $post_type->cap->edit_post, $post->ID );
+				$capability = is_string( $post_type->cap->edit_post ) ? $post_type->cap->edit_post : '';
+				break;
 			case 'delete':
-				return current_user_can( $post_type->cap->delete_post, $post->ID );
+				$capability = is_string( $post_type->cap->delete_post ) ? $post_type->cap->delete_post : '';
+				break;
 			default:
 				return false;
 		}
+		if ( $capability === '' ) {
+			return false;
+		}
+		return current_user_can( $capability, $post->ID );
 	}
 }

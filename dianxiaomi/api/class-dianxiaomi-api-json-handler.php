@@ -40,7 +40,8 @@ final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	 * @return string
 	 */
 	public function get_content_type(): string {
-		return 'application/json; charset=' . get_option( 'blog_charset' );
+		$charset = get_option( 'blog_charset' );
+		return 'application/json; charset=' . ( is_string( $charset ) ? $charset : 'UTF-8' );
 	}
 
 	/**
@@ -54,7 +55,9 @@ final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	 */
 	public function parse_body( string $data ): array {
 		$decoded = json_decode( $data, true );
-		return is_array( $decoded ) ? $decoded : array();
+		/** @var array<string, mixed> $result */
+		$result = is_array( $decoded ) ? $decoded : array();
+		return $result;
 	}
 
 	/**

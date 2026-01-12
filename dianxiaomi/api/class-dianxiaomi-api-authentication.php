@@ -129,6 +129,7 @@ final class Dianxiaomi_API_Authentication {
 		if ( ! $user_id ) {
 			throw new Exception( esc_html__( 'Dianxiaomi\'s WordPress API Key is invalid', 'dianxiaomi' ), 401 );
 		}
-		return new WP_User( $user_id );
+		/** @var int|string $user_id */
+		return new WP_User( (int) $user_id );
 	}
 }

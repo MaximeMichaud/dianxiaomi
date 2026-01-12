@@ -231,16 +231,26 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		// Gestion des métadonnées de suivi
+		$provider_meta = $order->get_meta( '_dianxiaomi_tracking_provider' );
+		$number_meta   = $order->get_meta( '_dianxiaomi_tracking_number' );
+		$ship_meta     = $order->get_meta( '_dianxiaomi_tracking_shipdate' );
+		$postal_meta   = $order->get_meta( '_dianxiaomi_tracking_postal' );
+		$account_meta  = $order->get_meta( '_dianxiaomi_tracking_account' );
+		$key_meta      = $order->get_meta( '_dianxiaomi_tracking_key' );
+		$country_meta  = $order->get_meta( '_dianxiaomi_tracking_destination_country' );
+
 		$tracking_data             = array(
-			'tracking_provider'            => $order->get_meta( '_dianxiaomi_tracking_provider' ),
-			'tracking_number'              => $order->get_meta( '_dianxiaomi_tracking_number' ),
-			'tracking_ship_date'           => $order->get_meta( '_dianxiaomi_tracking_shipdate' ),
-			'tracking_postal_code'         => $order->get_meta( '_dianxiaomi_tracking_postal' ),
-			'tracking_account_number'      => $order->get_meta( '_dianxiaomi_tracking_account' ),
-			'tracking_key'                 => $order->get_meta( '_dianxiaomi_tracking_key' ),
-			'tracking_destination_country' => $order->get_meta( '_dianxiaomi_tracking_destination_country' ),
+			'tracking_provider'            => is_string( $provider_meta ) ? $provider_meta : '',
+			'tracking_number'              => is_string( $number_meta ) ? $number_meta : '',
+			'tracking_ship_date'           => is_string( $ship_meta ) ? $ship_meta : '',
+			'tracking_postal_code'         => is_string( $postal_meta ) ? $postal_meta : '',
+			'tracking_account_number'      => is_string( $account_meta ) ? $account_meta : '',
+			'tracking_key'                 => is_string( $key_meta ) ? $key_meta : '',
+			'tracking_destination_country' => is_string( $country_meta ) ? $country_meta : '',
 		);
-		$order_data['trackings'][] = $tracking_data;
+		/** @var array<int, array<string, string>> $trackings */
+		$trackings                 = array( $tracking_data );
+		$order_data['trackings']   = $trackings;
 
 		return array( 'order' => apply_filters( 'dianxiaomi_api_order_response', $order_data, $order, $fields, $this->server ) );
 	}
@@ -376,7 +386,12 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return $validated_id;
 		}
 
-		return $this->delete( $validated_id, 'order', $force );
+		$result = $this->delete( $validated_id, 'order', $force );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		/** @var array<string, string> $result */
+		return $result;
 	}
 
 	/**
@@ -415,7 +430,9 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			);
 		}
 
-		return array( 'order_notes' => apply_filters( 'dianxiaomi_api_order_notes_response', $order_notes, $id, $this->server ) );
+		/** @var array<int, array<string, mixed>> $filtered_notes */
+		$filtered_notes = apply_filters( 'dianxiaomi_api_order_notes_response', $order_notes, $id, $this->server );
+		return array( 'order_notes' => $filtered_notes );
 	}
 
 	/**
@@ -462,9 +479,11 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @return float
 	 */
 	private function get_order_subtotal( WC_Order $order ): float {
-		$subtotal = 0;
+		$subtotal = 0.0;
 		foreach ( $order->get_items() as $item ) {
-			$subtotal += $item['line_subtotal'] ?? 0;
+			if ( $item instanceof WC_Order_Item_Product ) {
+				$subtotal += (float) $item->get_subtotal();
+			}
 		}
 		return $subtotal;
 	}
