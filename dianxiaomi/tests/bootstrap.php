@@ -27,6 +27,12 @@ if ( ! class_exists( 'WooCommerce' ) ) {
 	exit( 1 );
 }
 
+// Load WooCommerce admin functions for meta box testing.
+$wc_admin_functions = WP_PLUGIN_DIR . '/woocommerce/includes/admin/wc-meta-box-functions.php';
+if ( file_exists( $wc_admin_functions ) ) {
+	require_once $wc_admin_functions;
+}
+
 // Load our plugin if not already loaded.
 if ( ! class_exists( 'Dianxiaomi' ) ) {
 	require_once dirname( __DIR__ ) . '/dianxiaomi.php';
