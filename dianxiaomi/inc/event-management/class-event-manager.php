@@ -73,7 +73,8 @@ final class Event_Manager {
 	 * @phpstan-param callable|array{0: object, 1: string} $callback
 	 */
 	public function add_callback( string $hook_name, callable|array $callback, int $priority = 10, int $accepted_args = 1 ): void {
-		// WordPress accepts array callbacks [object, method] even though stubs say callable.
+		// PHPStan false positive: array{object, string} is a valid PHP callable (WordPress Trac #52539).
+		// Cannot use Closure::fromCallable() as it would break remove_filter() identity check.
 		\add_filter( $hook_name, $callback, $priority, $accepted_args ); // @phpstan-ignore argument.type
 	}
 

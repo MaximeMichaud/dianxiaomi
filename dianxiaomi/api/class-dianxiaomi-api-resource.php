@@ -72,8 +72,8 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 	 */
 	public function __construct( Dianxiaomi_API_Server $server ) {
 		$this->server = $server;
-		/** @phpstan-ignore argument.type */
-		add_filter( 'dianxiaomi_api_endpoints', array( $this, 'register_routes' ) );
+		// PHPStan false positive: array{object, string} is a valid PHP callable (WordPress Trac #52539).
+		add_filter( 'dianxiaomi_api_endpoints', array( $this, 'register_routes' ) ); // @phpstan-ignore argument.type
 		foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
 			add_filter( "dianxiaomi_api_{$resource}_response", array( $this, 'maybe_add_meta' ), 15, 2 );
 			add_filter( "dianxiaomi_api_{$resource}_response", array( $this, 'filter_response_fields' ), 20, 3 );
