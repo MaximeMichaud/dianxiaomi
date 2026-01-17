@@ -193,6 +193,12 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 		);
 	}
 
+	/**
+	 * Sanitize settings input.
+	 *
+	 * @param array<string, mixed> $input Raw input from settings form.
+	 * @return array<string, mixed> Sanitized input.
+	 */
 	public function sanitize( array $input ): array {
 		$new_input = array();
 

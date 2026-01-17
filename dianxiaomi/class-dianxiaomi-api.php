@@ -61,9 +61,9 @@ class Dianxiaomi_API {
 	 *
 	 * @since 2.0
 	 *
-	 * @param array $vars
+	 * @param array<int, string> $vars Query variables.
 	 *
-	 * @return array
+	 * @return array<int, string>
 	 */
 	public function add_query_vars( array $vars ): array {
 		$vars[] = 'dianxiaomi-api';

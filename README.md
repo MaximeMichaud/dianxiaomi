@@ -23,7 +23,7 @@ collaborative improvements.
 - PHP 8.1+ compatibility
 - WooCommerce 10.x compatibility
 - HPOS (High-Performance Order Storage) support
-- Modern code quality standards (PHPStan Level 8, Psalm, WPCS)
+- Modern WordPress code quality standards
 
 ## Requirements
 

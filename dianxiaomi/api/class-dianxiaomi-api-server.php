@@ -65,6 +65,7 @@ class Dianxiaomi_API_Server {
 	public const ACCEPT_DATA     = 128;
 	public const HIDDEN_ENDPOINT = 256;
 
+	/** @var array<string, int> HTTP method to constant mapping */
 	public static array $method_map = array(
 		'HEAD'   => self::METHOD_GET,
 		'GET'    => self::METHOD_GET,
@@ -76,12 +77,18 @@ class Dianxiaomi_API_Server {
 
 	public string $path   = '';
 	public string $method = 'HEAD';
-	public array $params  = array(
+
+	/** @var array<string, array<string, mixed>> Request parameters by method */
+	public array $params = array(
 		'GET'  => array(),
 		'POST' => array(),
 	);
+
+	/** @var array<string, mixed> HTTP headers */
 	public array $headers = array();
-	public array $files   = array();
+
+	/** @var array<string, mixed> Uploaded files */
+	public array $files = array();
 	public Dianxiaomi_API_Handler $handler;
 	public function __construct( string $path ) {
 		if ( ! isset( $_REQUEST['_wpnonce'] ) ) {
@@ -107,10 +114,16 @@ class Dianxiaomi_API_Server {
 		$this->path           = $path ? $path : ( $path_info ? $path_info : '/' );
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REQUEST_METHOD is always set by server, sanitized on next line.
 		$method_raw           = isset( $_SERVER['REQUEST_METHOD'] ) ? wp_unslash( $_SERVER['REQUEST_METHOD'] ) : 'GET';
-		$this->method         = is_string( $method_raw ) ? sanitize_text_field( $method_raw ) : 'GET';
-		$this->params['GET']  = $_GET;
-		$this->params['POST'] = $_POST;
-		$this->headers        = $this->get_headers( $_SERVER );
+		$this->method = is_string( $method_raw ) ? sanitize_text_field( $method_raw ) : 'GET';
+		/** @var array<string, mixed> $get_params */
+		$get_params = $_GET;
+		/** @var array<string, mixed> $post_params */
+		$post_params          = $_POST;
+		$this->params['GET']  = $get_params;
+		$this->params['POST'] = $post_params;
+		/** @var array<string, mixed> $server_vars */
+		$server_vars   = $_SERVER;
+		$this->headers = $this->get_headers( $server_vars );
 
 		$handler_class = $this->is_json_request() ? 'Dianxiaomi_API_JSON_Handler' :
 			( $this->is_xml_request() ? 'WC_API_XML_Handler' :
@@ -131,6 +144,12 @@ class Dianxiaomi_API_Server {
 		return $user;
 	}
 
+	/**
+	 * Convert WP_Error to array format.
+	 *
+	 * @param WP_Error $error The error object.
+	 * @return array{errors: array<int, array{code: int|string, message: mixed}>}
+	 */
 	protected function error_to_array( WP_Error $error ): array {
 		$errors      = array();
 		$error_array = $error->errors;
@@ -242,10 +261,6 @@ class Dianxiaomi_API_Server {
 				return new WP_Error( 'dianxiaomi_api_unsupported_method', __( 'Unsupported request method', 'dianxiaomi' ), array( 'status' => 400 ) );
 		}
 
-		if ( $method instanceof WP_Error ) {
-			return $method;
-		}
-
 		foreach ( $this->get_routes() as $route => $handlers ) {
 			if ( ! is_array( $handlers ) ) {
 				continue;
@@ -311,6 +326,11 @@ class Dianxiaomi_API_Server {
 		return new WP_Error( 'dianxiaomi_api_no_route', __( 'No route was found matching the URL and request method', 'dianxiaomi' ), array( 'status' => 404 ) );
 	}
 
+	/**
+	 * Get API index with store info and available routes.
+	 *
+	 * @return array<string, mixed>
+	 */
 	public function get_index(): array {
 		$available = array(
 			'store' => array(
@@ -449,9 +469,9 @@ class Dianxiaomi_API_Server {
 	 * @link http://www.iana.org/assignments/link-relations/link-relations.xml
 	 * @since 2.1
 	 *
-	 * @param string $rel   Link relation. Either a registered type, or an absolute URL
-	 * @param string $link  Target IRI for the link
-	 * @param array  $other Other parameters to send, as an associative array
+	 * @param string                         $rel   Link relation. Either a registered type, or an absolute URL.
+	 * @param string                         $link  Target IRI for the link.
+	 * @param array<string, string|int|bool> $other Other parameters to send, as an associative array.
 	 */
 	public function link_header( string $rel, string $link, array $other = array() ): void {
 		$header = sprintf( '<%s>; rel="%s"', $link, esc_attr( $rel ) );
@@ -568,11 +588,11 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array $server Associative array similar to $_SERVER
+	 * @param array<string, mixed> $server Associative array similar to $_SERVER.
 	 *
-	 * @return array Headers extracted from the input
+	 * @return array<string, mixed> Headers extracted from the input.
 	 */
-	public function get_headers( $server ) {
+	public function get_headers( array $server ): array {
 		$headers    = array();
 		$additional = array(
 			'CONTENT_LENGTH' => true,
@@ -614,12 +634,12 @@ class Dianxiaomi_API_Server {
 	 *
 	 * @since 2.1
 	 *
-	 * @param callable|array $callback the endpoint callback
-	 * @param array          $provided the provided request parameters
+	 * @param callable|array<int, mixed> $callback the endpoint callback
+	 * @param array<int|string, mixed>   $provided the provided request parameters
 	 *
-	 * @return array
+	 * @return array<int, mixed>|WP_Error
 	 */
-	protected function sort_callback_params( $callback, array $provided ): array {
+	protected function sort_callback_params( $callback, array $provided ): array|WP_Error {
 		if ( is_array( $callback ) && isset( $callback[0] ) && isset( $callback[1] ) ) {
 			/** @var object|class-string $object */
 			$object = $callback[0];

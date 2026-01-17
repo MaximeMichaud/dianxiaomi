@@ -302,9 +302,9 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 	 * @param string $type  the resource post type, or `customer`
 	 * @param bool   $force true to permanently delete resource, false to move to trash (not supported for `customer`)
 	 *
-	 * @return array|WP_Error
+	 * @return array{message: string}|WP_Error
 	 */
-	protected function delete( int $id, string $type, bool $force = false ) {
+	protected function delete( int $id, string $type, bool $force = false ): array|WP_Error {
 		$resource_name = $type === 'shop_order' || $type === 'shop_coupon' ? str_replace( 'shop_', '', $type ) : $type;
 
 		if ( 'customer' === $type ) {

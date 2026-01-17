@@ -14,15 +14,3 @@ parameters:
         - vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
         - dianxiaomi-functions.php
     treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: false
-    # Remaining issues from inherited code
-    ignoreErrors:
-        # Array value types - would require major refactoring to add proper types
-        - '#no value type specified in iterable type array#'
-        # Global variable from config file
-        - '#Variable \$dianxiaomi_fields might not be defined#'
-        # Defensive checks - is_wp_error on known-array values (intentional safety)
-        - '#should return array but returns WP_Error#'
-        - '#Instanceof between .* and WP_Error will always evaluate to false#'
-        - '#Call to function is_wp_error\(\) with array will always evaluate to false#'
-        - '#is_wp_error\(array\) will always evaluate to false#'

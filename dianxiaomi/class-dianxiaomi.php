@@ -502,6 +502,13 @@ final class Dianxiaomi implements Subscriber_Interface {
 		$this->display_tracking_info( $order->get_id(), true );
 	}
 
+	/**
+	 * Display tracking button with provider info.
+	 *
+	 * @param string             $tracking_provider      Tracking provider slug.
+	 * @param string             $tracking_number        Tracking number.
+	 * @param array<int, string> $required_fields_values Additional required field values.
+	 */
 	private function display_track_button( string $tracking_provider, string $tracking_number, array $required_fields_values ): void {
 		$js = '(function(e,t,n){})(document,"script","trackdog-jssdk")';
 
