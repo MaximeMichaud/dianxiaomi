@@ -512,14 +512,10 @@ final class Dianxiaomi implements Subscriber_Interface {
 	private function display_track_button( string $tracking_provider, string $tracking_number, array $required_fields_values ): void {
 		$js = '(function(e,t,n){})(document,"script","trackdog-jssdk")';
 
-		if ( function_exists( 'wc_enqueue_js' ) ) {
-			wc_enqueue_js( $js );
-		} else {
-			global $woocommerce;
-			if ( is_object( $woocommerce ) && method_exists( $woocommerce, 'add_inline_js' ) ) {
-				$woocommerce->add_inline_js( $js );
-			}
-		}
+		$handle = 'dianxiaomi-trackdog';
+		wp_register_script( $handle, '', array(), DIANXIAOMI_VERSION, true );
+		wp_enqueue_script( $handle );
+		wp_add_inline_script( $handle, $js );
 
 		if ( count( $required_fields_values ) ) {
 			$tracking_number = $tracking_number . ':' . join( ':', $required_fields_values );
