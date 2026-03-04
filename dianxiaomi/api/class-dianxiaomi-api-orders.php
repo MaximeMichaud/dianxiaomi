@@ -94,7 +94,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed> Orders data.
 	 */
-	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, int $page = 1, string $updated_at_min = '' ): array {
+	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, string|int $page = 1, string $updated_at_min = '' ): array {
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
@@ -103,7 +103,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$filter['updated_at_min'] = $updated_at_min;
 		}
 
-		$filter['page'] = $page;
+		$filter['page'] = (int) $page;
 
 		$query = $this->query_orders( $filter );
 
@@ -112,10 +112,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$fields_array = null !== $fields ? explode( ',', $fields ) : null;
 		foreach ( $query->posts as $order_id ) {
 			$order_id = $order_id instanceof WP_Post ? $order_id->ID : (int) $order_id;
-			if ( ! $this->is_readable( $order_id ) ) {
-				continue;
-			}
-			$order_result = $this->get_order( $order_id, $fields_array );
+			$order_result = $this->get_order( $order_id, $fields_array, true );
 			if ( ! is_wp_error( $order_result ) ) {
 				$orders[] = current( $order_result );
 			}
@@ -136,14 +133,16 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed>|WP_Error Order data or error.
 	 */
-	public function get_order( int $id, ?array $fields = null ): array|WP_Error {
-		$id = $this->validate_request( $id, 'shop_order', 'read' );
+	public function get_order( string|int $id, ?array $fields = null, bool $skip_validation = false ): array|WP_Error {
+		if ( ! $skip_validation ) {
+			$id = $this->validate_request( (int) $id, 'shop_order', 'read' );
 
-		if ( is_wp_error( $id ) ) {
-			return $id;
+			if ( is_wp_error( $id ) ) {
+				return $id;
+			}
 		}
 
-		$order = wc_get_order( $id );
+		$order = wc_get_order( (int) $id );
 
 		if ( ! $order instanceof WC_Order ) {
 			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
@@ -267,8 +266,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed>|WP_Error Updated order data or error.
 	 */
-	public function edit_order( int $id, array $data ): array|WP_Error {
-		$id = $this->validate_request( $id, 'shop_order', 'edit' );
+	public function edit_order( string|int $id, array $data ): array|WP_Error {
+		$id = $this->validate_request( (int) $id, 'shop_order', 'edit' );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -332,8 +331,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed>|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
 	 */
-	public function ship_order( int $id, array $data ): array|WP_Error {
-		$validated_id = $this->validate_request( $id, 'shop_order', 'edit' );
+	public function ship_order( string|int $id, array $data ): array|WP_Error {
+		$validated_id = $this->validate_request( (int) $id, 'shop_order', 'edit' );
 
 		if ( is_wp_error( $validated_id ) ) {
 			return $validated_id;
@@ -379,8 +378,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, string>|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
 	 */
-	public function delete_order( int $id, bool $force = false ): array|WP_Error {
-		$validated_id = $this->validate_request( $id, 'shop_order', 'delete' );
+	public function delete_order( string|int $id, bool $force = false ): array|WP_Error {
+		$validated_id = $this->validate_request( (int) $id, 'shop_order', 'delete' );
 
 		if ( is_wp_error( $validated_id ) ) {
 			return $validated_id;
@@ -403,9 +402,9 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>> Order notes data.
 	 */
-	public function get_order_notes( int $id ): array {
+	public function get_order_notes( string|int $id ): array {
 		$args = array(
-			'post_id' => $id,
+			'post_id' => (int) $id,
 			'approve' => 'approve',
 			'type'    => 'order_note',
 		);
@@ -436,7 +435,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	}
 
 	/**
-	 * Helper method to get order post objects.
+	 * Helper method to get order IDs using HPOS-compatible wc_get_orders().
 	 *
 	 * @since 2.1
 	 *
@@ -445,28 +444,47 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @return WP_Query
 	 */
 	private function query_orders( array $args ): WP_Query {
-		$woo_version = $this->get_woocommerce_version();
-
 		$query_args = array(
-			'fields'      => 'ids',
-			'post_type'   => 'shop_order',
-			'post_status' => version_compare( $woo_version, '2.2', '>=' ) ? array_keys( wc_get_order_statuses() ) : 'publish',
+			'return'  => 'ids',
+			'limit'   => isset( $args['posts_per_page'] ) && is_numeric( $args['posts_per_page'] ) ? (int) $args['posts_per_page'] : 10,
+			'page'    => isset( $args['page'] ) && is_numeric( $args['page'] ) ? (int) $args['page'] : 1,
+			'orderby' => 'date',
+			'order'   => 'DESC',
 		);
 
 		if ( ! empty( $args['status'] ) && is_string( $args['status'] ) ) {
-			$statuses                  = explode( ',', $args['status'] );
-			$query_args['post_status'] = array_map(
-				function ( $status ) {
+			$statuses             = explode( ',', $args['status'] );
+			$query_args['status'] = array_map(
+				static function ( string $status ): string {
 					return 'wc-' . $status;
 				},
 				$statuses
 			);
-			unset( $args['status'] );
+		} else {
+			$query_args['status'] = array_keys( wc_get_order_statuses() );
 		}
 
-		$query_args = array_merge( $query_args, $args );
+		if ( ! empty( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ) {
+			$query_args['date_modified'] = '>=' . $args['updated_at_min'];
+		}
 
-		return new WP_Query( $query_args );
+		$order_ids = wc_get_orders( $query_args );
+
+		// Build a fake WP_Query object for pagination header compatibility.
+		$count_args            = $query_args;
+		$count_args['return']  = 'ids';
+		$count_args['limit']   = -1;
+		$count_args['page']    = 1;
+		$all_ids = wc_get_orders( $count_args );
+
+		$query              = new WP_Query();
+		/** @var array<int|WP_Post> $order_ids_array */
+		$order_ids_array    = is_array( $order_ids ) ? $order_ids : array();
+		$query->posts       = $order_ids_array;
+		$query->found_posts = is_array( $all_ids ) ? count( $all_ids ) : 0;
+		$query->max_num_pages = $query_args['limit'] > 0 ? (int) ceil( $query->found_posts / $query_args['limit'] ) : 1;
+
+		return $query;
 	}
 
 	/**
