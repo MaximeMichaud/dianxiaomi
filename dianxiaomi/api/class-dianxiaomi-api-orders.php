@@ -205,9 +205,20 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			'line_items'                => array(),
 		);
 
+		// Load excluded product IDs from settings.
+		$dianxiaomi_options = get_option( 'dianxiaomi_option_name' );
+		/** @var int[] $excluded_product_ids */
+		$excluded_product_ids = is_array( $dianxiaomi_options ) && isset( $dianxiaomi_options['excluded_products'] ) && is_array( $dianxiaomi_options['excluded_products'] )
+			? array_map( static fn( mixed $id ): int => is_numeric( $id ) ? (int) $id : 0, $dianxiaomi_options['excluded_products'] )
+			: array();
+
 		// Ajout des articles de la commande
+		$filtered_quantity = 0;
 		foreach ( $order->get_items() as $item_id => $item ) {
 			if ( ! $item instanceof WC_Order_Item_Product ) {
+				continue;
+			}
+			if ( in_array( $item->get_product_id(), $excluded_product_ids, true ) ) {
 				continue;
 			}
 			$product      = $item->get_product();
@@ -227,7 +238,11 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 				'images'           => $has_product ? $product->get_image() : null,
 				'view_product_url' => $has_product ? get_permalink( $product->get_id() ) : null,
 			);
+			$filtered_quantity += $item->get_quantity();
 		}
+
+		// Recalculate quantity after exclusion.
+		$order_data['total_line_items_quantity'] = $filtered_quantity;
 
 		// Gestion des métadonnées de suivi
 		$provider_meta = $order->get_meta( '_dianxiaomi_tracking_provider' );
@@ -453,7 +468,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		);
 
 		if ( ! empty( $args['status'] ) && is_string( $args['status'] ) ) {
-			$statuses             = explode( ',', $args['status'] );
+			$statuses              = explode( ',', $args['status'] );
 			$query_args['status'] = array_map(
 				static function ( string $status ): string {
 					return 'wc-' . $status;
@@ -497,9 +512,18 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @return float
 	 */
 	private function get_order_subtotal( WC_Order $order ): float {
+		$dianxiaomi_options = get_option( 'dianxiaomi_option_name' );
+		/** @var int[] $excluded_product_ids */
+		$excluded_product_ids = is_array( $dianxiaomi_options ) && isset( $dianxiaomi_options['excluded_products'] ) && is_array( $dianxiaomi_options['excluded_products'] )
+			? array_map( static fn( mixed $id ): int => is_numeric( $id ) ? (int) $id : 0, $dianxiaomi_options['excluded_products'] )
+			: array();
+
 		$subtotal = 0.0;
 		foreach ( $order->get_items() as $item ) {
 			if ( $item instanceof WC_Order_Item_Product ) {
+				if ( in_array( $item->get_product_id(), $excluded_product_ids, true ) ) {
+					continue;
+				}
 				$subtotal += (float) $item->get_subtotal();
 			}
 		}

@@ -102,11 +102,11 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 			return;
 		}
 		$version = '1.0.0';
-		// Use WooCommerce's SelectWoo (already bundled).
-		wp_enqueue_script( 'selectWoo' );
+		// Use WooCommerce's enhanced select (handles wc-product-search automatically).
+		wp_enqueue_script( 'wc-enhanced-select' );
 		wp_enqueue_script( 'dianxiaomi_settings_util', plugins_url( basename( __DIR__ ) ) . '/assets/js/util.js', array(), $version, true );
 		wp_enqueue_script( 'dianxiaomi_settings_couriers', plugins_url( basename( __DIR__ ) ) . '/assets/js/couriers.js', array(), $version, true );
-		wp_enqueue_script( 'dianxiaomi_settings_script', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array( 'selectWoo' ), $version, true );
+		wp_enqueue_script( 'dianxiaomi_settings_script', plugins_url( basename( __DIR__ ) ) . '/assets/js/setting.js', array( 'wc-enhanced-select' ), $version, true );
 	}
 
 	public function add_plugin_page(): void {
@@ -169,6 +169,14 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 		);
 
 		add_settings_field(
+			'excluded_products',
+			'Excluded Products',
+			array( $this, 'excluded_products_callback' ),
+			'dianxiaomi-setting-admin',
+			'dianxiaomi_setting_section_id'
+		);
+
+		add_settings_field(
 			'use_track_button',
 			'Display Track Button at Order History Page',
 			array( $this, 'track_button_callback' ),
@@ -224,6 +232,10 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 			$new_input['track_message_2'] = sanitize_text_field( $input['track_message_2'] ) . $postfix;
 		}
 
+		if ( isset( $input['excluded_products'] ) && is_array( $input['excluded_products'] ) ) {
+			$new_input['excluded_products'] = array_filter( array_map( static fn( mixed $id ): int => is_numeric( $id ) ? (int) $id : 0, $input['excluded_products'] ) );
+		}
+
 		if ( isset( $input['use_track_button'] ) ) {
 			$new_input['use_track_button'] = true;
 		}
@@ -248,6 +260,27 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 		echo '</select>';
 		echo '<input type="hidden" id="couriers" name="dianxiaomi_option_name[couriers]" value="' . esc_attr( implode( ',', $couriers ) ) . '"/>';
 		echo '<br><a href="https://www.dianxiaomi.com/settings/courier" target="_blank">' . esc_html__( 'Update carrier list', 'dianxiaomi' ) . '</a>';
+	}
+
+	public function excluded_products_callback(): void {
+		$excluded = isset( $this->options['excluded_products'] ) && is_array( $this->options['excluded_products'] ) ? $this->options['excluded_products'] : array();
+		echo '<select class="wc-product-search" multiple="multiple"'
+			. ' id="excluded_products"'
+			. ' name="dianxiaomi_option_name[excluded_products][]"'
+			. ' data-placeholder="' . esc_attr__( 'Search for a product...', 'dianxiaomi' ) . '"'
+			. ' data-action="woocommerce_json_search_products"'
+			. ' style="width:100%">';
+		foreach ( $excluded as $excluded_id ) {
+			$product_id = is_numeric( $excluded_id ) ? (int) $excluded_id : 0;
+			$product    = wc_get_product( $product_id );
+			if ( $product instanceof WC_Product ) {
+				echo '<option value="' . esc_attr( (string) $product_id ) . '" selected="selected">'
+					. esc_html( wp_strip_all_tags( $product->get_formatted_name() ) )
+					. '</option>';
+			}
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'These products will be excluded from the API response.', 'dianxiaomi' ) . '</p>';
 	}
 
 	public function plugin_callback(): void {
