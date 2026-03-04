@@ -103,6 +103,10 @@ final class Dianxiaomi implements Subscriber_Interface {
 			'plugins_loaded'                   => 'load_plugin_textdomain',
 			'woocommerce_view_order'           => 'display_tracking_info',
 			'woocommerce_email_before_order_table' => 'email_display',
+			'show_user_profile'                    => 'add_api_key_field',
+			'edit_user_profile'                    => 'add_api_key_field',
+			'personal_options_update'              => 'generate_api_key',
+			'edit_user_profile_update'             => 'generate_api_key',
 		);
 	}
 
@@ -316,7 +320,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * @param WP_User $user
 	 */
 	public function add_api_key_field( WP_User $user ): void {
-		if ( ! current_user_can( 'manage_dianxiaomi' ) || ! current_user_can( 'edit_user', $user->ID ) ) {
+		if ( ! current_user_can( 'manage_woocommerce' ) || ! current_user_can( 'edit_user', $user->ID ) ) {
 			return;
 		}
 
@@ -324,18 +328,24 @@ final class Dianxiaomi implements Subscriber_Interface {
 		echo '<table class="form-table">';
 		echo '<tbody>';
 		echo '<tr>';
-		echo '<th><label for="dianxiaomi_wp_api_key">' . esc_html__( 'Dianxiaomi\'s WordPress API Key', 'dianxiaomi' ) . '</label></th>';
+		echo '<th><label>' . esc_html__( 'Dianxiaomi\'s WordPress API Keys', 'dianxiaomi' ) . '</label></th>';
 		echo '<td>';
-		$api_key = $user->get( 'dianxiaomi_wp_api_key' );
-		$api_key = is_string( $api_key ) ? $api_key : '';
-		if ( empty( $api_key ) ) {
-			echo '<input name="dianxiaomi_wp_generate_api_key" type="checkbox" id="dianxiaomi_wp_generate_api_key" value="0" />';
-			echo '<span class="description">' . esc_html__( 'Generate API Key', 'dianxiaomi' ) . '</span>';
+		$keys_raw = get_user_meta( $user->ID, 'dianxiaomi_wp_api_key', false );
+		$keys_arr = is_array( $keys_raw ) ? $keys_raw : array();
+		/** @var string[] $keys */
+		$keys = array_filter( array_map( static fn( mixed $k ): string => is_string( $k ) ? $k : '', $keys_arr ) );
+		if ( count( $keys ) > 0 ) {
+			foreach ( $keys as $i => $key ) {
+				echo '<code>' . esc_html( $key ) . '</code> ';
+				echo '<label><input name="dianxiaomi_wp_revoke_keys[]" type="checkbox" value="' . esc_attr( $key ) . '" /> ';
+				echo esc_html__( 'Revoke', 'dianxiaomi' ) . '</label><br />';
+			}
 		} else {
-			echo '<code id="dianxiaomi_wp_api_key">' . esc_html( $api_key ) . '</code><br />';
-			echo '<input name="dianxiaomi_wp_generate_api_key" type="checkbox" id="dianxiaomi_wp_generate_api_key" value="0" />';
-			echo '<span class="description">' . esc_html__( 'Revoke API Key', 'dianxiaomi' ) . '</span>';
+			echo '<p>' . esc_html__( 'No API keys.', 'dianxiaomi' ) . '</p>';
 		}
+		echo '<br /><label><input name="dianxiaomi_wp_generate_api_key" type="checkbox" value="1" /> ';
+		echo esc_html__( 'Generate new API Key', 'dianxiaomi' ) . '</label>';
+		wp_nonce_field( 'dianxiaomi_generate_api_key', 'dianxiaomi_nonce' );
 		echo '</td>';
 		echo '</tr>';
 		echo '</tbody>';
@@ -362,14 +372,18 @@ final class Dianxiaomi implements Subscriber_Interface {
 		if ( ! $user ) {
 			return;
 		}
-		if ( isset( $_POST['dianxiaomi_wp_generate_api_key'] ) ) {
-			$existing_key = $user->get( 'dianxiaomi_wp_api_key' );
-			if ( empty( $existing_key ) ) {
-				$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
-				update_user_meta( $user_id, 'dianxiaomi_wp_api_key', $api_key );
-			} else {
-				delete_user_meta( $user_id, 'dianxiaomi_wp_api_key' );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
+		if ( isset( $_POST['dianxiaomi_wp_revoke_keys'] ) && is_array( $_POST['dianxiaomi_wp_revoke_keys'] ) ) {
+			foreach ( $_POST['dianxiaomi_wp_revoke_keys'] as $key_to_revoke ) {
+				if ( is_string( $key_to_revoke ) ) {
+					delete_user_meta( $user_id, 'dianxiaomi_wp_api_key', $key_to_revoke );
+				}
 			}
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
+		if ( isset( $_POST['dianxiaomi_wp_generate_api_key'] ) ) {
+			$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
+			add_user_meta( $user_id, 'dianxiaomi_wp_api_key', $api_key );
 		}
 	}
 
