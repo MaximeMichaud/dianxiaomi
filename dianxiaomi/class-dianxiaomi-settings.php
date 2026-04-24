@@ -238,7 +238,7 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	public function couriers_callback(): void {
 		$couriers_raw = $this->options['couriers'] ?? '';
 		if ( is_array( $couriers_raw ) ) {
-			$couriers = $couriers_raw;
+			$couriers = array_values( array_filter( $couriers_raw, 'is_string' ) );
 		} elseif ( is_string( $couriers_raw ) && $couriers_raw !== '' ) {
 			$couriers = explode( ',', $couriers_raw );
 		} else {
