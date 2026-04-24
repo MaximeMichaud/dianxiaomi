@@ -10,7 +10,7 @@
  * Tested up to: 6.9
  * Requires PHP: 8.1
  * WC requires at least: 8.0
- * WC tested up to: 10.4
+ * WC tested up to: 10.6
  * Requires Plugins: woocommerce
  * Text Domain: dianxiaomi
  * Domain Path: /languages
@@ -35,7 +35,7 @@ define( 'DIANXIAOMI_WP_VERSION', '5.8' );
 define( 'DIANXIAOMI_WP_VERSION_TESTED', '6.9' );
 define( 'DIANXIAOMI_PHP_VERSION', '8.1' );
 define( 'DIANXIAOMI_WC_VERSION', '8.0' );
-define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.4' );
+define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.6' );
 define( 'DIANXIAOMI_FILE', __FILE__ );
 define( 'DIANXIAOMI_PATH', plugin_dir_path( DIANXIAOMI_FILE ) );
 define( 'DIANXIAOMI_URL', plugin_dir_url( DIANXIAOMI_FILE ) );
