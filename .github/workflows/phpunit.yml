@@ -70,10 +70,6 @@ jobs:
           done
         working-directory: dianxiaomi
 
-      - name: Activate plugins
-        run: npx wp-env run tests-cli wp plugin activate woocommerce dianxiaomi
-        working-directory: dianxiaomi
-
       - name: Run PHPUnit tests
         run: npm run test
         working-directory: dianxiaomi
