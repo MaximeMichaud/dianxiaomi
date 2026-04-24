@@ -8,3 +8,7 @@ updates:
     directory: "/dianxiaomi"
     schedule:
       interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/dianxiaomi"
+    schedule:
+      interval: "daily"
