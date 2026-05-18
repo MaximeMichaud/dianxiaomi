@@ -89,7 +89,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @param string|null          $fields         Fields to include.
 	 * @param array<string, mixed> $filter         Query filters.
 	 * @param string|null          $status         Order status filter.
-	 * @param int                  $page           Page number.
+	 * @param string|int           $page           Page number.
 	 * @param string               $updated_at_min Minimum update date.
 	 *
 	 * @return array<string, mixed> Orders data.
@@ -128,7 +128,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int                     $id     The order ID.
+	 * @param string|int              $id     The order ID.
 	 * @param array<int, string>|null $fields Fields to include.
 	 *
 	 * @return array<string, mixed>|WP_Error Order data or error.
@@ -276,7 +276,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int                  $id   The order ID.
+	 * @param string|int           $id   The order ID.
 	 * @param array<string, mixed> $data Order data to update.
 	 *
 	 * @return array<string, mixed>|WP_Error Updated order data or error.
@@ -341,7 +341,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int                  $id   The order ID.
+	 * @param string|int           $id   The order ID.
 	 * @param array<string, mixed> $data Data containing shipping and order status information.
 	 *
 	 * @return array<string, mixed>|WP_Error Returns the updated order data or a WP_Error object if an error occurs.
@@ -388,8 +388,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @TODO enable along with POST in 2.2
 	 *
-	 * @param int  $id    The order ID.
-	 * @param bool $force True to permanently delete order, false to move to trash.
+	 * @param string|int $id    The order ID.
+	 * @param bool       $force True to permanently delete order, false to move to trash.
 	 *
 	 * @return array<string, string>|WP_Error Returns the result of the deletion or a WP_Error object if an error occurs.
 	 */
@@ -413,7 +413,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param int $id The order ID.
+	 * @param string|int $id The order ID.
 	 *
 	 * @return array<string, array<int, array<string, mixed>>> Order notes data.
 	 */
@@ -492,7 +492,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$count_args['page']    = 1;
 		$all_ids = wc_get_orders( $count_args );
 
-		$query              = new WP_Query();
+		$query = new WP_Query();
 		/** @var array<int|WP_Post> $order_ids_array */
 		$order_ids_array    = is_array( $order_ids ) ? $order_ids : array();
 		$query->posts       = $order_ids_array;

@@ -107,6 +107,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 			'edit_user_profile'                    => 'add_api_key_field',
 			'personal_options_update'              => 'generate_api_key',
 			'edit_user_profile_update'             => 'generate_api_key',
+			'woocommerce_rest_prepare_shop_order_object' => array( 'filter_rest_order_response', 10, 1 ),
 		);
 	}
 
@@ -374,9 +375,11 @@ final class Dianxiaomi implements Subscriber_Interface {
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
 		if ( isset( $_POST['dianxiaomi_wp_revoke_keys'] ) && is_array( $_POST['dianxiaomi_wp_revoke_keys'] ) ) {
-			foreach ( $_POST['dianxiaomi_wp_revoke_keys'] as $key_to_revoke ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each value sanitized in the loop below.
+			$raw_keys = wp_unslash( $_POST['dianxiaomi_wp_revoke_keys'] );
+			foreach ( (array) $raw_keys as $key_to_revoke ) {
 				if ( is_string( $key_to_revoke ) ) {
-					delete_user_meta( $user_id, 'dianxiaomi_wp_api_key', $key_to_revoke );
+					delete_user_meta( $user_id, 'dianxiaomi_wp_api_key', sanitize_text_field( $key_to_revoke ) );
 				}
 			}
 		}
@@ -385,6 +388,58 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
 			add_user_meta( $user_id, 'dianxiaomi_wp_api_key', $api_key );
 		}
+	}
+
+	/**
+	 * Filter excluded products from WooCommerce REST API order responses.
+	 *
+	 * @param WP_REST_Response $response The response object.
+	 *
+	 * @return WP_REST_Response Filtered response.
+	 */
+	public function filter_rest_order_response( WP_REST_Response $response ): WP_REST_Response {
+		$options = get_option( 'dianxiaomi_option_name' );
+
+		if ( ! is_array( $options ) || empty( $options['exclude_from_wc_rest_api'] ) ) {
+			return $response;
+		}
+
+		$excluded = isset( $options['excluded_products'] ) && is_array( $options['excluded_products'] )
+			? array_map( static fn( mixed $id ): int => is_numeric( $id ) ? (int) $id : 0, $options['excluded_products'] )
+			: array();
+
+		if ( count( $excluded ) === 0 ) {
+			return $response;
+		}
+
+		/** @var array<string, mixed> $data */
+		$data = $response->get_data();
+		if ( ! isset( $data['line_items'] ) || ! is_array( $data['line_items'] ) ) {
+			return $response;
+		}
+
+		$filtered_items    = array();
+		$filtered_quantity = 0;
+		$filtered_subtotal = 0.0;
+		foreach ( $data['line_items'] as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$product_id = isset( $item['product_id'] ) && is_numeric( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+			if ( in_array( $product_id, $excluded, true ) ) {
+				continue;
+			}
+			$filtered_items[] = $item;
+			$qty = isset( $item['quantity'] ) && is_numeric( $item['quantity'] ) ? (int) $item['quantity'] : 0;
+			$filtered_quantity += $qty;
+			$subtotal = isset( $item['subtotal'] ) && is_numeric( $item['subtotal'] ) ? (float) $item['subtotal'] : 0.0;
+			$filtered_subtotal += $subtotal;
+		}
+
+		$data['line_items'] = $filtered_items;
+		$response->set_data( $data );
+
+		return $response;
 	}
 
 	/**
