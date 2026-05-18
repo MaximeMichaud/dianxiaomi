@@ -3,12 +3,8 @@ name: PHPUnit Tests
 on:
   push:
     branches: [ main, dev ]
-    paths:
-      - 'dianxiaomi/**'
   pull_request:
     branches: [ main, dev ]
-    paths:
-      - 'dianxiaomi/**'
   workflow_dispatch:
 
 jobs:

@@ -359,7 +359,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * @param int $user_id
 	 */
 	public function generate_api_key( int $user_id ): void {
-		if ( ! current_user_can( 'edit_user', $user_id ) ) {
+		if ( ! current_user_can( 'manage_woocommerce' ) || ! current_user_can( 'edit_user', $user_id ) ) {
 			return;
 		}
 		// Vérifier le nonce pour la sécurité
@@ -379,13 +379,15 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$raw_keys = wp_unslash( $_POST['dianxiaomi_wp_revoke_keys'] );
 			foreach ( (array) $raw_keys as $key_to_revoke ) {
 				if ( is_string( $key_to_revoke ) ) {
-					delete_user_meta( $user_id, 'dianxiaomi_wp_api_key', sanitize_text_field( $key_to_revoke ) );
+					$sanitized_key = sanitize_text_field( $key_to_revoke );
+					delete_user_meta( $user_id, 'dianxiaomi_wp_api_key', $sanitized_key );
+					wp_cache_delete( 'dianxiaomi_user_' . md5( $sanitized_key ) );
 				}
 			}
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
 		if ( isset( $_POST['dianxiaomi_wp_generate_api_key'] ) ) {
-			$api_key = 'ck_' . hash( 'md5', $user->user_login . gmdate( 'U' ) . wp_rand() );
+			$api_key = 'ck_' . bin2hex( random_bytes( 20 ) );
 			add_user_meta( $user_id, 'dianxiaomi_wp_api_key', $api_key );
 		}
 	}
@@ -418,9 +420,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return $response;
 		}
 
-		$filtered_items    = array();
-		$filtered_quantity = 0;
-		$filtered_subtotal = 0.0;
+		$filtered_items = array();
 		foreach ( $data['line_items'] as $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
@@ -430,10 +430,6 @@ final class Dianxiaomi implements Subscriber_Interface {
 				continue;
 			}
 			$filtered_items[] = $item;
-			$qty = isset( $item['quantity'] ) && is_numeric( $item['quantity'] ) ? (int) $item['quantity'] : 0;
-			$filtered_quantity += $qty;
-			$subtotal = isset( $item['subtotal'] ) && is_numeric( $item['subtotal'] ) ? (float) $item['subtotal'] : 0.0;
-			$filtered_subtotal += $subtotal;
 		}
 
 		$data['line_items'] = $filtered_items;
