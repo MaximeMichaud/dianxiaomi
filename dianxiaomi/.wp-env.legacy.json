@@ -1,6 +1,7 @@
 {
   "$schema": "https://schemas.wp.org/trunk/wp-env.json",
   "autoPort": true,
+  "port": 8898,
   "core": "WordPress/WordPress#6.8.6",
   "phpVersion": "8.1",
   "testsEnvironment": false,
