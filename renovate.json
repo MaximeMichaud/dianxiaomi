@@ -1,32 +1,136 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "enabledManagers": ["composer", "npm", "github-actions"],
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":configMigration",
+    "security:minimumReleaseAgeNpm"
+  ],
+  "enabledManagers": ["composer", "npm", "github-actions", "custom.regex"],
+  "timezone": "America/Toronto",
   "schedule": ["before 6am on Monday"],
   "labels": ["dependencies"],
-  "rangeStrategy": "update-lockfile",
-  "dependencyDashboard": false,
-  "automerge": true,
+  "dependencyDashboard": true,
+  "automerge": false,
   "automergeType": "pr",
+  "automergeStrategy": "squash",
   "platformAutomerge": true,
   "vulnerabilityAlerts": {
     "enabled": true,
-    "schedule": ["at any time"],
-    "automerge": true
+    "automerge": false,
+    "addLabels": ["security"],
+    "vulnerabilityFixStrategy": "lowest"
   },
-  "packageRules": [
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on Monday"],
+    "automerge": false
+  },
+  "customManagers": [
     {
-      "matchUpdateTypes": ["major"],
-      "enabled": false
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/"
+      ],
+      "matchStrings": [
+        "\"core\"\\s*:\\s*\"WordPress/WordPress#(?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)\""
+      ],
+      "depNameTemplate": "WordPress",
+      "packageNameTemplate": "WordPress/WordPress",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced"
     },
     {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/"
+      ],
+      "matchStrings": [
+        "https://downloads\\.wordpress\\.org/plugin/woocommerce\\.(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.zip"
+      ],
+      "depNameTemplate": "WooCommerce",
+      "packageNameTemplate": "woocommerce/woocommerce",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver-coerced"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Update lock files while preserving compatible manifest ranges",
+      "matchManagers": ["composer", "npm"],
+      "rangeStrategy": "update-lockfile"
+    },
+    {
+      "description": "Automerge non-major Composer updates",
+      "matchManagers": ["composer"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "Non-major dependencies",
+      "groupName": "Composer non-major dependencies",
+      "minimumReleaseAge": "3 days",
       "automerge": true
     },
     {
+      "description": "Automerge non-major npm updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm non-major dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Automerge safe GitHub Actions updates",
       "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "pinDigest", "digest"],
       "groupName": "GitHub Actions",
+      "automerge": true
+    },
+    {
+      "description": "Never automerge moving Composer branches",
+      "matchManagers": ["composer"],
+      "matchCurrentValue": "/^dev-/",
+      "automerge": false
+    },
+    {
+      "description": "Never automerge major updates",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["breaking"],
+      "automerge": false
+    },
+    {
+      "description": "Keep legacy WordPress on the 6.8 release line",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["dianxiaomi/.wp-env.legacy.json"],
+      "matchPackageNames": ["WordPress/WordPress"],
+      "allowedVersions": "/^6\\.8(?:\\.\\d+)?$/"
+    },
+    {
+      "description": "Keep legacy WooCommerce below 10.8",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["dianxiaomi/.wp-env.legacy.json"],
+      "matchPackageNames": ["woocommerce/woocommerce"],
+      "allowedVersions": "<10.8.0"
+    },
+    {
+      "description": "Keep current WordPress on the 7.0 release line",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["dianxiaomi/.wp-env.current.json"],
+      "matchPackageNames": ["WordPress/WordPress"],
+      "allowedVersions": "/^7\\.0(?:\\.\\d+)?$/"
+    },
+    {
+      "description": "Automerge legacy compatibility stack updates",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["dianxiaomi/.wp-env.legacy.json"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Legacy WordPress compatibility stack",
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "Automerge current compatibility stack updates",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["dianxiaomi/.wp-env.current.json"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Current WordPress compatibility stack",
+      "minimumReleaseAge": "3 days",
       "automerge": true
     }
   ]
