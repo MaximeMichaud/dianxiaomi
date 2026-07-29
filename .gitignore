@@ -95,7 +95,8 @@ fabric.properties
 # Custom
 .DS_Store
 
-**/composer.lock
 **/vendor
 **/.php-cs-fixer.cache
 **/.phpunit.result.cache
+**/.wp-env*.override.json
+**/node_modules/

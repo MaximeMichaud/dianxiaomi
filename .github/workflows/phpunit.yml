@@ -7,9 +7,32 @@ on:
     branches: [ main, dev ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: phpunit-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  phpunit:
+  phpunit_matrix:
+    name: phpunit (${{ matrix.stack }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - stack: legacy
+            config: .wp-env.legacy.json
+            php: '8.1'
+            wordpress: 6.8.6
+            woocommerce: 10.7.0
+          - stack: current
+            config: .wp-env.current.json
+            php: '8.1'
+            wordpress: 7.0.2
+            woocommerce: 10.9.4
 
     steps:
       - name: Checkout code
@@ -25,13 +48,13 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.1'
           tools: composer:v2
           coverage: none
 
       - name: Get composer cache directory
         id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
         working-directory: dianxiaomi
 
       - name: Cache Composer dependencies
@@ -46,35 +69,79 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
         working-directory: dianxiaomi
 
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+        working-directory: dianxiaomi
+
       - name: Install npm dependencies
         run: npm ci
         working-directory: dianxiaomi
 
-      - name: Start wp-env
-        run: npm run start
-        working-directory: dianxiaomi
-
-      - name: Wait for WordPress to be ready
+      - name: Start wp-env with retry
+        env:
+          WP_ENV_CONFIG: ${{ matrix.config }}
         run: |
-          for i in {1..30}; do
-            if npx wp-env run tests-cli wp core version 2>/dev/null; then
-              echo "WordPress is ready"
-              break
+          for attempt in 1 2 3; do
+            if npx --no-install wp-env start --config="$WP_ENV_CONFIG"; then
+              exit 0
             fi
-            echo "Waiting for WordPress... ($i/30)"
-            sleep 2
+
+            npx --no-install wp-env stop --config="$WP_ENV_CONFIG" || true
+
+            if [ "$attempt" -eq 3 ]; then
+              echo "wp-env failed to start after $attempt attempts"
+              exit 1
+            fi
+
+            sleep $((attempt * 15))
           done
         working-directory: dianxiaomi
 
-      - name: Activate plugins
-        run: npx wp-env run tests-cli wp plugin activate woocommerce dianxiaomi
+      - name: Verify compatibility stack
+        env:
+          EXPECTED_PHP: ${{ matrix.php }}
+          EXPECTED_WORDPRESS: ${{ matrix.wordpress }}
+          EXPECTED_WOOCOMMERCE: ${{ matrix.woocommerce }}
+          WP_ENV_CONFIG: ${{ matrix.config }}
+        run: |
+          set -euo pipefail
+
+          PHP_VERSION="$(npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+          WORDPRESS_VERSION="$(npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" wp core version)"
+          WOOCOMMERCE_VERSION="$(npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" wp plugin get woocommerce --field=version)"
+
+          printf '%s\n' "$PHP_VERSION"
+          printf '%s\n' "$WORDPRESS_VERSION"
+          printf '%s\n' "$WOOCOMMERCE_VERSION"
+
+          grep -Fxq "$EXPECTED_PHP" <<< "$PHP_VERSION"
+          grep -Fxq "$EXPECTED_WORDPRESS" <<< "$WORDPRESS_VERSION"
+          grep -Fxq "$EXPECTED_WOOCOMMERCE" <<< "$WOOCOMMERCE_VERSION"
+
+          npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" wp plugin is-active woocommerce
+          npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" wp plugin is-active dianxiaomi
         working-directory: dianxiaomi
 
       - name: Run PHPUnit tests
-        run: npm run test
+        env:
+          WP_ENV_CONFIG: ${{ matrix.config }}
+        run: npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit
         working-directory: dianxiaomi
 
       - name: Stop wp-env
         if: always()
-        run: npm run stop
+        env:
+          WP_ENV_CONFIG: ${{ matrix.config }}
+        run: npx --no-install wp-env stop --config="$WP_ENV_CONFIG"
         working-directory: dianxiaomi
+
+  phpunit:
+    name: phpunit
+    if: always()
+    needs: phpunit_matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PHPUnit matrix
+        env:
+          MATRIX_RESULT: ${{ needs.phpunit_matrix.result }}
+        run: test "$MATRIX_RESULT" = "success"

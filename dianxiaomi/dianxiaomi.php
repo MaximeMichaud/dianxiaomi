@@ -7,10 +7,10 @@
  * Author: Dianxiaomi & Maxime Michaud
  * Author URI: https://github.com/MaximeMichaud/dianxiaomi
  * Requires at least: 5.8
- * Tested up to: 6.9
+ * Tested up to: 7.0
  * Requires PHP: 8.1
  * WC requires at least: 8.0
- * WC tested up to: 10.6
+ * WC tested up to: 10.9
  * Requires Plugins: woocommerce
  * Text Domain: dianxiaomi
  * Domain Path: /languages

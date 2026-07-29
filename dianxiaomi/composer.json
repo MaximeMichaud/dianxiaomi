@@ -1,16 +1,12 @@
 {
-    "_comment": "wordpress-stubs pinned to ~6.8.0: v6.9 crashes Psalm (vimeo/psalm#11588)",
+    "_comment": "WordPress and WooCommerce stubs match the legacy compatibility stack.",
     "name": "dianxiaomi/dianxiaomi",
     "description": "WordPress Plugin",
     "type": "project",
     "require": {
-        "wp-coding-standards/wpcs": "3.3.0",
-        "squizlabs/php_codesniffer": "^3.8",
-        "automattic/vipwpcs": "^3.0.1",
-        "vena/php-cs-fixer-wordpress": "dev-main@dev",
-        "phpcompatibility/phpcompatibility-wp": "^2.1"
+        "php": ">=8.1"
     },
-    "license": "GPL",
+    "license": "GPL-2.0-or-later",
     "autoload": {
         "classmap": [
             "inc/"
@@ -27,16 +23,24 @@
     ],
     "minimum-stability": "stable",
     "config": {
+        "platform": {
+            "php": "8.1.31"
+        },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "require-dev": {
+        "wp-coding-standards/wpcs": "3.4.1",
+        "squizlabs/php_codesniffer": "^3.8",
+        "automattic/vipwpcs": "^3.0.1",
+        "vena/php-cs-fixer-wordpress": "dev-main@dev",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
         "tareq1988/wp-php-cs-fixer": "dev-master@dev",
         "phpstan/phpstan": "^2.0",
         "szepeviktor/phpstan-wordpress": "^2.0",
-        "php-stubs/woocommerce-stubs": "^10.4",
-        "php-stubs/wordpress-stubs": "~6.9.1",
+        "php-stubs/woocommerce-stubs": "~10.7.0",
+        "php-stubs/wordpress-stubs": "~6.8.0",
         "vimeo/psalm": "^6.14",
         "humanmade/psalm-plugin-wordpress": "^3.0",
         "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0",

@@ -7,8 +7,16 @@ on:
     branches: [ main, dev ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: phpstan-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  phpstan:
+  phpstan_matrix:
+    name: phpstan (${{ matrix.php-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,7 +35,7 @@ jobs:
 
       - name: Get composer cache directory
         id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
         working-directory: dianxiaomi
 
       - name: Cache dependencies
@@ -42,6 +50,21 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
         working-directory: dianxiaomi
 
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+        working-directory: dianxiaomi
+
       - name: Run PHPStan
         run: composer phpstan
         working-directory: dianxiaomi
+
+  phpstan:
+    name: phpstan
+    if: always()
+    needs: phpstan_matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PHPStan matrix
+        env:
+          MATRIX_RESULT: ${{ needs.phpstan_matrix.result }}
+        run: test "$MATRIX_RESULT" = "success"

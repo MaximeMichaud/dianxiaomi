@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+  "autoPort": true,
+  "core": "WordPress/WordPress#6.8.6",
+  "phpVersion": "8.1",
+  "testsEnvironment": false,
+  "phpmyadmin": false,
+  "plugins": [
+    "https://downloads.wordpress.org/plugin/woocommerce.10.7.0.zip",
+    "."
+  ],
+  "config": {
+    "WP_DEBUG": true,
+    "SCRIPT_DEBUG": true
+  }
+}

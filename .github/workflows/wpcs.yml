@@ -7,8 +7,16 @@ on:
     branches: [ main, dev ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: wpcs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  phpcs:
+  wpcs_matrix:
+    name: phpcs (${{ matrix.php-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,7 +35,7 @@ jobs:
 
       - name: Get composer cache directory
         id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
         working-directory: dianxiaomi
 
       - name: Cache dependencies
@@ -42,6 +50,21 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
         working-directory: dianxiaomi
 
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+        working-directory: dianxiaomi
+
       - name: Run PHPCS
         run: composer phpcs
         working-directory: dianxiaomi
+
+  wpcs:
+    name: wpcs
+    if: always()
+    needs: wpcs_matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify WPCS matrix
+        env:
+          MATRIX_RESULT: ${{ needs.wpcs_matrix.result }}
+        run: test "$MATRIX_RESULT" = "success"

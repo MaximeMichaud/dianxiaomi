@@ -4,16 +4,32 @@
   "description": "WooCommerce tracking number plugin",
   "scripts": {
     "wp-env": "wp-env",
-    "test": "wp-env run tests-cli --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
-    "test:watch": "wp-env run tests-cli --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit --filter",
-    "start": "wp-env start",
-    "stop": "wp-env stop",
-    "destroy": "wp-env destroy"
+    "test": "wp-env run cli --config=.wp-env.current.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
+    "test:legacy": "wp-env run cli --config=.wp-env.legacy.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
+    "test:watch": "wp-env run cli --config=.wp-env.current.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit --filter",
+    "start": "wp-env start --config=.wp-env.current.json",
+    "start:legacy": "wp-env start --config=.wp-env.legacy.json",
+    "stop": "wp-env stop --config=.wp-env.current.json",
+    "stop:legacy": "wp-env stop --config=.wp-env.legacy.json",
+    "destroy": "wp-env destroy --config=.wp-env.current.json",
+    "destroy:legacy": "wp-env destroy --config=.wp-env.legacy.json"
   },
   "devDependencies": {
-    "@wordpress/env": "^10.0.0"
+    "@wordpress/env": "^11.12.0"
+  },
+  "overrides": {
+    "@wordpress/env": {
+      "adm-zip": "0.6.0",
+      "simple-git": "3.36.0"
+    },
+    "docker-compose": {
+      "yaml": "2.9.0"
+    },
+    "minimatch": {
+      "brace-expansion": "2.1.3"
+    }
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.12.0"
   }
 }
