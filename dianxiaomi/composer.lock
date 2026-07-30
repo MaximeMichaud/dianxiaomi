@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d3c02dcada32978c8e1d54a47f0f349",
+    "content-hash": "c2c5f45ad2ea83fa05fd12563be075f2",
     "packages": [],
     "packages-dev": [
         {
@@ -2365,24 +2365,24 @@
         },
         {
             "name": "php-stubs/woocommerce-stubs",
-            "version": "v10.7.0",
+            "version": "v10.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-stubs/woocommerce-stubs.git",
-                "reference": "7251902ebc048626aff04855c333afa9f3bae2d5"
+                "reference": "a569e43283b86178628beb7aa22cc34b4076b435"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-stubs/woocommerce-stubs/zipball/7251902ebc048626aff04855c333afa9f3bae2d5",
-                "reference": "7251902ebc048626aff04855c333afa9f3bae2d5",
+                "url": "https://api.github.com/repos/php-stubs/woocommerce-stubs/zipball/a569e43283b86178628beb7aa22cc34b4076b435",
+                "reference": "a569e43283b86178628beb7aa22cc34b4076b435",
                 "shasum": ""
             },
             "require": {
-                "php-stubs/wordpress-stubs": "^5.3 || ^6.0"
+                "php-stubs/wordpress-stubs": "^5.3 || ^6.0 || ^7.0"
             },
             "require-dev": {
                 "php": "~7.1 || ~8.0",
-                "php-stubs/generator": "^0.8.0"
+                "php-stubs/generator": "^0.9.0"
             },
             "suggest": {
                 "symfony/polyfill-php73": "Symfony polyfill backporting some PHP 7.3+ features to lower PHP versions",
@@ -2403,9 +2403,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-stubs/woocommerce-stubs/issues",
-                "source": "https://github.com/php-stubs/woocommerce-stubs/tree/v10.7.0"
+                "source": "https://github.com/php-stubs/woocommerce-stubs/tree/v10.9.4"
             },
-            "time": "2026-04-14T15:19:28+00:00"
+            "time": "2026-07-16T18:17:41+00:00"
         },
         {
             "name": "php-stubs/wordpress-globals",
@@ -2450,16 +2450,16 @@
         },
         {
             "name": "php-stubs/wordpress-stubs",
-            "version": "v6.8.3",
+            "version": "v6.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-stubs/wordpress-stubs.git",
-                "reference": "abeb5a8b58fda7ac21f15ee596f302f2959a7114"
+                "reference": "90a9412826b9944f93b10bf41d795b5fe68abcd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-stubs/wordpress-stubs/zipball/abeb5a8b58fda7ac21f15ee596f302f2959a7114",
-                "reference": "abeb5a8b58fda7ac21f15ee596f302f2959a7114",
+                "url": "https://api.github.com/repos/php-stubs/wordpress-stubs/zipball/90a9412826b9944f93b10bf41d795b5fe68abcd5",
+                "reference": "90a9412826b9944f93b10bf41d795b5fe68abcd5",
                 "shasum": ""
             },
             "conflict": {
@@ -2469,10 +2469,11 @@
                 "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
                 "nikic/php-parser": "^5.5",
                 "php": "^7.4 || ^8.0",
-                "php-stubs/generator": "^0.8.3",
-                "phpdocumentor/reflection-docblock": "^5.4.1",
+                "php-stubs/generator": "^0.8.6",
+                "phpdocumentor/reflection-docblock": "^6.0",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^9.5",
+                "symfony/polyfill-php80": "*",
                 "szepeviktor/phpcs-psr-12-neutron-hybrid-ruleset": "^1.1.1",
                 "wp-coding-standards/wpcs": "3.1.0 as 2.3.0"
             },
@@ -2495,9 +2496,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-stubs/wordpress-stubs/issues",
-                "source": "https://github.com/php-stubs/wordpress-stubs/tree/v6.8.3"
+                "source": "https://github.com/php-stubs/wordpress-stubs/tree/v6.9.4"
             },
-            "time": "2025-09-30T20:58:47+00:00"
+            "time": "2026-05-01T20:36:01+00:00"
         },
         {
             "name": "php-stubs/wp-cli-stubs",
