@@ -32,7 +32,7 @@
     },
     "require-dev": {
         "wp-coding-standards/wpcs": "3.4.1",
-        "squizlabs/php_codesniffer": "^3.8",
+        "squizlabs/php_codesniffer": "^4.0",
         "automattic/vipwpcs": "^3.0.1",
         "vena/php-cs-fixer-wordpress": "dev-main@dev",
         "phpcompatibility/phpcompatibility-wp": "^2.1",
