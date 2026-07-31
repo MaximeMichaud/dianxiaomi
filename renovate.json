@@ -11,20 +11,20 @@
   "schedule": ["before 6am on Monday"],
   "labels": ["dependencies"],
   "dependencyDashboard": true,
-  "automerge": false,
+  "automerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "platformAutomerge": true,
   "vulnerabilityAlerts": {
     "enabled": true,
-    "automerge": false,
+    "automerge": true,
     "addLabels": ["security"],
     "vulnerabilityFixStrategy": "lowest"
   },
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 6am on Monday"],
-    "automerge": false
+    "automerge": true
   },
   "customManagers": [
     {
@@ -61,38 +61,28 @@
       "rangeStrategy": "update-lockfile"
     },
     {
-      "description": "Automerge non-major Composer updates",
+      "description": "Group non-major Composer updates",
       "matchManagers": ["composer"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Composer non-major dependencies",
-      "minimumReleaseAge": "3 days",
-      "automerge": true
+      "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Automerge non-major npm updates",
+      "description": "Group non-major npm updates",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "npm non-major dependencies",
-      "automerge": true
+      "groupName": "npm non-major dependencies"
     },
     {
-      "description": "Automerge safe GitHub Actions updates",
+      "description": "Group GitHub Actions updates",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch", "pinDigest", "digest"],
-      "groupName": "GitHub Actions",
-      "automerge": true
+      "groupName": "GitHub Actions"
     },
     {
-      "description": "Never automerge moving Composer branches",
-      "matchManagers": ["composer"],
-      "matchCurrentValue": "/^dev-/",
-      "automerge": false
-    },
-    {
-      "description": "Never automerge major updates",
+      "description": "Flag major updates as breaking without holding them back",
       "matchUpdateTypes": ["major"],
-      "addLabels": ["breaking"],
-      "automerge": false
+      "addLabels": ["breaking"]
     },
     {
       "description": "Keep legacy WordPress on the 6.8 release line",
@@ -116,22 +106,20 @@
       "allowedVersions": "/^7\\.0(?:\\.\\d+)?$/"
     },
     {
-      "description": "Automerge legacy compatibility stack updates",
+      "description": "Group legacy compatibility stack updates",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["dianxiaomi/.wp-env.legacy.json"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Legacy WordPress compatibility stack",
-      "minimumReleaseAge": "3 days",
-      "automerge": true
+      "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Automerge current compatibility stack updates",
+      "description": "Group current compatibility stack updates",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["dianxiaomi/.wp-env.current.json"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Current WordPress compatibility stack",
-      "minimumReleaseAge": "3 days",
-      "automerge": true
+      "minimumReleaseAge": "3 days"
     }
   ]
 }
