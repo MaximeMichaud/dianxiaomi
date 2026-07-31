@@ -149,7 +149,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		if ( ! $this->is_order_screen() ) {
 			return;
 		}
-		$version = '1.5.4'; // plugin version
+		$version = DIANXIAOMI_VERSION;
 		// Use WooCommerce's SelectWoo/Select2 styles (already bundled).
 		wp_enqueue_style( 'select2' );
 		wp_enqueue_style( 'dianxiaomi_styles', plugin_dir_url( __FILE__ ) . 'assets/css/admin.css', array(), $version );
@@ -162,7 +162,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		if ( ! $this->is_order_screen() ) {
 			return;
 		}
-		$version = '1.5.4'; // plugin version
+		$version = DIANXIAOMI_VERSION;
 		// Use WooCommerce's SelectWoo (already bundled).
 		wp_enqueue_script( 'selectWoo' );
 		wp_enqueue_script( 'dianxiaomi_script_util', plugin_dir_url( __FILE__ ) . 'assets/js/util.js', array(), $version, true );
@@ -177,7 +177,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		if ( ! $this->is_order_screen() ) {
 			return;
 		}
-		$version = '1.5.4'; // plugin version
+		$version = DIANXIAOMI_VERSION;
 		wp_enqueue_script( 'dianxiaomi_script_footer', plugin_dir_url( __FILE__ ) . 'assets/js/footer.js', array(), $version, true );
 	}
 
