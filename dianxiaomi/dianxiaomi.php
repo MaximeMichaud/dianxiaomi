@@ -3,7 +3,7 @@
  * Plugin Name: Dianxiaomi Enhanced for WooCommerce
  * Plugin URI: https://github.com/MaximeMichaud/dianxiaomi
  * Description: Enhances WooCommerce by adding tracking numbers, carrier names and automating tracking number imports to Dianxiaomi.
- * Version: 1.5.5
+ * Version: 1.6.0
  * Author: Dianxiaomi & Maxime Michaud
  * Author URI: https://github.com/MaximeMichaud/dianxiaomi
  * Requires at least: 5.8
@@ -30,12 +30,12 @@ declare(strict_types=1);
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
 // Plugin version constants.
-define( 'DIANXIAOMI_VERSION', '1.5.5' );
+define( 'DIANXIAOMI_VERSION', '1.6.0' );
 define( 'DIANXIAOMI_WP_VERSION', '5.8' );
-define( 'DIANXIAOMI_WP_VERSION_TESTED', '6.9' );
+define( 'DIANXIAOMI_WP_VERSION_TESTED', '7.0' );
 define( 'DIANXIAOMI_PHP_VERSION', '8.1' );
 define( 'DIANXIAOMI_WC_VERSION', '8.0' );
-define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.6' );
+define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.9' );
 define( 'DIANXIAOMI_FILE', __FILE__ );
 define( 'DIANXIAOMI_PATH', plugin_dir_path( DIANXIAOMI_FILE ) );
 define( 'DIANXIAOMI_URL', plugin_dir_url( DIANXIAOMI_FILE ) );
