@@ -15,6 +15,7 @@
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "platformAutomerge": true,
+  "rebaseWhen": "behind-base-branch",
   "vulnerabilityAlerts": {
     "enabled": true,
     "automerge": true,
@@ -80,9 +81,37 @@
       "groupName": "GitHub Actions"
     },
     {
-      "description": "Flag major updates as breaking without holding them back",
+      "description": "Major updates queue on the dependency dashboard instead of opening a pull request that nothing can merge",
       "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false,
       "addLabels": ["breaking"]
+    },
+    {
+      "description": "npm overrides are security pins on transitive packages, so they follow the advisory that created them and never a major release",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["overrides"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "PHP 8.1 is the supported baseline and PHPUnit 11 requires PHP 8.2, so PHPUnit 10 is the ceiling until that baseline moves",
+      "matchPackageNames": ["phpunit/phpunit"],
+      "allowedVersions": "<11"
+    },
+    {
+      "description": "The polyfills follow PHPUnit: 3.0 and later drop the PHPUnit 10 support this repository still needs",
+      "matchPackageNames": ["yoast/phpunit-polyfills"],
+      "allowedVersions": "<3"
+    },
+    {
+      "description": "PHP_CodeSniffer 4 waits for WPCS, VIPCS and PHPCompatibility, wordpress-stubs 7 waits for phpstan-wordpress and psalm-plugin-wordpress. Approve them on the dashboard once those releases land",
+      "matchPackageNames": [
+        "squizlabs/php_codesniffer",
+        "php-stubs/wordpress-stubs"
+      ],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
     },
     {
       "description": "Keep legacy WordPress on the 6.8 release line",
