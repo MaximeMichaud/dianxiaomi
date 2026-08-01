@@ -4,16 +4,16 @@ return (new PhpCsFixer\Config())
     ->setIndent("\t")
     ->setLineEnding("\n")
     ->setRules([
-        'array_syntax' => [ 'syntax' => 'long' ], 
+        'array_syntax' => [ 'syntax' => 'long' ],
         'array_indentation' => true,
         'binary_operator_spaces' => [ 'default' => 'align_single_space_minimal' ],
         'blank_line_after_opening_tag' => true,
         'blank_line_between_import_groups' => true,
         'blank_lines_before_namespace' => true,
         'braces' => [
-            'position_after_functions_and_oop_constructs' => 'same', 
-            'position_after_control_structures' => 'same', 
-            'position_after_anonymous_constructs' => 'same' 
+            'position_after_functions_and_oop_constructs' => 'same',
+            'position_after_control_structures' => 'same',
+            'position_after_anonymous_constructs' => 'same'
         ],
         'class_definition' => [ 'single_line' => false, 'space_before_parenthesis' => true ],
         'compact_nullable_type_declaration' => true,
@@ -59,8 +59,8 @@ return (new PhpCsFixer\Config())
         'switch_case_space' => true,
         'encoding' => true,
         'full_opening_tag' => true,
-        'phpdoc_to_comment' => false, 
-        'phpdoc_summary' => true, 
+        'phpdoc_to_comment' => false,
+        'phpdoc_summary' => true,
         'include' => true,
         'phpdoc_no_empty_return' => true,
         'phpdoc_no_useless_inheritdoc' => true,
