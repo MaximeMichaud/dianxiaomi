@@ -29,8 +29,8 @@ collaborative improvements.
 
 | Software     | Minimum Version | Tested Up To |
 |--------------|-----------------|--------------|
-| WordPress    | 5.8             | 6.9          |
-| WooCommerce  | 8.0             | 10.6         |
+| WordPress    | 5.8             | 7.0          |
+| WooCommerce  | 8.0             | 10.9         |
 | PHP          | 8.1             | 8.4          |
 
 > **Note:** PHP 8.4 and 8.5 pass all CI tests but have not been tested in production.
