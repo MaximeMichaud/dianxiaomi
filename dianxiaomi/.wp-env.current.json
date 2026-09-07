@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/wp-env.json",
   "autoPort": true,
   "port": 8899,
-  "core": "WordPress/WordPress#7.0.2",
+  "core": "WordPress/WordPress#7.0.4",
   "phpVersion": "8.1",
   "testsEnvironment": false,
   "phpmyadmin": false,
