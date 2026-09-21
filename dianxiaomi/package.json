@@ -23,7 +23,7 @@
       "simple-git": "3.36.0"
     },
     "docker-compose": {
-      "yaml": "2.9.0"
+      "yaml": "2.9.1"
     }
   },
   "engines": {
