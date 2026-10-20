@@ -20,7 +20,7 @@
   "overrides": {
     "@wordpress/env": {
       "adm-zip": "0.6.0",
-      "simple-git": "3.36.0"
+      "simple-git": "4.0.1"
     },
     "docker-compose": {
       "yaml": "2.9.0"
