@@ -16,7 +16,7 @@
 /**
  * Alex 02/03/2024
  * Déclarations de type : Ajout de déclarations de type pour les paramètres et les valeurs de retour pour améliorer la robustesse et la prévisibilité du code.
- * Sécurité améliorée pour JSONP : Utilisation de htmlspecialchars pour nettoyer la sortie JSONP et éviter les attaques XSS.
+ * JSONP callbacks are validated as JavaScript identifiers before being emitted.
  * Gestion des erreurs : Amélioration de la gestion des erreurs pour les réponses JSONP.
  */
 
@@ -95,8 +95,21 @@ final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 				);
 				return $this->encode_json( $data );
 			}
-			$jsonp_callback = is_string( $_GET['_jsonp'] ) ? sanitize_text_field( wp_unslash( $_GET['_jsonp'] ) ) : '';
-			return htmlspecialchars( $jsonp_callback ) . '(' . $this->encode_json( $data ) . ')';
+			// Validate the original name; HTML sanitization cannot make JavaScript safe.
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated against an identifier-only grammar below.
+			$jsonp_callback = is_string( $_GET['_jsonp'] ) ? wp_unslash( $_GET['_jsonp'] ) : '';
+			if ( 1 !== preg_match( '/\A[a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*\z/', $jsonp_callback ) ) {
+				status_header( 400 );
+				return $this->encode_json(
+					array(
+						array(
+							'code'    => 'dianxiaomi_api_invalid_jsonp_callback',
+							'message' => __( 'Invalid JSONP callback', 'dianxiaomi' ),
+						),
+					)
+				);
+			}
+			return $jsonp_callback . '(' . $this->encode_json( $data ) . ')';
 		}
 
 		return $this->encode_json( $data );
