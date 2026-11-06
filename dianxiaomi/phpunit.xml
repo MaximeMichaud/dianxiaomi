@@ -3,6 +3,8 @@
     bootstrap="tests/bootstrap.php"
     colors="true"
     stopOnFailure="false"
+    failOnDeprecation="true"
+    displayDetailsOnTestsThatTriggerDeprecations="true"
     beStrictAboutTestsThatDoNotTestAnything="true"
     beStrictAboutOutputDuringTests="true">
     <testsuites>

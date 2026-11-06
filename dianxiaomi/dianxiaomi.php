@@ -7,10 +7,10 @@
  * Author: Dianxiaomi & Maxime Michaud
  * Author URI: https://github.com/MaximeMichaud/dianxiaomi
  * Requires at least: 5.8
- * Tested up to: 7.0
+ * Tested up to: 7.1.4
  * Requires PHP: 8.1
  * WC requires at least: 8.0
- * WC tested up to: 10.9
+ * WC tested up to: 11.2.2
  * Requires Plugins: woocommerce
  * Text Domain: dianxiaomi
  * Domain Path: /languages
@@ -32,10 +32,10 @@ defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 // Plugin version constants.
 define( 'DIANXIAOMI_VERSION', '1.6.0' );
 define( 'DIANXIAOMI_WP_VERSION', '5.8' );
-define( 'DIANXIAOMI_WP_VERSION_TESTED', '7.0' );
+define( 'DIANXIAOMI_WP_VERSION_TESTED', '7.1.4' );
 define( 'DIANXIAOMI_PHP_VERSION', '8.1' );
 define( 'DIANXIAOMI_WC_VERSION', '8.0' );
-define( 'DIANXIAOMI_WC_VERSION_TESTED', '10.9' );
+define( 'DIANXIAOMI_WC_VERSION_TESTED', '11.2.2' );
 define( 'DIANXIAOMI_FILE', __FILE__ );
 define( 'DIANXIAOMI_PATH', plugin_dir_path( DIANXIAOMI_FILE ) );
 define( 'DIANXIAOMI_URL', plugin_dir_url( DIANXIAOMI_FILE ) );

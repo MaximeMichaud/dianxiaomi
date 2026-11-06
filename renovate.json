@@ -30,11 +30,12 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/"
-      ],
+      "managerFilePatterns": ["/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/", "/^dianxiaomi/dianxiaomi\\.php$/", "/^README\\.md$/"],
       "matchStrings": [
-        "\"core\"\\s*:\\s*\"WordPress/WordPress#(?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)\""
+        "\"core\"\\s*:\\s*\"WordPress/WordPress#(?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)\"",
+        "Tested up to: (?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)",
+        "'DIANXIAOMI_WP_VERSION_TESTED', '(?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)'",
+        "\\| WordPress\\s+\\| [^|]+\\| (?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)\\s+\\|"
       ],
       "depNameTemplate": "WordPress",
       "packageNameTemplate": "WordPress/WordPress",
@@ -43,11 +44,12 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/"
-      ],
+      "managerFilePatterns": ["/(^|/)\\.wp-env\\.(?:legacy|current)\\.json$/", "/^dianxiaomi/dianxiaomi\\.php$/", "/^README\\.md$/"],
       "matchStrings": [
-        "https://downloads\\.wordpress\\.org/plugin/woocommerce\\.(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.zip"
+        "https://downloads\\.wordpress\\.org/plugin/woocommerce\\.(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.zip",
+        "WC tested up to: (?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "'DIANXIAOMI_WC_VERSION_TESTED', '(?<currentValue>\\d+\\.\\d+\\.\\d+)'",
+        "\\| WooCommerce\\s+\\| [^|]+\\| (?<currentValue>\\d+\\.\\d+\\.\\d+)\\s+\\|"
       ],
       "depNameTemplate": "WooCommerce",
       "packageNameTemplate": "woocommerce/woocommerce",
@@ -88,7 +90,7 @@
       "addLabels": ["breaking"]
     },
     {
-      "description": "npm overrides are security pins on transitive packages, so they follow the advisory that created them and never a major release",
+      "description": "Keep transitive security overrides on their validated major until upstream adopts the fixes.",
       "matchManagers": ["npm"],
       "matchDepTypes": ["overrides"],
       "matchUpdateTypes": ["major"],
@@ -105,11 +107,8 @@
       "allowedVersions": "<3"
     },
     {
-      "description": "PHP_CodeSniffer 4 waits for WPCS, VIPCS and PHPCompatibility, wordpress-stubs 7 waits for phpstan-wordpress and psalm-plugin-wordpress. Approve them on the dashboard once those releases land",
-      "matchPackageNames": [
-        "squizlabs/php_codesniffer",
-        "php-stubs/wordpress-stubs"
-      ],
+      "description": "PHP_CodeSniffer 4 waits for WPCS, VIPCS and PHPCompatibility; WordPress stubs 7 wait for the analysis integrations.",
+      "matchPackageNames": ["squizlabs/php_codesniffer", "php-stubs/wordpress-stubs"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     },
@@ -128,13 +127,6 @@
       "allowedVersions": "<10.8.0"
     },
     {
-      "description": "Keep current WordPress on the 7.0 release line",
-      "matchManagers": ["custom.regex"],
-      "matchFileNames": ["dianxiaomi/.wp-env.current.json"],
-      "matchPackageNames": ["WordPress/WordPress"],
-      "allowedVersions": "/^7\\.0(?:\\.\\d+)?$/"
-    },
-    {
       "description": "Group legacy compatibility stack updates",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["dianxiaomi/.wp-env.legacy.json"],
@@ -145,10 +137,14 @@
     {
       "description": "Group current compatibility stack updates",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": ["dianxiaomi/.wp-env.current.json"],
+      "matchFileNames": ["dianxiaomi/.wp-env.current.json", "dianxiaomi/dianxiaomi.php", "README.md"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Current WordPress compatibility stack",
       "minimumReleaseAge": "3 days"
     }
-  ]
+  ],
+  "constraints": {
+    "node": "^24.18.0",
+    "npm": "^12.2.1"
+  }
 }

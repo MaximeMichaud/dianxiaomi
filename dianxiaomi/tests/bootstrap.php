@@ -21,6 +21,9 @@ if ( file_exists( $wp_load ) ) {
 	exit( 1 );
 }
 
+// Integration fixtures must never send real email.
+add_filter( 'pre_wp_mail', '__return_true' );
+
 // Ensure WooCommerce is loaded.
 if ( ! class_exists( 'WooCommerce' ) ) {
 	echo "WooCommerce not found. Make sure it's installed in wp-env.\n";

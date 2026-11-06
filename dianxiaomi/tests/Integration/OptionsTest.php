@@ -44,7 +44,6 @@ class OptionsTest extends TestCase {
 	private function reset_singleton(): void {
 		$reflection = new ReflectionClass( \Dianxiaomi::class );
 		$property   = $reflection->getProperty( '_instance' );
-		$property->setAccessible( true );
 		$property->setValue( null, null );
 	}
 

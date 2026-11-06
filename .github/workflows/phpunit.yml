@@ -25,14 +25,15 @@ jobs:
         include:
           - stack: legacy
             config: .wp-env.legacy.json
-            php: '8.1'
-            wordpress: 6.8.6
-            woocommerce: 10.7.0
           - stack: current
             config: .wp-env.current.json
-            php: '8.1'
-            wordpress: 7.0.2
-            woocommerce: 10.9.4
+          - stack: current-php85
+            config: .wp-env.current.json
+            php: '8.5'
+
+    env:
+      WP_ENV_CONFIG: ${{ matrix.config }}
+      WP_ENV_PHP_VERSION: ${{ matrix.php || '' }}
 
     steps:
       - name: Checkout code
@@ -41,9 +42,17 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: '24'
+          node-version: '24.21.0'
           cache: 'npm'
           cache-dependency-path: dianxiaomi/package-lock.json
+
+      - name: Validate metadata and read expected compatibility versions
+        env:
+          STACK: ${{ matrix.stack }}
+        run: |
+          node ../scripts/check-compatibility.mjs "$WP_ENV_CONFIG" >> "$GITHUB_ENV"
+          echo "WP_ENV_HOME=${WP_ENV_HOME:-$RUNNER_TEMP/wp-env}-$STACK" >> "$GITHUB_ENV"
+        working-directory: dianxiaomi
 
       - name: Set up PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
@@ -78,12 +87,17 @@ jobs:
         working-directory: dianxiaomi
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm ci --engine-strict
+        working-directory: dianxiaomi
+
+      - name: Audit development dependencies
+        run: |
+          composer audit --locked
+          npm audit
         working-directory: dianxiaomi
 
       - name: Start wp-env with retry
-        env:
-          WP_ENV_CONFIG: ${{ matrix.config }}
+        id: wp-env
         run: |
           for attempt in 1 2 3; do
             if npx --no-install wp-env start --config="$WP_ENV_CONFIG"; then
@@ -102,11 +116,6 @@ jobs:
         working-directory: dianxiaomi
 
       - name: Verify compatibility stack
-        env:
-          EXPECTED_PHP: ${{ matrix.php }}
-          EXPECTED_WORDPRESS: ${{ matrix.wordpress }}
-          EXPECTED_WOOCOMMERCE: ${{ matrix.woocommerce }}
-          WP_ENV_CONFIG: ${{ matrix.config }}
         run: |
           set -euo pipefail
 
@@ -127,15 +136,11 @@ jobs:
         working-directory: dianxiaomi
 
       - name: Run PHPUnit tests
-        env:
-          WP_ENV_CONFIG: ${{ matrix.config }}
         run: npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit
         working-directory: dianxiaomi
 
       - name: Stop wp-env
-        if: always()
-        env:
-          WP_ENV_CONFIG: ${{ matrix.config }}
+        if: always() && steps.wp-env.outcome != 'skipped'
         run: npx --no-install wp-env stop --config="$WP_ENV_CONFIG"
         working-directory: dianxiaomi
 
