@@ -92,9 +92,13 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @param string|int           $page           Page number.
 	 * @param string               $updated_at_min Minimum update date.
 	 *
-	 * @return array<string, mixed> Orders data.
+	 * @return array<string, mixed>|WP_Error Orders data or error.
 	 */
-	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, string|int $page = 1, string $updated_at_min = '' ): array {
+	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
+		if ( ! current_user_can( 'read_private_shop_orders' ) ) {
+			return $this->forbidden( __( 'You do not have permission to read the orders', 'dianxiaomi' ) );
+		}
+
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
@@ -112,7 +116,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$fields_array = null !== $fields ? explode( ',', $fields ) : null;
 		foreach ( $query->posts as $order_id ) {
 			$order_id = $order_id instanceof WP_Post ? $order_id->ID : (int) $order_id;
-			$order_result = $this->get_order( $order_id, $fields_array, true );
+			$order_result = $this->get_order( $order_id, $fields_array );
 			if ( ! is_wp_error( $order_result ) ) {
 				$orders[] = current( $order_result );
 			}
@@ -133,13 +137,11 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed>|WP_Error Order data or error.
 	 */
-	public function get_order( string|int $id, ?array $fields = null, bool $skip_validation = false ): array|WP_Error {
-		if ( ! $skip_validation ) {
-			$id = $this->validate_request( (int) $id, 'shop_order', 'read' );
+	public function get_order( string|int $id, ?array $fields = null ): array|WP_Error {
+		$id = $this->validate_request( (int) $id, 'shop_order', 'read' );
 
-			if ( is_wp_error( $id ) ) {
-				return $id;
-			}
+		if ( is_wp_error( $id ) ) {
+			return $id;
 		}
 
 		$order = wc_get_order( (int) $id );
@@ -415,9 +417,14 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @param string|int $id The order ID.
 	 *
-	 * @return array<string, array<int, array<string, mixed>>> Order notes data.
+	 * @return array<string, array<int, array<string, mixed>>>|WP_Error Order notes data or error.
 	 */
-	public function get_order_notes( string|int $id ): array {
+	public function get_order_notes( string|int $id ): array|WP_Error {
+		$id = $this->validate_request( (int) $id, 'shop_order', 'read' );
+		if ( is_wp_error( $id ) ) {
+			return $id;
+		}
+
 		$args = array(
 			'post_id' => (int) $id,
 			'approve' => 'approve',
