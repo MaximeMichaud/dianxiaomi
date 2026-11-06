@@ -132,19 +132,20 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|int              $id     The order ID.
-	 * @param array<int, string>|null $fields Fields to include.
+	 * @param string|int                     $id     The order ID.
+	 * @param string|array<int, string>|null $fields Fields to include as a comma-separated string or array.
 	 *
 	 * @return array<string, mixed>|WP_Error Order data or error.
 	 */
-	public function get_order( string|int $id, ?array $fields = null ): array|WP_Error {
+	public function get_order( string|int $id, string|array|null $fields = null ): array|WP_Error {
 		$id = $this->validate_request( (int) $id, 'shop_order', 'read' );
 
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
 
-		$order = wc_get_order( (int) $id );
+		$fields = is_string( $fields ) ? explode( ',', $fields ) : $fields;
+		$order  = wc_get_order( (int) $id );
 
 		if ( ! $order instanceof WC_Order ) {
 			return $this->not_found( __( 'Order', 'dianxiaomi' ) );

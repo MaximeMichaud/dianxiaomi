@@ -212,6 +212,46 @@ class ApiPermissionsTest extends TestCase {
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
+	#[DataProvider( 'authorized_roles' )]
+	public function test_detail_route_accepts_comma_separated_fields( string $role ): void {
+		$user     = $this->create_api_user( $role );
+		$params   = array( 'fields' => 'id,status' );
+		$expected = array( 'id' => $this->order->get_id(), 'status' => 'processing' );
+		$list     = $this->authenticated_request( $user, 'orders', $params );
+		$this->assertContains( $expected, $list['orders'] );
+
+		$detail = $this->authenticated_request( $user, 'order', $params );
+		$this->assertSame( $expected, $detail['order'] );
+	}
+
+	public function test_detail_route_accepts_nested_fields(): void {
+		$user   = $this->create_api_user( 'shop_manager' );
+		$result = $this->authenticated_request( $user, 'order', array( 'fields' => 'id,billing_address.first_name' ) );
+		$this->assertSame(
+			array( 'id' => $this->order->get_id(), 'billing_address' => array( 'first_name' => '' ) ),
+			$result['order']
+		);
+	}
+
+	public function test_detail_retains_array_and_default_fields(): void {
+		$user = $this->create_api_user( 'administrator' );
+		wp_set_current_user( $user->ID );
+		$default = $this->orders->get_order( $this->order->get_id() );
+		$this->assertSame( $this->order->get_id(), $default['order']['id'] );
+		$this->assertArrayHasKey( 'billing_address', $default['order'] );
+		$this->assertSame( $default, $this->orders->get_order( $this->order->get_id(), null ) );
+		$this->assertSame( $default, $this->orders->get_order( $this->order->get_id(), array() ) );
+		$this->assertSame(
+			array( 'order' => array( 'id' => $this->order->get_id(), 'status' => 'processing' ) ),
+			$this->orders->get_order( $this->order->get_id(), array( 'id', 'status' ) )
+		);
+	}
+
+	public function test_detail_fields_still_require_read_permission(): void {
+		$user = $this->create_api_user( 'subscriber' );
+		$this->assert_denied( 'order', $this->authenticated_request( $user, 'order', array( 'fields' => 'id,status' ) ) );
+	}
+
 	private function create_api_user( string $role ): \WP_User {
 		$user_id = wp_insert_user(
 			array(
