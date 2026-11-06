@@ -4,7 +4,7 @@
  * Required: TEST_BASE_URL, TEST_ADMIN_USER, TEST_ADMIN_PASSWORD,
  * PLAYWRIGHT_MODULE (if not installed locally), PLAYWRIGHT_CHROMIUM_EXECUTABLE.
  * The installation must block outgoing mail and HTTP requests with a MU plugin.
- * Usage: node tests/browser/admin-order.mjs [hpos|classic] [settings|box]
+ * Usage: node tests/browser/admin-order.mjs [hpos|classic] [settings|box|carriers|selection|save]
  */
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -13,9 +13,9 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright-c
 const baseURL = process.env.TEST_BASE_URL;
 assert.ok(baseURL && process.env.TEST_ADMIN_USER && process.env.TEST_ADMIN_PASSWORD, 'Set isolated test URL and admin credentials');
 const mode = process.argv[2] || 'hpos';
-const check = process.argv[3] || 'box';
+const check = process.argv[3] || 'save';
 assert.ok(['hpos', 'classic'].includes(mode));
-assert.ok(['settings', 'box'].includes(check));
+assert.ok(['settings', 'box', 'carriers', 'selection', 'save'].includes(check));
 const phpLiteral = (value) => `json_decode(base64_decode('${Buffer.from(JSON.stringify(value)).toString('base64')}'), true)`;
 function wp(code) {
     const output = execFileSync(process.execPath, [
@@ -86,6 +86,47 @@ try {
             : `${baseURL}/wp-admin/post.php?post=${orderId}&action=edit`;
         await page.goto(orderURL);
         assert.equal(await page.locator('#woocommerce-dianxiaomi #dianxiaomi_tracking_number').count(), 1, 'The order editor must render the tracking meta box');
+        if (check !== 'box') {
+            const actual = await page.locator('#dianxiaomi_tracking_provider option').evaluateAll((items) => items.map((item) => item.value).filter(Boolean).sort());
+            assert.deepEqual(actual, ['fedex', 'ups'], 'Configured JSON carriers must populate the order selector');
+        }
+        if (['selection', 'save'].includes(check)) {
+            await page.locator('#select2-dianxiaomi_tracking_provider-container').click();
+            await page.getByRole('option', { name: 'UPS', exact: true }).click();
+            assert.equal(await page.locator('#dianxiaomi_tracking_provider_name').inputValue(), 'UPS');
+            await page.locator('#select2-dianxiaomi_tracking_provider-container').click();
+            await page.getByRole('option', { name: 'FedEx', exact: true }).click();
+            assert.equal(await page.locator('#dianxiaomi_tracking_provider_name').inputValue(), 'FedEx', 'Selecting a carrier must update its persisted display name');
+            assert.deepEqual(errors, [], 'The admin selection must not throw JavaScript errors');
+        }
+        if (check === 'save') {
+            const tracking = `ADMIN-${mode.toUpperCase()}-${orderId}-${Date.now()}`;
+            await page.locator('#dianxiaomi_tracking_number').fill(tracking);
+            await Promise.all([page.waitForNavigation(), page.getByRole('button', { name: 'Update', exact: true }).click()]);
+            await page.goto(`${baseURL}/wp-admin/index.php`);
+            await page.goto(orderURL);
+            await page.reload();
+            assert.equal(await page.locator('#dianxiaomi_tracking_number').inputValue(), tracking);
+            assert.equal(await page.locator('#dianxiaomi_tracking_provider').inputValue(), 'fedex');
+            assert.equal(await page.locator('#dianxiaomi_tracking_provider_name').inputValue(), 'FedEx');
+            const stored = wp(`
+                global $wpdb;
+                $table = '${mode}' === 'hpos' ? $wpdb->prefix . 'wc_orders_meta' : $wpdb->postmeta;
+                $column = '${mode}' === 'hpos' ? 'order_id' : 'post_id';
+                $rows = $wpdb->get_results("SELECT meta_key, meta_value FROM $table WHERE $column = ${orderId} AND meta_key IN ('_dianxiaomi_tracking_number', '_dianxiaomi_tracking_provider', '_dianxiaomi_tracking_provider_name')", OBJECT_K);
+                $values = array_map(static fn($row) => $row->meta_value, $rows);
+                $values['sync'] = get_option('woocommerce_custom_orders_table_data_sync_enabled');
+                $values['postmeta_count'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id = ${orderId} AND meta_key = '_dianxiaomi_tracking_number'");
+                ${result('$values')}
+            `);
+            assert.equal(stored._dianxiaomi_tracking_number, tracking);
+            assert.equal(stored._dianxiaomi_tracking_provider, 'fedex');
+            assert.equal(stored._dianxiaomi_tracking_provider_name, 'FedEx');
+            assert.equal(stored.sync, 'no');
+            assert.equal(stored.postmeta_count, mode === 'hpos' ? 0 : 1);
+            console.log(JSON.stringify({ mode, orderId, stored }));
+            assert.deepEqual(errors, []);
+        }
     }
     assert.deepEqual(errors, [], 'The admin page must not throw JavaScript errors');
     console.log(`PASS: ${mode} ${check}; settings saved/reloaded and checked in database`);

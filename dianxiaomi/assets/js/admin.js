@@ -110,7 +110,7 @@ var dianxiaomi_woocommerce_tracking_onload = function () {
 		});
 
 		var couriers_selected = jQuery('#dianxiaomi_couriers_selected').val();
-		var couriers_selected_arr = (couriers_selected) ? couriers_selected.split(',') : [];
+		var couriers_selected_arr = (couriers_selected) ? JSON.parse(couriers_selected) : [];
 		fill_meta_box(couriers_selected_arr);
 	}
 
