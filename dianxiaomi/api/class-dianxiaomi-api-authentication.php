@@ -79,9 +79,11 @@ final class Dianxiaomi_API_Authentication {
 		if ( ! is_array( $headers ) ) {
 			$headers = array();
 		}
-		$key     = 'AFTERSHIP_WP_KEY';
-		$key1    = str_replace( ' ', '-', ucwords( strtolower( str_replace( '_', ' ', $key ) ) ) );
-		$key2    = 'DIANXIAOMI-WP-KEY';
+		// HTTP header names are case-insensitive, including when normalized by a proxy.
+		$headers = array_change_key_case( $headers, CASE_LOWER );
+		$key     = 'aftership_wp_key';
+		$key1    = 'aftership-wp-key';
+		$key2    = 'dianxiaomi-wp-key';
 		$qskey   = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : null;
 		// Vérification de la clé API
 		$api_key = $headers[ $key ] ?? $headers[ $key1 ] ?? $headers[ $key2 ] ?? $qskey;

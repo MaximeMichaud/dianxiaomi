@@ -252,6 +252,47 @@ class ApiPermissionsTest extends TestCase {
 		$this->assert_denied( 'order', $this->authenticated_request( $user, 'order', array( 'fields' => 'id,status' ) ) );
 	}
 
+	public static function api_key_headers(): array {
+		return array(
+			'Dianxiaomi header' => array( 'HTTP_DIANXIAOMI_WP_KEY' ),
+			'legacy AfterShip header' => array( 'HTTP_AFTERSHIP_WP_KEY' ),
+		);
+	}
+
+	#[DataProvider( 'api_key_headers' )]
+	public function test_api_key_headers_authenticate_without_a_query_key( string $header ): void {
+		$user = $this->create_api_user( 'administrator' );
+		wp_set_current_user( 0 );
+		$_GET = array();
+		$_REQUEST = array( '_wpnonce' => wp_create_nonce( 'dianxiaomi_action' ) );
+		$_SERVER[ $header ] = get_user_meta( $user->ID, 'dianxiaomi_wp_api_key', true );
+
+		$this->assertInstanceOf( \WP_User::class, $this->server->check_authentication() );
+		$this->assertSame( $user->ID, get_current_user_id() );
+		$this->assert_order_data( 'orders', $this->server->dispatch() );
+	}
+
+	public function test_api_key_header_still_requires_a_valid_nonce(): void {
+		$user = $this->create_api_user( 'administrator' );
+		$_SERVER['HTTP_DIANXIAOMI_WP_KEY'] = get_user_meta( $user->ID, 'dianxiaomi_wp_api_key', true );
+		$_REQUEST['_wpnonce'] = 'invalid-header-nonce';
+		$result = $this->server->check_authentication();
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( array( 'status' => 403 ), $result->get_error_data() );
+		$this->assertSame( 0, get_current_user_id() );
+	}
+
+	public function test_invalid_api_key_header_is_rejected(): void {
+		$_SERVER['HTTP_DIANXIAOMI_WP_KEY'] = 'invalid-local-regression-key';
+		$_REQUEST = array( '_wpnonce' => wp_create_nonce( 'dianxiaomi_action' ) );
+		$result = $this->server->check_authentication();
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( array( 'status' => 401 ), $result->get_error_data() );
+		$this->assertSame( 0, get_current_user_id() );
+	}
+
 	private function create_api_user( string $role ): \WP_User {
 		$user_id = wp_insert_user(
 			array(
