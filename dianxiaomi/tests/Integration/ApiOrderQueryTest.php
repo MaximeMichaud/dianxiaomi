@@ -272,4 +272,25 @@ class ApiOrderQueryTest extends TestCase {
 		$result = $this->api->get_orders( null, array(), 'dxm-query' );
 		$this->assertSame( '', $result['orders'][0]['completed_at'] );
 	}
+
+	public function test_pagination_links_preserve_the_home_port_and_request_path(): void {
+		$home_url = static fn(): string => 'http://localhost:9905/shop';
+		add_filter( 'home_url', $home_url );
+		try {
+			$this->create_query_order( '2026-01-01T12:00:00Z' );
+			$this->create_query_order( '2026-01-02T12:00:00Z' );
+			$_SERVER['REQUEST_URI'] = '/shop/dianxiaomi-api/v1/orders?filter%5Bposts_per_page%5D=1';
+			$this->api->get_orders( null, array( 'posts_per_page' => 1 ), 'dxm-query' );
+			$this->assertNotEmpty( $this->server->sent_headers['Link'] );
+			foreach ( $this->server->sent_headers['Link'] as $header ) {
+				$this->assertSame( 1, preg_match( '/^<(.+)>; rel="([^"]+)"$/', $header, $matches ) );
+				$url = wp_parse_url( $matches[1] );
+				$this->assertSame( 'localhost', $url['host'] );
+				$this->assertSame( 9905, $url['port'] ?? null );
+				$this->assertSame( '/shop/dianxiaomi-api/v1/orders', $url['path'] );
+			}
+		} finally {
+			remove_filter( 'home_url', $home_url );
+		}
+	}
 }

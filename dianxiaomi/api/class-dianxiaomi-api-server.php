@@ -505,6 +505,8 @@ class Dianxiaomi_API_Server {
 		$request   = is_string( $request ) ? urldecode( add_query_arg( 'page', $page, $request ) ) : '';
 		$host_raw  = wp_parse_url( get_home_url(), PHP_URL_HOST );
 		$host      = is_string( $host_raw ) ? $host_raw : 'localhost';
+		$port      = wp_parse_url( get_home_url(), PHP_URL_PORT );
+		$host     .= is_int( $port ) ? ':' . $port : '';
 
 		return set_url_scheme( "http://{$host}{$request}" );
 	}
