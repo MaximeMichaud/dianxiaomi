@@ -299,7 +299,17 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 				$options .= $option;
 			}
 		}
-		printf( '<select id="plugin" name="dianxiaomi_option_name[plugin]" class="dianxiaomi_dropdown">' . esc_html( $options ) . '</select>' );
+		echo '<select id="plugin" name="dianxiaomi_option_name[plugin]" class="dianxiaomi_dropdown">';
+		echo wp_kses(
+			$options,
+			array(
+				'option' => array(
+					'value'    => true,
+					'selected' => true,
+				),
+			)
+		);
+		echo '</select>';
 	}
 
 	public function custom_domain_callback(): void {
