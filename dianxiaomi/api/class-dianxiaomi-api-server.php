@@ -175,14 +175,14 @@ class Dianxiaomi_API_Server {
 
 		if ( ! apply_filters( 'dianxiaomi_api_enabled', true, $this ) || ( 'no' === get_option( 'dianxiaomi_api_enabled' ) ) ) {
 			$this->send_status( 404 );
-			echo esc_html(
-				$this->handler->generate_response(
-					array(
-						'errors' => array(
-							'code'    => 'dianxiaomi_api_disabled',
-							'message' => esc_html__( 'The WooCommerce API is disabled on this site', 'dianxiaomi' ),
-						),
-					)
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The handler encodes the response for its content type, not HTML.
+			echo $this->handler->generate_response(
+				array(
+					'errors' => array(
+						'code'    => 'dianxiaomi_api_disabled',
+						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Encoded by the response handler.
+						'message' => __( 'The WooCommerce API is disabled on this site', 'dianxiaomi' ),
+					),
 				)
 			);
 			return;
@@ -208,7 +208,8 @@ class Dianxiaomi_API_Server {
 			}
 			/** @var array<string, mixed> $response_data */
 			$response_data = is_array( $result ) ? $result : array( 'data' => $result );
-			echo esc_html( $this->handler->generate_response( $response_data ) );
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The handler encodes the response for its content type, not HTML.
+			echo $this->handler->generate_response( $response_data );
 		}
 	}
 
