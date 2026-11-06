@@ -493,6 +493,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$all_ids = wc_get_orders( $count_args );
 
 		$query = new WP_Query();
+		$query->set( 'paged', $query_args['page'] );
 		/** @var array<int|WP_Post> $order_ids_array */
 		$order_ids_array    = is_array( $order_ids ) ? $order_ids : array();
 		$query->posts       = $order_ids_array;
