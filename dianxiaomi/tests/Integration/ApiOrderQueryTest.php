@@ -293,4 +293,74 @@ class ApiOrderQueryTest extends TestCase {
 			remove_filter( 'home_url', $home_url );
 		}
 	}
+
+	public static function encoded_bounds(): array {
+		return array(
+			'CPT top level' => array( false, false ),
+			'CPT filter' => array( false, true ),
+			'HPOS top level' => array( true, false ),
+			'HPOS filter' => array( true, true ),
+		);
+	}
+
+	/** @dataProvider encoded_bounds */
+	public function test_dispatch_preserves_already_decoded_timezone_offsets( bool $hpos, bool $nested ): void {
+		$this->use_storage( $hpos );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00' ) as $time ) {
+			$order = $this->create_query_order( "2026-05-06T{$time}Z" );
+			$this->set_modified_date( $order, "2026-05-06T{$time}Z" );
+			$ids[] = $order->get_id();
+		}
+		$params = array( 'status' => 'dxm-query' );
+		$bound = '2026-05-06T17:00:00+05:00';
+		if ( $nested ) {
+			$params['filter']['updated_at_min'] = $bound;
+		} else {
+			$params['updated_at_min'] = $bound;
+		}
+		// PHP decodes the query string once before the API receives $_GET.
+		parse_str( http_build_query( $params, '', '&', PHP_QUERY_RFC3986 ), $decoded );
+		$this->server->params = array( 'GET' => $decoded, 'POST' => array() );
+		$this->server->method = 'GET';
+		$result = $this->server->dispatch();
+		$this->assertIsArray( $result );
+		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
+	}
+
+	/** @dataProvider encoded_bounds */
+	public function test_following_pagination_links_preserves_encoded_filters( bool $hpos, bool $nested ): void {
+		$this->use_storage( $hpos );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$order = $this->create_query_order( "2026-05-06T{$time}Z" );
+			$this->set_modified_date( $order, "2026-05-06T{$time}Z" );
+			$ids[] = $order->get_id();
+		}
+		$params = array( 'status' => 'dxm-query', 'filter' => array( 'posts_per_page' => '1' ) );
+		$bound = '2026-05-06T17:00:00+05:00';
+		if ( $nested ) {
+			$params['filter']['updated_at_min'] = $bound;
+		} else {
+			$params['updated_at_min'] = $bound;
+		}
+		$_SERVER['REQUEST_URI'] = '/dianxiaomi-api/v1/orders?' . http_build_query( $params, '', '&', PHP_QUERY_RFC3986 );
+		$result = $this->api->get_orders( null, $params['filter'], 'dxm-query', 1, $params['updated_at_min'] ?? '' );
+		$this->assertSame( array( $ids[2] ), array_column( $result['orders'], 'id' ) );
+		$next_url = null;
+		foreach ( $this->server->sent_headers['Link'] as $header ) {
+			if ( preg_match( '/^<(.+)>; rel="next"$/', $header, $matches ) ) {
+				$next_url = $matches[1];
+			}
+		}
+		$this->assertNotNull( $next_url );
+		parse_str( (string) wp_parse_url( $next_url, PHP_URL_QUERY ), $decoded );
+		$this->assertSame( $bound, $nested ? $decoded['filter']['updated_at_min'] : $decoded['updated_at_min'] );
+		$this->assertSame( '2', $decoded['page'] );
+		$this->server->params = array( 'GET' => $decoded, 'POST' => array() );
+		$this->server->method = 'GET';
+		$result = $this->server->dispatch();
+		$this->assertIsArray( $result );
+		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
+	}
 }

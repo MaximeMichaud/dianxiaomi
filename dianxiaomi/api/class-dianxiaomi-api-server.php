@@ -502,7 +502,7 @@ class Dianxiaomi_API_Server {
 	 */
 	private function get_paginated_url( int $page ): string {
 		$request   = remove_query_arg( 'page' );
-		$request   = is_string( $request ) ? urldecode( add_query_arg( 'page', $page, $request ) ) : '';
+		$request   = is_string( $request ) ? add_query_arg( 'page', $page, $request ) : '';
 		$host_raw  = wp_parse_url( get_home_url(), PHP_URL_HOST );
 		$host      = is_string( $host_raw ) ? $host_raw : 'localhost';
 		$port      = wp_parse_url( get_home_url(), PHP_URL_PORT );
@@ -655,16 +655,8 @@ class Dianxiaomi_API_Server {
 
 		foreach ( $wanted as $param ) {
 			if ( isset( $provided[ $param->getName() ] ) ) {
-				// We have this parameters in the list to choose from
-				$param_value = $provided[ $param->getName() ];
-				if ( is_array( $param_value ) ) {
-					/** @var array<int|string, string> $param_value */
-					$ordered_parameters[] = array_map( 'urldecode', $param_value );
-				} elseif ( is_string( $param_value ) ) {
-					$ordered_parameters[] = urldecode( $param_value );
-				} else {
-					$ordered_parameters[] = $param_value;
-				}
+				// Query parameters and request bodies have already been decoded.
+				$ordered_parameters[] = $provided[ $param->getName() ];
 			} elseif ( $param->isDefaultValueAvailable() ) {
 				// We don't have this parameter, but it's optional
 				$ordered_parameters[] = $param->getDefaultValue();
