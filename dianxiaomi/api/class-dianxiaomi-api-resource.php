@@ -83,8 +83,8 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 	/**
 	 * Validate the request by checking:
 	 * 1) the ID is a valid integer
-	 * 2) the ID returns a valid post object and matches the provided post type
-	 * 3) the current user has the proper permissions to read/edit/delete the post
+	 * 2) the ID returns a valid resource from its data store and matches the provided type
+	 * 3) the current user has the proper permissions to read/edit/delete the resource
 	 *
 	 * @since 2.1
 	 *
@@ -100,6 +100,19 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 		if ( empty( $id ) ) {
 			// translators: %s: resource name
 			return new WP_Error( "dianxiaomi_api_invalid_{$resource_name}_id", sprintf( __( 'Invalid %s ID', 'dianxiaomi' ), $type ), array( 'status' => 404 ) );
+		}
+
+		if ( 'shop_order' === $type ) {
+			// HPOS orders may only have a placeholder in the posts table.
+			$order = wc_get_order( $id );
+			if ( ! $order instanceof WC_Order || 'shop_order' !== $order->get_type() ) {
+				// translators: %s: resource name
+				return new WP_Error( "dianxiaomi_api_invalid_{$resource_name}", sprintf( __( 'Invalid %s', 'dianxiaomi' ), $resource_name ), array( 'status' => 404 ) );
+			}
+
+			$has_permission = in_array( $context, array( 'read', 'edit', 'delete' ), true ) && wc_rest_check_post_permissions( $type, $context, $id );
+			// translators: %1$s: context, %2$s: resource name
+			return $has_permission ? $id : new WP_Error( "dianxiaomi_api_user_cannot_{$context}_{$resource_name}", sprintf( __( 'You do not have permission to %1$s this %2$s', 'dianxiaomi' ), $context, $resource_name ), array( 'status' => 401 ) );
 		}
 
 		$post = get_post( $id );
