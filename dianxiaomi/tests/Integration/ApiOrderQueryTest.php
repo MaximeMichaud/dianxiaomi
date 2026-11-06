@@ -119,6 +119,17 @@ class ApiOrderQueryTest extends TestCase {
 		return $order;
 	}
 
+	private function set_modified_date( \WC_Order $order, string $date ): void {
+		$order->set_date_modified( $date );
+		$order->save();
+		if ( ! OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			// Preserve historical fixture dates through WooCommerce's CPT import path.
+			$order->get_data_store()->update_order_from_object( $order );
+		}
+		$stored = new \WC_Order( $order->get_id() );
+		$this->assertSame( ( new \DateTimeImmutable( $date ) )->getTimestamp(), $stored->get_date_modified()->getTimestamp() );
+	}
+
 	private function links(): array {
 		$links = array();
 		foreach ( $this->server->sent_headers['Link'] ?? array() as $header ) {
@@ -179,13 +190,51 @@ class ApiOrderQueryTest extends TestCase {
 		foreach ( array( 3, 1, 2 ) as $day ) {
 			$order = $this->create_query_order( "2026-01-0{$day}T12:00:00Z" );
 			$modified_day = 4 - $day;
-			$order->set_date_modified( "2026-02-0{$modified_day}T12:00:00Z" );
-			$order->save();
+			$this->set_modified_date( $order, "2026-02-0{$modified_day}T12:00:00Z" );
 			$ids[] = $order->get_id();
 		}
 		$result = $this->api->get_orders( null, $filter, 'dxm-query' );
 		$this->assertSame( array_map( static fn( int $index ): int => $ids[ $index ], $expected ), array_column( $result['orders'], 'id' ) );
 		$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-Total'] );
 		$this->assertSame( array( isset( $filter['posts_per_page'] ) ? '3' : '1' ), $this->server->sent_headers['X-WC-TotalPages'] );
+	}
+
+	public static function update_bounds(): array {
+		$bounds = array(
+			'UTC' => '2026-05-06T12:00:00Z',
+			'positive offset' => '2026-05-06T17:00:00+05:00',
+			'negative offset' => '2026-05-06T08:00:00-04:00',
+			'timestamp' => (string) ( new \DateTimeImmutable( '2026-05-06T12:00:00Z' ) )->getTimestamp(),
+		);
+		$data = array();
+		foreach ( self::storage_modes() as $mode => [ $hpos ] ) {
+			foreach ( $bounds as $name => $bound ) {
+				$data[ $mode . ' ' . $name ] = array( $hpos, $bound );
+			}
+		}
+		return $data;
+	}
+
+	/** @dataProvider update_bounds */
+	public function test_updated_at_min_filters_the_instant_inclusively( bool $hpos, string $bound ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$date = "2026-05-06T{$time}Z";
+			$order = $this->create_query_order( $date );
+			$this->set_modified_date( $order, $date );
+			$ids[] = $order->get_id();
+		}
+		$result = $this->api->get_orders( null, array(), 'dxm-query', 1, $bound );
+		$this->assertSame( array( $ids[2], $ids[1] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '2' ), $this->server->sent_headers['X-WC-Total'] );
+	}
+
+	public function test_datetime_parser_converts_offsets_to_utc(): void {
+		$this->assertSame( '2026-05-06 12:00:00', $this->server->parse_datetime( '2026-05-06T17:00:00+05:00' ) );
+		$this->assertSame( '2026-05-06 12:00:00', $this->server->parse_datetime( '2026-05-06T08:00:00-04:00' ) );
+		$this->assertSame( '2026-05-06 12:00:00', $this->server->parse_datetime( '2026-05-06T12:00:00.000Z' ) );
+		$this->assertSame( '1970-01-01 00:00:00', $this->server->parse_datetime( 'not-a-date' ) );
 	}
 }

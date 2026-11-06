@@ -496,7 +496,11 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		if ( ! empty( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ) {
-			$query_args['date_modified'] = '>=' . $args['updated_at_min'];
+			// WooCommerce uses second precision for timestamps, but day precision for date strings.
+			$modified_since = is_numeric( $args['updated_at_min'] )
+				? (int) $args['updated_at_min']
+				: ( new DateTime( $this->server->parse_datetime( $args['updated_at_min'] ), new DateTimeZone( 'UTC' ) ) )->getTimestamp();
+			$query_args['date_modified'] = '>=' . $modified_since;
 		}
 
 		$order_ids = wc_get_orders( $query_args );

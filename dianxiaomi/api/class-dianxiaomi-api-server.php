@@ -540,18 +540,13 @@ class Dianxiaomi_API_Server {
 			}
 		}
 
-		$result = preg_replace( '/[+-]\d+:+\d+$/', '+00:00', $datetime );
-		if ( null !== $result ) {
-			$datetime = $result;
-		}
-
 		try {
 			$datetime = new DateTime( $datetime, new DateTimeZone( 'UTC' ) );
 		} catch ( Exception $e ) {
 			$datetime = new DateTime( '@0' );
 		}
 
-		return $datetime->format( 'Y-m-d H:i:s' );
+		return $datetime->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
 	}
 
 	/**
