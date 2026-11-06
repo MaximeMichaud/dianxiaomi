@@ -185,19 +185,19 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * Add a meta box for shipment info on the order page.
 	 */
 	public function add_meta_box(): void {
-		add_meta_box( 'woocommerce-dianxiaomi', __( 'Dianxiaomi', 'wc_dianxiaomi' ), array( $this, 'meta_box' ), 'shop_order', 'side', 'high' );
+		add_meta_box( 'woocommerce-dianxiaomi', __( 'Dianxiaomi', 'wc_dianxiaomi' ), array( $this, 'meta_box' ), wc_get_page_screen_id( 'shop-order' ), 'side', 'high' );
 	}
 
 	/**
 	 * Display the meta box for shipment info on the order page.
+	 *
+	 * @param WP_Post|WC_Order|null $post_or_order Post (classic) or order (HPOS) supplied by the editor.
 	 */
-	public function meta_box(): void {
+	public function meta_box( WP_Post|WC_Order|null $post_or_order = null ): void {
 		global $post;
-		// HPOS compatible: get order object.
-		if ( ! $post instanceof WP_Post ) {
-			return;
-		}
-		$order = wc_get_order( $post->ID );
+		// Keep the global post fallback for callers using the classic callback directly.
+		$post_or_order = $post_or_order ?? $post;
+		$order         = $post_or_order instanceof WC_Order ? $post_or_order : ( $post_or_order instanceof WP_Post ? wc_get_order( $post_or_order->ID ) : false );
 		if ( ! $order instanceof WC_Order ) {
 			return;
 		}

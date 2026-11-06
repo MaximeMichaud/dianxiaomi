@@ -4,7 +4,7 @@
  * Required: TEST_BASE_URL, TEST_ADMIN_USER, TEST_ADMIN_PASSWORD,
  * PLAYWRIGHT_MODULE (if not installed locally), PLAYWRIGHT_CHROMIUM_EXECUTABLE.
  * The installation must block outgoing mail and HTTP requests with a MU plugin.
- * Usage: node tests/browser/admin-order.mjs [hpos|classic] [settings]
+ * Usage: node tests/browser/admin-order.mjs [hpos|classic] [settings|box]
  */
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -13,9 +13,9 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright-c
 const baseURL = process.env.TEST_BASE_URL;
 assert.ok(baseURL && process.env.TEST_ADMIN_USER && process.env.TEST_ADMIN_PASSWORD, 'Set isolated test URL and admin credentials');
 const mode = process.argv[2] || 'hpos';
-const check = process.argv[3] || 'settings';
+const check = process.argv[3] || 'box';
 assert.ok(['hpos', 'classic'].includes(mode));
-assert.equal(check, 'settings');
+assert.ok(['settings', 'box'].includes(check));
 const phpLiteral = (value) => `json_decode(base64_decode('${Buffer.from(JSON.stringify(value)).toString('base64')}'), true)`;
 function wp(code) {
     const output = execFileSync(process.execPath, [
@@ -80,7 +80,14 @@ try {
     assert.deepEqual(storedCouriers.split(',').sort(), ['fedex', 'ups']);
     assert.deepEqual(await page.locator('#couriers_select').evaluate((select) => Array.from(select.selectedOptions, (option) => option.value).sort()), ['fedex', 'ups']);
 
-    assert.deepEqual(errors, [], 'The settings page must not throw JavaScript errors');
+    if (check !== 'settings') {
+        const orderURL = mode === 'hpos'
+            ? `${baseURL}/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`
+            : `${baseURL}/wp-admin/post.php?post=${orderId}&action=edit`;
+        await page.goto(orderURL);
+        assert.equal(await page.locator('#woocommerce-dianxiaomi #dianxiaomi_tracking_number').count(), 1, 'The order editor must render the tracking meta box');
+    }
+    assert.deepEqual(errors, [], 'The admin page must not throw JavaScript errors');
     console.log(`PASS: ${mode} ${check}; settings saved/reloaded and checked in database`);
 } catch (error) {
     console.error(JSON.stringify({ mode, check, pageErrors: errors }));
