@@ -467,6 +467,22 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			'order'   => 'DESC',
 		);
 
+		if ( isset( $args['order'] ) && is_string( $args['order'] ) && in_array( strtoupper( $args['order'] ), array( 'ASC', 'DESC' ), true ) ) {
+			$query_args['order'] = strtoupper( $args['order'] );
+		}
+		$allowed_orderby = array(
+			'id'       => 'ID',
+			'date'     => 'date',
+			'modified' => 'modified',
+		);
+		if ( isset( $args['orderby'] ) && is_string( $args['orderby'] ) && isset( $allowed_orderby[ strtolower( $args['orderby'] ) ] ) ) {
+			$query_args['orderby'] = $allowed_orderby[ strtolower( $args['orderby'] ) ];
+		}
+		$offset = filter_var( $args['offset'] ?? null, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0 ) ) );
+		if ( false !== $offset ) {
+			$query_args['offset'] = $offset;
+		}
+
 		if ( ! empty( $args['status'] ) && is_string( $args['status'] ) ) {
 			$statuses              = explode( ',', $args['status'] );
 			$query_args['status'] = array_map(
@@ -490,6 +506,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$count_args['return']  = 'ids';
 		$count_args['limit']   = -1;
 		$count_args['page']    = 1;
+		unset( $count_args['offset'] );
 		$all_ids = wc_get_orders( $count_args );
 
 		$query = new WP_Query();

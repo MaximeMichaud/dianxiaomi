@@ -36,6 +36,8 @@ class ApiOrderQueryTest extends TestCase {
 		foreach ( array( 'woocommerce_custom_orders_table_enabled', 'woocommerce_custom_orders_table_data_sync_enabled', 'timezone_string', 'gmt_offset', 'home' ) as $name ) {
 			$this->options[ $name ] = get_option( $name );
 		}
+		// WooCommerce's test-only switch avoids syncing fixtures owned by other suites.
+		add_filter( 'wc_allow_changing_orders_storage_while_sync_is_pending', array( $this, 'allow_storage_switch' ) );
 		update_option( 'woocommerce_custom_orders_table_data_sync_enabled', 'no' );
 		update_option( 'timezone_string', 'UTC' );
 		update_option( 'gmt_offset', 0 );
@@ -78,11 +80,16 @@ class ApiOrderQueryTest extends TestCase {
 			foreach ( $this->options as $name => $value ) {
 				false === $value ? delete_option( $name ) : update_option( $name, $value );
 			}
+			remove_filter( 'wc_allow_changing_orders_storage_while_sync_is_pending', array( $this, 'allow_storage_switch' ) );
 			wp_set_current_user( $this->user_id );
 			list( $_GET, $_POST, $_REQUEST, $_SERVER ) = $this->request_globals;
 		} finally {
 			parent::tear_down();
 		}
+	}
+
+	public function allow_storage_switch(): bool {
+		return true;
 	}
 
 	public function register_status( array $statuses ): array {
@@ -144,5 +151,41 @@ class ApiOrderQueryTest extends TestCase {
 			$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-TotalPages'] );
 			$this->assertSame( $links, $this->links(), "Incorrect Link headers for page {$page}" );
 		}
+	}
+
+	public static function query_filters(): array {
+		$cases = array(
+			'ascending date' => array( array( 'order' => 'asc' ), array( 1, 2, 0 ) ),
+			'modified descending' => array( array( 'orderby' => 'modified' ), array( 1, 2, 0 ) ),
+			'ID descending' => array( array( 'orderby' => 'ID' ), array( 2, 1, 0 ) ),
+			'offset' => array( array( 'offset' => '1', 'posts_per_page' => 1 ), array( 2 ) ),
+			'combined' => array( array( 'orderby' => 'id', 'order' => 'ASC', 'offset' => 1, 'posts_per_page' => 1 ), array( 1 ) ),
+			'invalid strings' => array( array( 'orderby' => 'not_a_column', 'order' => 'invalid', 'offset' => '-1' ), array( 0, 2, 1 ) ),
+			'invalid types' => array( array( 'orderby' => array( 'ID' ), 'order' => array( 'ASC' ), 'offset' => '1.5' ), array( 0, 2, 1 ) ),
+		);
+		$data = array();
+		foreach ( self::storage_modes() as $mode => [ $hpos ] ) {
+			foreach ( $cases as $name => [ $filter, $expected ] ) {
+				$data[ $mode . ' ' . $name ] = array( $hpos, $filter, $expected );
+			}
+		}
+		return $data;
+	}
+
+	/** @dataProvider query_filters */
+	public function test_order_filters_preserve_sorting_and_offset( bool $hpos, array $filter, array $expected ): void {
+		$this->use_storage( $hpos );
+		$ids = array();
+		foreach ( array( 3, 1, 2 ) as $day ) {
+			$order = $this->create_query_order( "2026-01-0{$day}T12:00:00Z" );
+			$modified_day = 4 - $day;
+			$order->set_date_modified( "2026-02-0{$modified_day}T12:00:00Z" );
+			$order->save();
+			$ids[] = $order->get_id();
+		}
+		$result = $this->api->get_orders( null, $filter, 'dxm-query' );
+		$this->assertSame( array_map( static fn( int $index ): int => $ids[ $index ], $expected ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-Total'] );
+		$this->assertSame( array( isset( $filter['posts_per_page'] ) ? '3' : '1' ), $this->server->sent_headers['X-WC-TotalPages'] );
 	}
 }
