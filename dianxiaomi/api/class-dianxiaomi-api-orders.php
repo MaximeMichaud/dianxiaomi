@@ -427,28 +427,20 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		$args = array(
-			'post_id' => (int) $id,
-			'approve' => 'approve',
-			'type'    => 'order_note',
+			'order_id' => $id,
+			'orderby'  => 'date_created_gmt',
 		);
 
-		$notes       = get_comments( $args );
+		$notes       = wc_get_order_notes( $args );
 		$order_notes = array();
 
-		if ( ! is_array( $notes ) ) {
-			return array( 'order_notes' => array() );
-		}
-
 		foreach ( $notes as $note ) {
-			if ( ! $note instanceof WP_Comment ) {
-				continue;
-			}
-			$comment_id    = (int) $note->comment_ID;
+			$date_created = $note->date_created;
 			$order_notes[] = array(
-				'id'            => $comment_id,
-				'created_at'    => $this->server->format_datetime( $note->comment_date_gmt ),
-				'note'          => $note->comment_content,
-				'customer_note' => (bool) get_comment_meta( $comment_id, 'is_customer_note', true ),
+				'id'            => $note->id,
+				'created_at'    => $date_created instanceof WC_DateTime ? $this->server->format_datetime( $date_created->getTimestamp() ) : '',
+				'note'          => $note->content,
+				'customer_note' => $note->customer_note,
 			);
 		}
 

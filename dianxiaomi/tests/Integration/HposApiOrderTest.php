@@ -29,7 +29,7 @@ class HposApiOrderTest extends TestCase {
 
 		$this->original_user   = get_current_user_id();
 		$this->request_globals = array( $_GET, $_POST, $_REQUEST );
-		foreach ( array( 'woocommerce_custom_orders_table_enabled', 'woocommerce_custom_orders_table_data_sync_enabled', 'dianxiaomi_ignore_order_status' ) as $option ) {
+		foreach ( array( 'woocommerce_custom_orders_table_enabled', 'woocommerce_custom_orders_table_data_sync_enabled', 'dianxiaomi_ignore_order_status', 'timezone_string' ) as $option ) {
 			$this->options[ $option ] = get_option( $option );
 		}
 
@@ -146,6 +146,30 @@ class HposApiOrderTest extends TestCase {
 		$this->set_tracking_info( $order, 'ups', $number );
 
 		$this->assert_api_order( $this->api->get_order( $order->get_id() ), $order->get_id(), 'processing', $number, 'ups' );
+	}
+
+	#[DataProvider( 'storage_modes' )]
+	public function test_authorized_order_notes_include_internal_and_customer_notes( bool $hpos ): void {
+		update_option( 'timezone_string', 'America/Toronto' );
+		$order       = $this->create_stored_order( $hpos );
+		$internal_id = $order->add_order_note( 'Internal fulfillment instructions.' );
+		$customer_id = $order->add_order_note( 'Your order has shipped.', 1 );
+		$other       = $this->create_stored_order( $hpos );
+		$foreign_id  = $other->add_order_note( 'Another order.' );
+		$filter      = has_filter( 'comments_clauses', array( 'WC_Comments', 'exclude_order_comments' ) );
+
+		$result = $this->api->get_order_notes( $order->get_id() );
+		$this->assertIsArray( $result );
+		$notes = array_column( $result['order_notes'], null, 'id' );
+		$this->assertArrayHasKey( $internal_id, $notes );
+		$this->assertArrayHasKey( $customer_id, $notes );
+		$this->assertArrayNotHasKey( $foreign_id, $notes );
+		$this->assertSame( 'Internal fulfillment instructions.', $notes[ $internal_id ]['note'] );
+		$this->assertFalse( $notes[ $internal_id ]['customer_note'] );
+		$this->assertSame( 'Your order has shipped.', $notes[ $customer_id ]['note'] );
+		$this->assertTrue( $notes[ $customer_id ]['customer_note'] );
+		$this->assertSame( str_replace( ' ', 'T', get_comment( $internal_id )->comment_date_gmt ) . 'Z', $notes[ $internal_id ]['created_at'] );
+		$this->assertSame( $filter, has_filter( 'comments_clauses', array( 'WC_Comments', 'exclude_order_comments' ) ) );
 	}
 
 	#[DataProvider( 'storage_modes' )]

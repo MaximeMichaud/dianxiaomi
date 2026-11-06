@@ -300,9 +300,8 @@ class ApiPermissionsTest extends TestCase {
 				$this->assertSame( $this->order->get_id(), $result['order']['id'] );
 				break;
 			case 'notes':
-				// WooCommerce currently excludes order notes from the resource's raw comment query.
-				// Keep that separate retrieval defect out of the authorization assertions.
 				$this->assertIsArray( $result['order_notes'] );
+				$this->assertContains( 'Private fulfillment instructions.', array_column( $result['order_notes'], 'note' ) );
 				break;
 		}
 	}
