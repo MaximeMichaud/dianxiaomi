@@ -159,9 +159,9 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$order_data = array(
 			'id'                        => $order->get_id(),
 			'order_number'              => $order->get_order_number(),
-			'created_at'                => $date_created ? $this->server->format_datetime( $date_created->date( 'Y-m-d H:i:s' ) ) : '',
-			'updated_at'                => $date_modified ? $this->server->format_datetime( $date_modified->date( 'Y-m-d H:i:s' ) ) : '',
-			'completed_at'              => $date_completed ? $this->server->format_datetime( $date_completed->date( 'Y-m-d H:i:s' ) ) : '',
+			'created_at'                => $date_created ? $this->server->format_datetime( $date_created->getTimestamp() ) : '',
+			'updated_at'                => $date_modified ? $this->server->format_datetime( $date_modified->getTimestamp() ) : '',
+			'completed_at'              => $date_completed ? $this->server->format_datetime( $date_completed->getTimestamp() ) : '',
 			'status'                    => $order->get_status(),
 			'currency'                  => $order->get_currency(),
 			'total'                     => wc_format_decimal( $order->get_total(), 2 ),

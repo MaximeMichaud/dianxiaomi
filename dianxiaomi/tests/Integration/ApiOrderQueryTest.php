@@ -237,4 +237,39 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( '2026-05-06 12:00:00', $this->server->parse_datetime( '2026-05-06T12:00:00.000Z' ) );
 		$this->assertSame( '1970-01-01 00:00:00', $this->server->parse_datetime( 'not-a-date' ) );
 	}
+
+	public static function response_dates(): array {
+		$data = array();
+		foreach ( self::storage_modes() as $mode => [ $hpos ] ) {
+			foreach ( array( 'winter' => '2026-01-15', 'summer' => '2026-07-15' ) as $season => $day ) {
+				foreach ( array( 'created_at' => 'date_created', 'updated_at' => 'date_modified', 'completed_at' => 'date_completed' ) as $field => $property ) {
+					$data[ $mode . ' ' . $season . ' ' . $field ] = array( $hpos, $day, $field, $property );
+				}
+			}
+		}
+		return $data;
+	}
+
+	/** @dataProvider response_dates */
+	public function test_response_dates_preserve_utc_instants_in_toronto( bool $hpos, string $day, string $field, string $property ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$order = $this->create_query_order( $day . 'T12:34:56Z' );
+		$order->set_date_completed( $day . 'T14:34:56Z' );
+		$this->set_modified_date( $order, $day . 'T15:34:56Z' );
+		$stored = new \WC_Order( $order->get_id() );
+		$result = $this->api->get_orders( null, array(), 'dxm-query' );
+		$this->assertCount( 1, $result['orders'] );
+		$timestamp = $stored->{ 'get_' . $property }()->getTimestamp();
+		$this->assertSame( gmdate( 'Y-m-d\TH:i:s\Z', $timestamp ), $result['orders'][0][ $field ], $field );
+		$this->assertSame( $timestamp, ( new \DateTimeImmutable( $result['orders'][0][ $field ] ) )->getTimestamp(), $field );
+	}
+
+	/** @dataProvider storage_modes */
+	public function test_response_keeps_missing_completion_date_empty( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$this->create_query_order( '2026-01-15T12:34:56Z' );
+		$result = $this->api->get_orders( null, array(), 'dxm-query' );
+		$this->assertSame( '', $result['orders'][0]['completed_at'] );
+	}
 }
