@@ -1,6 +1,6 @@
 {
   "name": "dianxiaomi",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "WooCommerce tracking number plugin",
   "scripts": {
     "wp-env": "wp-env",
