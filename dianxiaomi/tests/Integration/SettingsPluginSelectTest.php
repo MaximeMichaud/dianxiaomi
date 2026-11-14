@@ -62,6 +62,17 @@ class SettingsPluginSelectTest extends TestCase {
 		}
 	}
 
+	public function test_empty_custom_domain_field_matches_the_storefront_tracker(): void {
+		$this->assertSettingsHtml(
+			array( 'plugin' => 'dianxiaomi' ),
+			function ( \DOMXPath $xpath ): void {
+				$matches = $xpath->query( '//input[@id="custom_domain"]' );
+				$this->assertSame( 1, $matches->length );
+				$this->assertSame( 'https://t.17track.net/en#nums=', $matches->item( 0 )->getAttribute( 'value' ) );
+			}
+		);
+	}
+
 	public function test_track_button_checkbox_stays_checked_for_stored_string_one(): void {
 		$this->assertSettingsHtml(
 			array(

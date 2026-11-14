@@ -325,7 +325,7 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	}
 
 	public function custom_domain_callback(): void {
-		$custom_domain = isset( $this->options['custom_domain'] ) && is_string( $this->options['custom_domain'] ) ? $this->options['custom_domain'] : 'https://t.17track.net/zh-cn#nums=';
+		$custom_domain = isset( $this->options['custom_domain'] ) && is_string( $this->options['custom_domain'] ) ? $this->options['custom_domain'] : 'https://t.17track.net/en#nums=';
 		printf(
 			'<input type="text" id="custom_domain" name="dianxiaomi_option_name[custom_domain]" value="%s" style="width:100%%">',
 			esc_attr( $custom_domain )
