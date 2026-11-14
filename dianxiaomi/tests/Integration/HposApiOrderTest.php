@@ -140,6 +140,34 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	#[DataProvider( 'storage_modes' )]
+	public function test_meta_filter_returns_order_meta_for_the_stored_order( bool $hpos ): void {
+		$order = $this->create_stored_order( $hpos );
+		$order->update_meta_data( '_dianxiaomi_tracking_number', 'META1' );
+		$order->save();
+
+		$server = ( new \ReflectionProperty( $this->api, 'server' ) )->getValue( $this->api );
+		$this->assertInstanceOf( \Dianxiaomi_API_Server::class, $server );
+		$server->params['GET'] = array(
+			'filter' => array(
+				'meta' => 'true',
+			),
+		);
+
+		$result = $this->api->get_order( $order->get_id() );
+
+		$this->assertIsArray( $result );
+		$stored = wc_get_order( $order->get_id() );
+		$this->assertInstanceOf( \WC_Order::class, $stored );
+		$this->assertArrayHasKey(
+			'order_meta',
+			$result['order'],
+			get_class( $stored ) . ' keys=' . implode( ',', array_keys( $result['order'] ) )
+		);
+		$this->assertArrayNotHasKey( 'resource_meta', $result['order'] );
+		$this->assertSame( array( 'META1' ), $result['order']['order_meta']['_dianxiaomi_tracking_number'] );
+	}
+
+	#[DataProvider( 'storage_modes' )]
 	public function test_get_order_reads_the_authoritative_store( bool $hpos ): void {
 		$order  = $this->create_stored_order( $hpos );
 		$number = 'READ-' . wp_generate_uuid4();

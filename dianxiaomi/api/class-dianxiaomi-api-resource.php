@@ -211,19 +211,15 @@ class Dianxiaomi_API_Resource implements Subscriber_Interface {
 		$meta_flag  = isset( $filter['meta'] ) ? $filter['meta'] : null;
 
 		if ( 'true' === $meta_flag && method_exists( $res, 'get_id' ) ) {
-			switch ( get_class( $res ) ) {
-				case 'WC_Order':
-					$meta_name = 'order_meta';
-					break;
-				case 'WC_Coupon':
-					$meta_name = 'coupon_meta';
-					break;
-				case 'WC_Product':
-					$meta_name = 'product_meta';
-					break;
-				default:
-					$meta_name = 'resource_meta';
-					break;
+			// WooCommerce Admin replaces WC_Order with a subclass. An exact class name misses it.
+			if ( $res instanceof WC_Order ) {
+				$meta_name = 'order_meta';
+			} elseif ( $res instanceof WC_Coupon ) {
+				$meta_name = 'coupon_meta';
+			} elseif ( $res instanceof WC_Product ) {
+				$meta_name = 'product_meta';
+			} else {
+				$meta_name = 'resource_meta';
 			}
 			// HPOS compatible: use get_meta_data() for WC objects, fallback to get_post_meta for others.
 			if ( method_exists( $res, 'get_meta_data' ) ) {
