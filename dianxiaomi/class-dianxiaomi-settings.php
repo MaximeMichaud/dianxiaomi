@@ -341,7 +341,7 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 	public function track_button_callback(): void {
 		printf(
 			'<label><input type="checkbox" id="use_track_button" name="dianxiaomi_option_name[use_track_button]" %s>Use Track Button</label>',
-			( isset( $this->options['use_track_button'] ) && $this->options['use_track_button'] === true ) ? 'checked="checked"' : ''
+			! empty( $this->options['use_track_button'] ) ? 'checked="checked"' : ''
 		);
 	}
 }
