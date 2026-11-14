@@ -87,9 +87,10 @@ final class Dianxiaomi implements Subscriber_Interface {
 			} else {
 				$this->couriers = array();
 			}
-
-			$this->register_hooks();
 		}
+
+		// Settings are optional on a fresh install. The meta box and tracking hooks still have to run.
+		$this->register_hooks();
 	}
 
 	/**

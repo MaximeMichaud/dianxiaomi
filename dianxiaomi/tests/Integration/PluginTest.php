@@ -32,10 +32,34 @@ class PluginTest extends TestCase {
 	}
 
 	/**
+	 * A fresh install has no settings yet. The order meta box and customer tracking still have to be hooked.
+	 */
+	public function test_hooks_register_when_settings_are_missing(): void {
+		$saved = get_option( 'dianxiaomi_option_name' );
+		delete_option( 'dianxiaomi_option_name' );
+
+		$reflection = new \ReflectionClass( \Dianxiaomi::class );
+		$property   = $reflection->getProperty( '_instance' );
+		$property->setValue( null, null );
+
+		try {
+			$plugin = \Dianxiaomi::instance();
+			$this->assertNotFalse( has_action( 'add_meta_boxes', array( $plugin, 'add_meta_box' ) ) );
+			$this->assertNotFalse( has_action( 'woocommerce_view_order', array( $plugin, 'display_tracking_info' ) ) );
+			$this->assertNotFalse( has_action( 'woocommerce_email_before_order_table', array( $plugin, 'email_display' ) ) );
+		} finally {
+			if ( false === $saved ) {
+				delete_option( 'dianxiaomi_option_name' );
+			} else {
+				update_option( 'dianxiaomi_option_name', $saved );
+			}
+		}
+	}
+
+	/**
 	 * Test plugin registers hooks when options are set.
 	 */
 	public function test_plugin_registers_hooks_with_options(): void {
-		// Hooks are only registered when dianxiaomi_option_name option exists.
 		// Check if the event manager and subscriber system exist.
 		$this->assertTrue( class_exists( \Dianxiaomi\EventManagement\Event_Manager::class ) );
 		$this->assertTrue( in_array( \Dianxiaomi\Interfaces\Subscriber_Interface::class, class_implements( \Dianxiaomi::class ), true ) );
