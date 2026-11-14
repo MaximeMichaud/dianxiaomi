@@ -80,7 +80,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 			// Handle couriers as string (comma-separated) or array.
 			$couriers = $options['couriers'] ?? array();
 			if ( is_string( $couriers ) ) {
-				$this->couriers = array_filter( array_map( 'trim', explode( ',', $couriers ) ) );
+				// array_filter() keeps the original keys. A hole makes wp_json_encode() emit an object, and admin.js then cannot read the list.
+				$this->couriers = array_values( array_filter( array_map( 'trim', explode( ',', $couriers ) ) ) );
 			} elseif ( is_array( $couriers ) ) {
 				/** @var array<int, string> $couriers */
 				$this->couriers = $couriers;

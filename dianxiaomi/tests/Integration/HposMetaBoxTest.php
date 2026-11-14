@@ -221,4 +221,49 @@ class HposMetaBoxTest extends TestCase {
 		$select = substr( $html, (int) $start, (int) $end - (int) $start );
 		$this->assertStringNotContainsString( '<a', $select );
 	}
+
+	/**
+	 * Empty segments in the stored courier string must not turn the hidden list into a JSON object.
+	 *
+	 * admin.js calls indexOf on the parsed value. A JSON object has no indexOf, so the carrier menu stays empty.
+	 */
+	public function test_courier_list_with_empty_segments_is_a_json_array(): void {
+		$saved      = get_option( 'dianxiaomi_option_name' );
+		$reflection = new \ReflectionClass( \Dianxiaomi::class );
+		$property   = $reflection->getProperty( '_instance' );
+		$previous   = $property->getValue( null );
+		update_option(
+			'dianxiaomi_option_name',
+			array(
+				'plugin'   => 'dianxiaomi',
+				'couriers' => ',ups,,dhl,',
+			)
+		);
+		$property->setValue( null, null );
+
+		try {
+			$plugin = \Dianxiaomi::instance();
+			$order  = $this->create_fixture();
+			unset( $GLOBALS['post'] );
+
+			ob_start();
+			try {
+				$plugin->meta_box( $order );
+				$html = ob_get_contents();
+			} finally {
+				ob_end_clean();
+			}
+			$this->assertIsString( $html );
+			$this->assertSame( 1, preg_match( '/id="dianxiaomi_couriers_selected" value="([^"]*)"/', $html, $matches ) );
+			$decoded = json_decode( html_entity_decode( $matches[1], ENT_QUOTES ), true );
+			$this->assertSame( array( 'ups', 'dhl' ), $decoded, 'json=' . $matches[1] );
+		} finally {
+			$property->setValue( null, $previous );
+			if ( false === $saved ) {
+				delete_option( 'dianxiaomi_option_name' );
+			} else {
+				update_option( 'dianxiaomi_option_name', $saved );
+			}
+		}
+	}
 }
