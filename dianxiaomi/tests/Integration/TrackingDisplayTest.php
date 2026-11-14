@@ -196,6 +196,38 @@ class TrackingDisplayTest extends TestCase {
 	}
 
 	/**
+	 * The number link is the only tracker when the button is off, including in emails.
+	 * It has to carry the same required-field suffix as the Track button.
+	 */
+	public function test_tracking_number_link_keeps_required_courier_fields(): void {
+		$order = $this->create_order();
+		$this->set_tracking_info( $order, 'deutsch-post', 'DE123', 'Deutsche Post' );
+		$order->update_meta_data( '_dianxiaomi_tracking_postal', '75001' );
+		$order->update_meta_data( '_dianxiaomi_tracking_required_fields', 'tracking_postal_code' );
+		$order->save();
+
+		$plugin                   = $this->get_plugin();
+		$plugin->plugin           = 'dianxiaomi';
+		$plugin->use_track_button = false;
+		$plugin->custom_domain    = 'https://t.17track.net/en#nums=';
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$page = (string) ob_get_clean();
+
+		ob_start();
+		do_action( 'woocommerce_email_before_order_table', $order, false, false, null );
+		$email = (string) ob_get_clean();
+
+		foreach ( array( $page, $email ) as $output ) {
+			$this->assertMatchesRegularExpression( '#<a target="_blank" href="[^"]*nums=DE123:75001"#', $output );
+			$this->assertStringContainsString( '>DE123</a>', $output );
+			$this->assertStringContainsString( '(75001)', $output );
+			$this->assertStringNotContainsString( 'tracking-widget', $output );
+		}
+	}
+
+	/**
 	 * The meta box stores the ship date as a unix timestamp.
 	 */
 	public function test_ship_date_required_field_formats_the_stored_timestamp(): void {

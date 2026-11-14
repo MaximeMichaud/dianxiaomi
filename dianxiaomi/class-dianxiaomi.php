@@ -527,6 +527,12 @@ final class Dianxiaomi implements Subscriber_Interface {
 		}
 
 		$required_fields_msg = ! empty( $required_fields_values ) ? ' (' . join( ', ', $required_fields_values ) . ')' : '';
+		// The Track button already appends these values. The number link is the only URL in emails and when the button is off.
+		$linked_number = $dianxiaomi_tracking_number;
+		if ( count( $required_fields_values ) > 0 ) {
+			$linked_number .= ':' . join( ':', $required_fields_values );
+		}
+
 		if ( $plain_text ) {
 			$text = $track_message_1 . $dianxiaomi_tracking_provider_name . "\n" . $track_message_2 . $dianxiaomi_tracking_number . $required_fields_msg . "\n";
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Plain-text email body; strip markup without introducing HTML entities.
@@ -538,7 +544,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 		if ( preg_match( '#^[a-z][a-z0-9+.-]*:|^//#i', $custom_domain ) !== 1 ) {
 			$custom_domain = '//' . ltrim( $custom_domain, '/' );
 		}
-		$tracking_url = $custom_domain . $dianxiaomi_tracking_number;
+		$tracking_url = $custom_domain . $linked_number;
 
 		echo esc_html( $track_message_1 ) . esc_html( $dianxiaomi_tracking_provider_name ) . '<br/>' . esc_html( $track_message_2 ) . '<a target="_blank" href="' . esc_url( $tracking_url ) . '">' . esc_html( $dianxiaomi_tracking_number ) . '</a>' . esc_html( $required_fields_msg );
 
