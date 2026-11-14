@@ -479,6 +479,96 @@ class ApiOrderQueryTest extends TestCase {
 	}
 
 	/**
+	 * A refund shares the default order query type. The list and the count are shop orders only.
+	 *
+	 * @dataProvider storage_modes
+	 */
+	public function test_refunds_are_omitted_from_the_order_list_and_count( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$order = new \WC_Order();
+		$order->set_status( 'completed' );
+		$order->set_total( '20' );
+		$order->set_date_created( '2499-03-01T12:00:00Z' );
+		$order->save();
+		$this->orders[] = $order;
+
+		$refund = wc_create_refund(
+			array(
+				'amount'       => '5',
+				'order_id'     => $order->get_id(),
+				'reason'       => 'fixture',
+				'date_created' => '2499-03-02T12:00:00Z',
+			)
+		);
+		$this->assertInstanceOf( \WC_Order_Refund::class, $refund );
+		array_unshift( $this->orders, $refund );
+
+		$order->set_date_created( '2499-03-01T12:00:00Z' );
+		$order->set_date_modified( '2499-03-01T12:00:00Z' );
+		$order->save();
+		$refund->set_date_created( '2499-03-02T12:00:00Z' );
+		$refund->set_date_modified( '2499-03-02T12:00:00Z' );
+		$refund->save();
+		if ( ! $hpos ) {
+			$order->get_data_store()->update_order_from_object( $order );
+			$refund->get_data_store()->update_order_from_object( $refund );
+		}
+
+		$stored_order  = wc_get_order( $order->get_id() );
+		$stored_refund = wc_get_order( $refund->get_id() );
+		$this->assertInstanceOf( \WC_Order::class, $stored_order );
+		$this->assertInstanceOf( \WC_Order_Refund::class, $stored_refund );
+		$refund_created = $stored_refund->get_date_created();
+		$this->assertInstanceOf( \WC_DateTime::class, $refund_created );
+		$this->assertGreaterThanOrEqual(
+			( new \DateTimeImmutable( '2499-01-01T00:00:00Z' ) )->getTimestamp(),
+			$refund_created->getTimestamp()
+		);
+
+		$filter = array(
+			'posts_per_page' => '1',
+			'created_at_min' => '2499-01-01T00:00:00Z',
+			'created_at_max' => '2499-12-31T23:59:59Z',
+		);
+		$this->server->sent_headers = array();
+		$this->server->method       = 'GET';
+		$this->server->path         = '/orders';
+		$this->server->params       = array(
+			'GET'  => array(
+				'status' => 'completed',
+				'filter' => $filter,
+			),
+			'POST' => array(),
+		);
+		$listed = $this->server->dispatch();
+		$ids    = is_array( $listed ) ? array_column( $listed['orders'] ?? array(), 'id' ) : array();
+		$total  = $this->server->sent_headers['X-WC-Total'] ?? array();
+		$detail = (string) wp_json_encode(
+			array(
+				'storage'       => $hpos ? 'hpos' : 'cpt',
+				'order'         => $order->get_id(),
+				'order_status'  => $stored_order->get_status(),
+				'order_type'    => $stored_order->get_type(),
+				'refund'        => $refund->get_id(),
+				'refund_status' => $stored_refund->get_status(),
+				'refund_type'   => $stored_refund->get_type(),
+				'ids'           => $ids,
+				'total'         => $total,
+			)
+		);
+		$this->assertIsArray( $listed, $detail );
+		$this->assertSame( array( $order->get_id() ), $ids, $detail );
+		$this->assertNotContains( $refund->get_id(), $ids, $detail );
+		$this->assertSame( array( '1' ), $total, $detail );
+
+		$this->server->path = '/orders/count';
+		$counted            = $this->server->dispatch();
+		$count_detail       = is_array( $counted ) ? (string) wp_json_encode( $counted ) : get_debug_type( $counted );
+		$this->assertIsArray( $counted, $detail . ' ' . $count_detail );
+		$this->assertSame( 1, $counted['count'] ?? null, $detail . ' ' . $count_detail );
+	}
+
+	/**
 	 * filter[updated_at_min][] is the same lower bound as a string.
 	 */
 	public function test_nested_repeated_updated_at_min_keeps_the_bound(): void {

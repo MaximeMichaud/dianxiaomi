@@ -551,12 +551,14 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @return WP_Query
 	 */
 	private function query_orders( array $args ): WP_Query {
+		// Refunds share the default view-orders type. A newer refund would empty the page and inflate the count.
 		$query_args = array(
 			'return'  => 'ids',
 			'limit'   => $this->orders_per_page( $args ),
 			'page'    => isset( $args['page'] ) && is_numeric( $args['page'] ) ? (int) $args['page'] : 1,
 			'orderby' => 'date',
 			'order'   => 'DESC',
+			'type'    => 'shop_order',
 		);
 
 		if ( isset( $args['order'] ) && is_string( $args['order'] ) && in_array( strtoupper( $args['order'] ), array( 'ASC', 'DESC' ), true ) ) {
