@@ -351,6 +351,60 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( 400, $count->get_error_data()['status'] );
 	}
 
+	/**
+	 * status[] is a list of statuses, not a request for every order.
+	 */
+	public function test_repeated_status_filter_does_not_return_every_order(): void {
+		$this->use_storage( false );
+		$wanted = $this->create_query_order( '2099-07-01T12:00:00Z' );
+		$other  = new \WC_Order();
+		$other->set_status( 'processing' );
+		$other->set_date_created( '2099-07-02T12:00:00Z' );
+		$other->save();
+		$this->orders[] = $other;
+
+		$this->server->method = 'GET';
+		$this->server->path   = '/orders';
+		$this->server->params = array(
+			'GET'  => array(
+				'filter' => array(
+					'status'         => array( 'dxm-query' ),
+					'posts_per_page' => '20',
+				),
+			),
+			'POST' => array(),
+		);
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$statuses = array_column( $listed['orders'], 'status' );
+		$this->assertContains( $wanted->get_id(), array_column( $listed['orders'], 'id' ) );
+		$this->assertNotContains( 'processing', $statuses, 'statuses=' . implode( ',', $statuses ) );
+
+		$this->server->params = array(
+			'GET'  => array( 'status' => array( 'wc-dxm-query' ) ),
+			'POST' => array(),
+		);
+		$repeated = $this->server->dispatch();
+		$this->assertIsArray( $repeated );
+		$this->assertNotContains( 'processing', array_column( $repeated['orders'], 'status' ) );
+		$this->assertContains( $wanted->get_id(), array_column( $repeated['orders'], 'id' ) );
+
+		$this->server->path   = '/orders/count';
+		$this->server->params = array(
+			'GET'  => array( 'filter' => array( 'status' => array( 'dxm-query' ) ) ),
+			'POST' => array(),
+		);
+		$filtered_count = $this->server->dispatch();
+		$this->server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$all_count = $this->server->dispatch();
+		$this->assertIsArray( $filtered_count );
+		$this->assertIsArray( $all_count );
+		$this->assertLessThan( $all_count['count'], $filtered_count['count'] );
+	}
+
 	/** @dataProvider encoded_bounds */
 	public function test_following_pagination_links_preserves_encoded_filters( bool $hpos, bool $nested ): void {
 		$this->use_storage( $hpos );
