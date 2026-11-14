@@ -287,10 +287,22 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 		$options       = '';
 		$plugin_option = isset( $this->options['plugin'] ) && is_string( $this->options['plugin'] ) ? $this->options['plugin'] : '';
 		foreach ( $this->plugins as $plugin ) {
-			$path  = isset( $plugin['path'] ) && is_string( $plugin['path'] ) ? $plugin['path'] : '';
-			$value = isset( $plugin['value'] ) && is_string( $plugin['value'] ) ? $plugin['value'] : '';
-			$label = isset( $plugin['label'] ) && is_string( $plugin['label'] ) ? $plugin['label'] : '';
-			if ( $path !== '' && Dianxiaomi_Dependencies::plugin_active_check( $path ) ) {
+			$raw_path = $plugin['path'] ?? '';
+			$value    = isset( $plugin['value'] ) && is_string( $plugin['value'] ) ? $plugin['value'] : '';
+			$label    = isset( $plugin['label'] ) && is_string( $plugin['label'] ) ? $plugin['label'] : '';
+			$path     = null;
+			if ( is_string( $raw_path ) && $raw_path !== '' ) {
+				$path = $raw_path;
+			} elseif ( is_array( $raw_path ) ) {
+				$paths = array();
+				foreach ( $raw_path as $candidate ) {
+					if ( is_string( $candidate ) && $candidate !== '' ) {
+						$paths[] = $candidate;
+					}
+				}
+				$path = $paths !== array() ? $paths : null;
+			}
+			if ( null !== $path && Dianxiaomi_Dependencies::plugin_active_check( $path ) ) {
 				$option = '<option value="' . esc_attr( $value ) . '"';
 				if ( $plugin_option === $value ) {
 					$option .= ' selected="selected"';

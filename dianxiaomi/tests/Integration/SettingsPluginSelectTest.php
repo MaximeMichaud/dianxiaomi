@@ -75,6 +75,32 @@ class SettingsPluginSelectTest extends TestCase {
 		);
 	}
 
+	public function test_shipment_tracking_plugin_is_selectable_when_active(): void {
+		$reflection = new \ReflectionClass( \Dianxiaomi_Dependencies::class );
+		$property   = $reflection->getProperty( 'active_plugins' );
+		$original_plugins = $property->getValue();
+		$property->setValue(
+			null,
+			array_merge(
+				is_array( $original_plugins ) ? $original_plugins : array(),
+				array( 'woocommerce-shipment-tracking/woocommerce-shipment-tracking.php' )
+			)
+		);
+		try {
+			$this->assertSettingsHtml(
+				array( 'plugin' => 'wc-shipment-tracking' ),
+				function ( \DOMXPath $xpath ): void {
+					$matches = $xpath->query( '//select[@id="plugin"]/option[@value="wc-shipment-tracking"]' );
+					$this->assertSame( 1, $matches->length );
+					$this->assertSame( 'WooCommerce Shipment Tracking', $matches->item( 0 )->textContent );
+					$this->assertTrue( $matches->item( 0 )->hasAttribute( 'selected' ) );
+				}
+			);
+		} finally {
+			$property->setValue( null, $original_plugins );
+		}
+	}
+
 	/**
 	 * @param array<string, mixed>    $options
 	 * @param callable(\DOMXPath):void $assert
