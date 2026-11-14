@@ -523,6 +523,62 @@ class HposApiOrderTest extends TestCase {
 		}
 	}
 
+	/**
+	 * An empty ship request is not an order update.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_empty_ship_does_not_mark_the_order_as_updated( bool $hpos ): void {
+		$order = $this->create_stored_order( $hpos );
+		$order->set_date_modified( '2020-01-01T00:00:00Z' );
+		$order->save();
+		if ( ! $hpos ) {
+			// CPT save() does not keep a backdated modification time. The order datastore does.
+			$order->get_data_store()->update_order_from_object( $order );
+		}
+		$seed = $this->api->get_order( $order->get_id() );
+		$this->assertSame( '2020-01-01T00:00:00Z', $seed['order']['updated_at'] );
+
+		$server = new class( '/orders/' . $order->get_id() . '/ship' ) extends \Dianxiaomi_API_Server {
+			public string $body = '{}';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		try {
+			$shipped = $server->dispatch();
+			$this->assertIsArray( $shipped );
+			$this->assertSame( 'processing', $shipped['order']['status'] );
+			$this->assertSame( '', $shipped['order']['trackings'][0]['tracking_number'] );
+			$this->assertSame(
+				'2020-01-01T00:00:00Z',
+				$shipped['order']['updated_at'],
+				'updated_at=' . (string) $shipped['order']['updated_at']
+			);
+
+			$server->body = '{"status":"completed","tracking_provider":"ups","tracking_number":"AFTER-EMPTY"}';
+			$changed      = $server->dispatch();
+			$this->assert_api_order( $changed, $order->get_id(), 'completed', 'AFTER-EMPTY', 'ups' );
+			$stored = new \WC_Order( $order->get_id() );
+			$this->assertGreaterThan(
+				( new \DateTimeImmutable( '2020-01-01T00:00:00Z' ) )->getTimestamp(),
+				$stored->get_date_modified()->getTimestamp()
+			);
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
 	#[DataProvider( 'storage_modes' )]
 	public function test_invalid_ids_and_non_orders_are_rejected( bool $hpos ): void {
 		$order            = $this->create_stored_order( $hpos );

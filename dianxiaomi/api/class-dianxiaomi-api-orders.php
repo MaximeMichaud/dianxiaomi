@@ -404,6 +404,9 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return $this->not_found( __( 'Order', 'dianxiaomi' ) );
 		}
 
+		// An empty ship must not bump date_modified. HPOS rewrites it on every save().
+		$dirty = false;
+
 		// Mettre à jour les métadonnées si elles sont fournies
 		if ( isset( $data['tracking_number'] ) && is_int( $data['tracking_number'] ) ) {
 			// json_decode() turns a numeric tracking number into an integer. Keep every digit.
@@ -411,6 +414,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 		if ( ! empty( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
+			$dirty = true;
 		}
 		$detail_meta = array(
 			'tracking_ship_date'           => '_dianxiaomi_tracking_shipdate',
@@ -437,11 +441,13 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 				$value  = $parsed instanceof \DateTimeImmutable ? (string) $parsed->getTimestamp() : '';
 			}
 			$order->update_meta_data( $meta_key, $value );
+			$dirty = true;
 		}
 		if ( ! empty( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
 			$order->update_meta_data( '_dianxiaomi_tracking_provider_name', dianxiaomi_courier_name( $data['tracking_provider'] ) );
 			$order->update_meta_data( '_dianxiaomi_tracking_required_fields', dianxiaomi_courier_required_fields( $data['tracking_provider'] ) );
+			$dirty = true;
 		}
 
 		// Vérifier si le statut de la commande doit être ignoré
@@ -456,10 +462,13 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			}
 			$note = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
 			$order->set_status( $status, $note );
+			$dirty = true;
 		}
 
 		// Sauvegarder les modifications
-		$order->save();
+		if ( $dirty ) {
+			$order->save();
+		}
 
 		// Retourner les données de la commande mise à jour
 		return $this->get_order( $validated_id );
