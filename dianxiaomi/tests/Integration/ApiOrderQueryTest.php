@@ -429,4 +429,56 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
 		$this->assertSame( array( '1' ), $this->server->sent_headers['X-WC-Total'] );
 	}
+
+	/** @dataProvider storage_modes */
+	public function test_created_at_min_filters_the_instant_inclusively( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$ids[] = $this->create_query_order( "2026-05-06T{$time}Z" )->get_id();
+		}
+
+		$result = $this->api->get_orders( null, array( 'created_at_min' => '2026-05-06T12:00:00Z' ), 'dxm-query' );
+
+		$this->assertSame( array( $ids[2], $ids[1] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '2' ), $this->server->sent_headers['X-WC-Total'] );
+	}
+
+	/** @dataProvider storage_modes */
+	public function test_created_at_max_filters_the_instant_inclusively( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$ids[] = $this->create_query_order( "2026-05-06T{$time}Z" )->get_id();
+		}
+
+		$result = $this->api->get_orders( null, array( 'created_at_max' => '2026-05-06T12:00:00Z' ), 'dxm-query' );
+
+		$this->assertSame( array( $ids[1], $ids[0] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '2' ), $this->server->sent_headers['X-WC-Total'] );
+	}
+
+	/** @dataProvider storage_modes */
+	public function test_created_at_range_keeps_both_bounds( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$ids[] = $this->create_query_order( "2026-05-06T{$time}Z" )->get_id();
+		}
+
+		$result = $this->api->get_orders(
+			null,
+			array(
+				'created_at_min' => '2026-05-06T12:00:00Z',
+				'created_at_max' => '2026-05-06T12:00:00Z',
+			),
+			'dxm-query'
+		);
+
+		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '1' ), $this->server->sent_headers['X-WC-Total'] );
+	}
 }

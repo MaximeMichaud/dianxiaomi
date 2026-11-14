@@ -498,6 +498,14 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$query_args['status'] = array_keys( wc_get_order_statuses() );
 		}
 
+		$created = $this->date_comparison(
+			isset( $args['created_at_min'] ) && is_string( $args['created_at_min'] ) ? $args['created_at_min'] : null,
+			isset( $args['created_at_max'] ) && is_string( $args['created_at_max'] ) ? $args['created_at_max'] : null
+		);
+		if ( null !== $created ) {
+			$query_args['date_created'] = $created;
+		}
+
 		$modified = $this->date_comparison(
 			isset( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ? $args['updated_at_min'] : null,
 			isset( $args['updated_at_max'] ) && is_string( $args['updated_at_max'] ) ? $args['updated_at_max'] : null
