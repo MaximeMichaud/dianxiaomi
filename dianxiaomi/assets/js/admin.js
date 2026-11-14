@@ -26,6 +26,23 @@ var dianxiaomi_woocommerce_tracking_onload = function () {
 		jQuery('label[for=' + id + ']').show();
 	}
 
+	function required_field_names(required) {
+		if (jQuery.isArray(required)) {
+			return required;
+		}
+		if (typeof required !== 'string' || required === '') {
+			return [];
+		}
+		var names = [];
+		jQuery.each(required.split(','), function (index, item) {
+			var name = String(item).replace(/^\s+|\s+$/g, '');
+			if (name !== '') {
+				names.push(name);
+			}
+		});
+		return names;
+	}
+
 	function set_dianxiaomi_tracking_provider() {
 
 		jQuery('#dianxiaomi_tracking_provider').on('change', function () {
@@ -36,19 +53,16 @@ var dianxiaomi_woocommerce_tracking_onload = function () {
 			var slug = jQuery(this).val();
 			if (slug) {
 				var provider = providers[slug];
-				var fields = [];
-				if (jQuery.isArray(provider.required_fields)) {
-					fields = provider.required_fields;
-				} else {
-					fields.push(provider.required_fields);
-				}
+				var fields = provider ? required_field_names(provider.required_fields) : [];
 				jQuery.each(fields, function (index, item) {
 					if (fields_id[item]) {
 						show_input_and_label(fields_id[item]);
 					}
 				});
-				jQuery('#dianxiaomi_tracking_provider_name').val(provider.name);
-				jQuery('#dianxiaomi_tracking_required_fields').val(fields.join());
+				if (provider) {
+					jQuery('#dianxiaomi_tracking_provider_name').val(provider.name);
+					jQuery('#dianxiaomi_tracking_required_fields').val(fields.join());
+				}
 			}
 		});
 	}
