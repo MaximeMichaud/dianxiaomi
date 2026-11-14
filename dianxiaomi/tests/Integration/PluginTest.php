@@ -68,6 +68,26 @@ class PluginTest extends TestCase {
 	}
 
 	/**
+	 * The field catalog is loaded with include_once. A later instance must still see it.
+	 */
+	public function test_second_instance_keeps_the_field_catalog(): void {
+		$reflection = new \ReflectionClass( \Dianxiaomi::class );
+		$property   = $reflection->getProperty( '_instance' );
+		$property->setValue( null, null );
+
+		$plugin = \Dianxiaomi::instance();
+		$ids    = array();
+		foreach ( $plugin->dianxiaomi_fields as $field ) {
+			if ( is_array( $field ) && isset( $field['id'] ) && is_string( $field['id'] ) ) {
+				$ids[] = $field['id'];
+			}
+		}
+
+		$this->assertContains( 'dianxiaomi_tracking_postal', $ids );
+		$this->assertContains( 'dianxiaomi_tracking_shipdate', $ids );
+	}
+
+	/**
 	 * Test plugin has expected properties.
 	 */
 	public function test_plugin_has_expected_properties(): void {

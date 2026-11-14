@@ -54,9 +54,13 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 */
 	private function includes(): void {
 		include_once 'dianxiaomi-fields.php';
-		// phpcs:ignore WordPress.PHP.DontExtract.extract_undefined
+		// include_once skips the file on a later instance, so the local variable is gone.
+		if ( isset( $dianxiaomi_fields ) && is_array( $dianxiaomi_fields ) ) {
+			$GLOBALS['dianxiaomi_fields'] = $dianxiaomi_fields;
+		}
+		$stored_fields = $GLOBALS['dianxiaomi_fields'] ?? array();
 		/** @var array<string, mixed> $fields_array */
-		$fields_array            = isset( $dianxiaomi_fields ) && is_array( $dianxiaomi_fields ) ? $dianxiaomi_fields : array();
+		$fields_array            = is_array( $stored_fields ) ? $stored_fields : array();
 		$this->dianxiaomi_fields = $fields_array;
 
 		include_once 'class-dianxiaomi-api.php';
