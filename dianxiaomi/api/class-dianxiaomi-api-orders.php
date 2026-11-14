@@ -655,6 +655,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * `posts_per_page` stays first so existing callers keep their explicit size.
 	 * `limit` is the name documented by the WooCommerce API filter object.
+	 * A repeated parameter arrives as a one-value list and uses that size.
 	 *
 	 * @param array<string, mixed> $args Request filters.
 	 */
@@ -664,6 +665,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 				continue;
 			}
 			$size = $args[ $key ];
+			if ( is_array( $size ) && 1 === count( $size ) ) {
+				$only = array_values( $size )[0] ?? null;
+				$size = is_int( $only ) || is_string( $only ) ? $only : null;
+			}
 			if ( ! is_int( $size ) && ! is_float( $size ) && ! ( is_string( $size ) && is_numeric( $size ) ) ) {
 				continue;
 			}

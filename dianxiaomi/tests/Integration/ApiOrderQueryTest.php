@@ -601,6 +601,42 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-TotalPages'] );
 	}
 
+	/**
+	 * A repeated posts_per_page query parameter arrives as a one-value list.
+	 *
+	 * @dataProvider storage_modes
+	 */
+	public function test_repeated_posts_per_page_sets_the_page_size( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$older = $this->create_query_order( '2299-01-01T12:00:00Z' );
+		$newer = $this->create_query_order( '2299-01-02T12:00:00Z' );
+
+		$result = $this->api->get_orders(
+			null,
+			array(
+				'created_at_min' => '2299-01-01T00:00:00Z',
+				'posts_per_page' => array( '1' ),
+			),
+			'dxm-query'
+		);
+
+		$this->assertIsArray( $result );
+		$found = array_column( $result['orders'], 'id' );
+		$this->assertSame( array( $newer->get_id() ), $found, 'ids=' . implode( ',', $found ) );
+		$this->assertNotContains( $older->get_id(), $found );
+
+		$by_limit = $this->api->get_orders(
+			null,
+			array(
+				'created_at_min' => '2299-01-01T00:00:00Z',
+				'limit'          => array( '1' ),
+			),
+			'dxm-query'
+		);
+		$this->assertIsArray( $by_limit );
+		$this->assertSame( array( $newer->get_id() ), array_column( $by_limit['orders'], 'id' ) );
+	}
+
 	/** @dataProvider storage_modes */
 	public function test_status_filter_accepts_a_wc_prefix( bool $hpos ): void {
 		$this->use_storage( $hpos );
