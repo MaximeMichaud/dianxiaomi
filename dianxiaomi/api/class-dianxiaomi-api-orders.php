@@ -313,6 +313,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 				$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
 				$order->update_meta_data( '_dianxiaomi_tracking_provider_name', dianxiaomi_courier_name( $data['tracking_provider'] ) );
 			}
+			if ( isset( $data['tracking_number'] ) && is_int( $data['tracking_number'] ) ) {
+				// Same JSON integer the ship route stores.
+				$data['tracking_number'] = (string) $data['tracking_number'];
+			}
 			if ( array_key_exists( 'tracking_number', $data ) && is_string( $data['tracking_number'] ) ) {
 				$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
 			}
@@ -380,6 +384,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		// Mettre à jour les métadonnées si elles sont fournies
+		if ( isset( $data['tracking_number'] ) && is_int( $data['tracking_number'] ) ) {
+			// json_decode() turns a numeric tracking number into an integer. Keep every digit.
+			$data['tracking_number'] = (string) $data['tracking_number'];
+		}
 		if ( ! empty( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
 		}

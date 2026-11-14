@@ -334,6 +334,72 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	/**
+	 * A JSON number is still the tracking number the carrier issued.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_numeric_json_tracking_number_is_stored( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() . '/ship' ) extends \Dianxiaomi_API_Server {
+			public string $body = '';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$server->body   = '{"status":"completed","tracking_provider":"ups","tracking_number":9400111899223}';
+		try {
+			$shipped = $server->dispatch();
+			$this->assert_api_order( $shipped, $order->get_id(), 'completed', '9400111899223', 'ups' );
+			$this->assert_persisted_order( $order->get_id(), 'completed', '9400111899223', 'ups' );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
+	/**
+	 * Editing an order must keep a JSON tracking number too.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_numeric_json_tracking_number_survives_an_edit( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() ) extends \Dianxiaomi_API_Server {
+			public string $body = '';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$server->body   = '{"status":"completed","tracking_number":9400111899223}';
+		try {
+			$edited = $server->dispatch();
+			$this->assert_api_order( $edited, $order->get_id(), 'completed', '9400111899223', '' );
+			$this->assert_persisted_order( $order->get_id(), 'completed', '9400111899223', '' );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
+	/**
 	 * WooCommerce turns an unknown status into pending. The API must refuse it instead.
 	 */
 	#[DataProvider( 'storage_modes' )]
@@ -473,5 +539,71 @@ class HposApiOrderTest extends TestCase {
 			$this->assertSame( 401, $result->get_error_data()['status'] );
 		}
 		$this->assert_persisted_order( $order->get_id(), 'processing', '', '' );
+	}
+
+	/**
+	 * A JSON number is still the tracking number the carrier issued.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_numeric_json_tracking_number_is_stored_beyond_php_integer_range( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() . '/ship' ) extends \Dianxiaomi_API_Server {
+			public string $body = '';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$server->body   = '{"status":"completed","tracking_provider":"ups","tracking_number":9400111899223856571031}';
+		try {
+			$shipped = $server->dispatch();
+			$this->assert_api_order( $shipped, $order->get_id(), 'completed', '9400111899223856571031', 'ups' );
+			$this->assert_persisted_order( $order->get_id(), 'completed', '9400111899223856571031', 'ups' );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
+	/**
+	 * Editing an order must keep a JSON tracking number too.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_numeric_json_tracking_number_survives_an_edit_beyond_php_integer_range( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() ) extends \Dianxiaomi_API_Server {
+			public string $body = '';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$server->body   = '{"status":"completed","tracking_number":9400111899223856571031}';
+		try {
+			$edited = $server->dispatch();
+			$this->assert_api_order( $edited, $order->get_id(), 'completed', '9400111899223856571031', '' );
+			$this->assert_persisted_order( $order->get_id(), 'completed', '9400111899223856571031', '' );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
 	}
 }

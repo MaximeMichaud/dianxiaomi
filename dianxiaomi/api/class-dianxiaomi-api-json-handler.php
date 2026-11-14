@@ -58,7 +58,7 @@ final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 		if ( '' === trim( $data ) ) {
 			return array();
 		}
-		$decoded = json_decode( $data, true );
+		$decoded = json_decode( $data, true, 512, JSON_BIGINT_AS_STRING );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
 			return new WP_Error( 'dianxiaomi_api_invalid_json', __( 'Invalid JSON', 'dianxiaomi' ), array( 'status' => 400 ) );
 		}
