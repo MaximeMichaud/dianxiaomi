@@ -805,6 +805,22 @@ class ApiOrderQueryTest extends TestCase {
 		}
 	}
 
+	/**
+	 * The index keeps the order id placeholder from the registered route.
+	 */
+	public function test_index_keeps_the_order_id_placeholder(): void {
+		$index  = $this->server->get_index();
+		$routes = $index['store']['routes'];
+		$keys   = implode( ',', array_keys( $routes ) );
+
+		$this->assertArrayHasKey( '/orders/<id>', $routes, $keys );
+		$this->assertArrayHasKey( '/orders/<id>/notes', $routes, $keys );
+		$this->assertArrayHasKey( '/orders/<id>/ship', $routes, $keys );
+		$this->assertArrayNotHasKey( 'meta', $routes['/orders/<id>'] );
+		$this->assertContains( 'GET', $routes['/orders/<id>']['supports'] );
+		$this->assertContains( 'PUT', $routes['/orders/<id>/ship']['supports'] );
+		$this->assertSame( home_url( '/dianxiaomi-api/v1/orders' ), $routes['/orders']['meta']['self'] ?? '' );
+	}
 	/** The API index must use the store URL's own scheme. */
 	public function test_index_preserves_the_store_url_scheme(): void {
 		foreach ( array( 'http', 'https' ) as $scheme ) {

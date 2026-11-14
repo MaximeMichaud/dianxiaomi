@@ -360,8 +360,9 @@ class Dianxiaomi_API_Server {
 		);
 
 		foreach ( $this->get_routes() as $route => $callbacks ) {
+			// The capture is the <id> placeholder. Without it, $1 is empty and the index drops the id.
 			$data  = array();
-			$route = preg_replace( '#\(\?P<\w+?>.*?\)#', '$1', $route );
+			$route = preg_replace( '#\(\?P(<\w+?>).*?\)#', '$1', $route );
 			if ( null === $route ) {
 				continue;
 			}
