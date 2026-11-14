@@ -90,11 +90,11 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @param array<string, mixed>|string       $filter         Query filters. A string is rejected.
 	 * @param array<int, string>|string|null    $status         Order status filter. A list selects those statuses.
 	 * @param array<int, string|int>|string|int $page           Page number. One repeated value selects that page.
-	 * @param string                            $updated_at_min Minimum update date.
+	 * @param array<int, string>|string         $updated_at_min Minimum update date. One repeated value is that bound.
 	 *
 	 * @return array<string, mixed>|WP_Error Orders data or error.
 	 */
-	public function get_orders( string|array|null $fields = null, array|string $filter = array(), string|array|null $status = null, string|int|array $page = 1, string $updated_at_min = '' ): array|WP_Error {
+	public function get_orders( string|array|null $fields = null, array|string $filter = array(), string|array|null $status = null, string|int|array $page = 1, string|array $updated_at_min = '' ): array|WP_Error {
 		if ( ! is_array( $filter ) ) {
 			return new WP_Error( 'dianxiaomi_api_invalid_filter', __( 'Invalid filter', 'dianxiaomi' ), array( 'status' => 400 ) );
 		}
@@ -105,6 +105,16 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
+		}
+
+		if ( is_array( $updated_at_min ) ) {
+			// A repeated updated_at_min query parameter is a one-value list.
+			$bounds = array_values( $updated_at_min );
+			$only   = $bounds[0] ?? null;
+			if ( 1 !== count( $bounds ) || ! is_string( $only ) || '' === $only ) {
+				return new WP_Error( 'dianxiaomi_api_invalid_date', __( 'Invalid date', 'dianxiaomi' ), array( 'status' => 400 ) );
+			}
+			$updated_at_min = $only;
 		}
 
 		if ( ! empty( $updated_at_min ) ) {

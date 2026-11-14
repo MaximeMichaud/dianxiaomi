@@ -443,6 +443,39 @@ class ApiOrderQueryTest extends TestCase {
 	}
 
 	/**
+	 * updated_at_min[] is one lower bound, not a crash.
+	 */
+	public function test_repeated_updated_at_min_keeps_the_bound(): void {
+		$this->use_storage( false );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00' ) as $time ) {
+			$order = $this->create_query_order( "2199-03-01T{$time}Z" );
+			$this->set_modified_date( $order, "2199-03-01T{$time}Z" );
+			$ids[] = $order->get_id();
+		}
+		$bound                = '2199-03-01T17:00:00+05:00';
+		$this->server->method = 'GET';
+		$this->server->path   = '/orders';
+		$this->server->params = array(
+			'GET'  => array(
+				'status'         => 'dxm-query',
+				'updated_at_min' => array( $bound ),
+				'filter'         => array( 'posts_per_page' => '20' ),
+			),
+			'POST' => array(),
+		);
+
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$this->assertSame( array( $ids[1] ), array_column( $listed['orders'], 'id' ) );
+
+		$this->server->params['GET']['updated_at_min'] = array( $bound, '2199-03-02T00:00:00Z' );
+		$invalid = $this->server->dispatch();
+		$this->assertInstanceOf( \WP_Error::class, $invalid );
+		$this->assertSame( 400, $invalid->get_error_data()['status'] );
+	}
+
+	/**
 	 * fields[] is the same field list the order detail route already accepts.
 	 */
 	public function test_repeated_fields_filter_the_order_list(): void {
