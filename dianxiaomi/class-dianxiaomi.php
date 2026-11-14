@@ -107,7 +107,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 			'woocommerce_process_shop_order_meta' => array( 'save_meta_box', 0, 2 ),
 			'plugins_loaded'                   => 'load_plugin_textdomain',
 			'woocommerce_view_order'           => 'display_tracking_info',
-			'woocommerce_email_before_order_table' => 'email_display',
+			'woocommerce_email_before_order_table' => array( 'email_display', 10, 3 ),
 			'show_user_profile'                    => 'add_api_key_field',
 			'edit_user_profile'                    => 'add_api_key_field',
 			'personal_options_update'              => 'generate_api_key',
@@ -451,15 +451,15 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * @param int  $order_id
 	 * @param bool $for_email
 	 */
-	public function display_tracking_info( int $order_id, bool $for_email = false ): void {
+	public function display_tracking_info( int $order_id, bool $for_email = false, bool $plain_text = false ): void {
 		if ( $this->plugin === 'dianxiaomi' ) {
-			$this->display_order_dianxiaomi( $order_id, $for_email );
+			$this->display_order_dianxiaomi( $order_id, $for_email, $plain_text );
 		} elseif ( $this->plugin === 'wc-shipment-tracking' ) {
 			$this->display_order_wc_shipment_tracking( $order_id, $for_email );
 		}
 	}
 
-	private function display_order_dianxiaomi( int $order_id, bool $for_email ): void {
+	private function display_order_dianxiaomi( int $order_id, bool $for_email, bool $plain_text = false ): void {
 		$order = wc_get_order( $order_id );
 		if ( ! $order instanceof WC_Order ) {
 			return;
@@ -527,6 +527,12 @@ final class Dianxiaomi implements Subscriber_Interface {
 		}
 
 		$required_fields_msg = ! empty( $required_fields_values ) ? ' (' . join( ', ', $required_fields_values ) . ')' : '';
+		if ( $plain_text ) {
+			$text = $track_message_1 . $dianxiaomi_tracking_provider_name . "\n" . $track_message_2 . $dianxiaomi_tracking_number . $required_fields_msg . "\n";
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Plain-text email body; strip markup without introducing HTML entities.
+			echo wp_strip_all_tags( html_entity_decode( $text, ENT_QUOTES, 'UTF-8' ) );
+			return;
+		}
 
 		$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
 		if ( preg_match( '#^[a-z][a-z0-9+.-]*:|^//#i', $custom_domain ) !== 1 ) {
@@ -587,8 +593,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 *
 	 * @access public
 	 */
-	public function email_display( WC_Order $order ): void {
-		$this->display_tracking_info( $order->get_id(), true );
+	public function email_display( WC_Order $order, bool $sent_to_admin = false, bool $plain_text = false ): void {
+		$this->display_tracking_info( $order->get_id(), true, $plain_text );
 	}
 
 	/**

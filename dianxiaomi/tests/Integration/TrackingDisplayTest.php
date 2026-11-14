@@ -42,6 +42,29 @@ class TrackingDisplayTest extends TestCase {
 		$this->assertStringContainsString( 'Your order was shipped via custom-carrier', $unknown_output );
 	}
 
+	public function test_plain_text_order_email_has_no_html_tags(): void {
+		$order = $this->create_order();
+		$this->set_tracking_info( $order, 'ups', '1ZPLAIN', 'UPS & Partners' );
+
+		$plugin         = $this->get_plugin();
+		$plugin->plugin = 'dianxiaomi';
+
+		ob_start();
+		do_action( 'woocommerce_email_before_order_table', $order, false, false, null );
+		$html = (string) ob_get_clean();
+
+		ob_start();
+		do_action( 'woocommerce_email_before_order_table', $order, false, true, null );
+		$plain = (string) ob_get_clean();
+
+		$this->assertStringContainsString( '1ZPLAIN', $html );
+		$this->assertStringContainsString( '<a', $html );
+		$this->assertStringContainsString( '1ZPLAIN', $plain );
+		$this->assertStringContainsString( 'UPS & Partners', $plain );
+		$this->assertStringNotContainsString( '&amp;', $plain );
+		$this->assertStringNotContainsString( '<', $plain );
+	}
+
 	/**
 	 * Test tracking info displays on order page.
 	 */
