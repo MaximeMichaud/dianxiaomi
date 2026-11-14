@@ -498,12 +498,12 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$query_args['status'] = array_keys( wc_get_order_statuses() );
 		}
 
-		if ( ! empty( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ) {
-			// WooCommerce uses second precision for timestamps, but day precision for date strings.
-			$modified_since = is_numeric( $args['updated_at_min'] )
-				? (int) $args['updated_at_min']
-				: ( new DateTime( $this->server->parse_datetime( $args['updated_at_min'] ), new DateTimeZone( 'UTC' ) ) )->getTimestamp();
-			$query_args['date_modified'] = '>=' . $modified_since;
+		$modified = $this->date_comparison(
+			isset( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ? $args['updated_at_min'] : null,
+			isset( $args['updated_at_max'] ) && is_string( $args['updated_at_max'] ) ? $args['updated_at_max'] : null
+		);
+		if ( null !== $modified ) {
+			$query_args['date_modified'] = $modified;
 		}
 
 		$order_ids = wc_get_orders( $query_args );
@@ -550,6 +550,37 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			}
 		}
 		return 10;
+	}
+
+	/**
+	 * Build an inclusive WooCommerce date comparison.
+	 *
+	 * Timestamps keep second precision. A single bound uses >= or <=.
+	 * Both bounds use the inclusive range operator WooCommerce already parses.
+	 */
+	private function date_comparison( ?string $min, ?string $max ): ?string {
+		$after  = is_string( $min ) && $min !== '' ? $this->date_bound( $min ) : null;
+		$before = is_string( $max ) && $max !== '' ? $this->date_bound( $max ) : null;
+		if ( null !== $after && null !== $before ) {
+			return $after . '...' . $before;
+		}
+		if ( null !== $after ) {
+			return '>=' . $after;
+		}
+		if ( null !== $before ) {
+			return '<=' . $before;
+		}
+		return null;
+	}
+
+	/**
+	 * Convert an API date bound to a UTC unix timestamp.
+	 */
+	private function date_bound( string $value ): int {
+		if ( is_numeric( $value ) ) {
+			return (int) $value;
+		}
+		return ( new DateTime( $this->server->parse_datetime( $value ), new DateTimeZone( 'UTC' ) ) )->getTimestamp();
 	}
 
 	/**

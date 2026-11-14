@@ -386,4 +386,47 @@ class ApiOrderQueryTest extends TestCase {
 
 		$this->assertSame( array( $order->get_id() ), array_column( $result['orders'], 'id' ) );
 	}
+
+	/** @dataProvider storage_modes */
+	public function test_updated_at_max_filters_the_instant_inclusively( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$date  = "2026-05-06T{$time}Z";
+			$order = $this->create_query_order( $date );
+			$this->set_modified_date( $order, $date );
+			$ids[] = $order->get_id();
+		}
+
+		$result = $this->api->get_orders( null, array( 'updated_at_max' => '2026-05-06T12:00:00Z' ), 'dxm-query' );
+
+		$this->assertSame( array( $ids[1], $ids[0] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '2' ), $this->server->sent_headers['X-WC-Total'] );
+	}
+
+	/** @dataProvider storage_modes */
+	public function test_updated_at_range_keeps_both_bounds( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		update_option( 'timezone_string', 'America/Toronto' );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00', '12:00:01' ) as $time ) {
+			$date  = "2026-05-06T{$time}Z";
+			$order = $this->create_query_order( $date );
+			$this->set_modified_date( $order, $date );
+			$ids[] = $order->get_id();
+		}
+
+		$result = $this->api->get_orders(
+			null,
+			array(
+				'updated_at_min' => '2026-05-06T12:00:00Z',
+				'updated_at_max' => '2026-05-06T12:00:00Z',
+			),
+			'dxm-query'
+		);
+
+		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
+		$this->assertSame( array( '1' ), $this->server->sent_headers['X-WC-Total'] );
+	}
 }
