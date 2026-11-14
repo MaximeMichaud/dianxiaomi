@@ -402,6 +402,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			if ( ! array_key_exists( $key, $data ) ) {
 				continue;
 			}
+			if ( is_int( $data[ $key ] ) ) {
+				// JSON numbers are postal codes, account numbers, or unix ship dates.
+				$data[ $key ] = (string) $data[ $key ];
+			}
 			if ( ! is_string( $data[ $key ] ) ) {
 				continue;
 			}

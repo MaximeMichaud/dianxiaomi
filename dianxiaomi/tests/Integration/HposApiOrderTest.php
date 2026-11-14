@@ -400,6 +400,43 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	/**
+	 * Postal codes and ship dates are often JSON numbers, not quoted strings.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_numeric_json_courier_details_are_stored( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() . '/ship' ) extends \Dianxiaomi_API_Server {
+			public string $body = '';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api            = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		$server->body   = '{"status":"completed","tracking_provider":"deutsch-post","tracking_number":"DE-NUM","tracking_postal_code":75001,"tracking_account_number":998877,"tracking_ship_date":1717200000}';
+		try {
+			$shipped = $server->dispatch();
+			$this->assertIsArray( $shipped );
+			$this->assertSame( 'completed', $shipped['order']['status'] );
+			$this->assertSame( 'DE-NUM', $shipped['order']['trackings'][0]['tracking_number'] );
+			$this->assertSame( '75001', $shipped['order']['trackings'][0]['tracking_postal_code'] );
+			$this->assertSame( '998877', $shipped['order']['trackings'][0]['tracking_account_number'] );
+			$this->assertSame( '1717200000', $shipped['order']['trackings'][0]['tracking_ship_date'] );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
+	/**
 	 * WooCommerce turns an unknown status into pending. The API must refuse it instead.
 	 */
 	#[DataProvider( 'storage_modes' )]
