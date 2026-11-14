@@ -490,7 +490,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$statuses              = explode( ',', $args['status'] );
 			$query_args['status'] = array_map(
 				static function ( string $status ): string {
-					return 'wc-' . $status;
+					return str_starts_with( $status, 'wc-' ) ? $status : 'wc-' . $status;
 				},
 				$statuses
 			);

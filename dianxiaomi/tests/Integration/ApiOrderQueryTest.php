@@ -377,4 +377,13 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-Total'] );
 		$this->assertSame( array( '3' ), $this->server->sent_headers['X-WC-TotalPages'] );
 	}
+
+	/** @dataProvider storage_modes */
+	public function test_status_filter_accepts_a_wc_prefix( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$order  = $this->create_query_order( '2026-04-01T12:00:00Z' );
+		$result = $this->api->get_orders( null, array(), 'wc-dxm-query' );
+
+		$this->assertSame( array( $order->get_id() ), array_column( $result['orders'], 'id' ) );
+	}
 }
