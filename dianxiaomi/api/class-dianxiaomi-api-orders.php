@@ -297,7 +297,10 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 
 		if ( isset( $data['status'] ) && is_string( $data['status'] ) && $data['status'] !== '' ) {
-			$status = $data['status'];
+			$status = $this->order_status_for_update( $data['status'] );
+			if ( is_wp_error( $status ) ) {
+				return $status;
+			}
 			$note = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
 			$order->update_status( $status, $note );
 			// A status change must not erase tracking that the request did not mention.
@@ -404,8 +407,13 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		// Mettre à jour le statut de la commande si nécessaire
 		if ( ! empty( $data['status'] ) && is_string( $data['status'] ) && $ignore_status !== 'yes' ) {
+			$status = $this->order_status_for_update( $data['status'] );
+			if ( is_wp_error( $status ) ) {
+				// Refuse before save(), so a bad status cannot persist the tracking staged above.
+				return $status;
+			}
 			$note = isset( $data['note'] ) && is_string( $data['note'] ) ? $data['note'] : '';
-			$order->set_status( $data['status'], $note );
+			$order->set_status( $status, $note );
 		}
 
 		// Sauvegarder les modifications
@@ -604,6 +612,21 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			return '<=' . $before;
 		}
 		return null;
+	}
+
+	/**
+	 * Accept a real WooCommerce status, with or without the wc- prefix.
+	 *
+	 * An unknown value must not reach WC_Order::set_status(), which replaces it with pending.
+	 *
+	 * @return string|WP_Error Status without the wc- prefix, or an error.
+	 */
+	private function order_status_for_update( string $status ): string|WP_Error {
+		$normalized = str_starts_with( $status, 'wc-' ) ? substr( $status, 3 ) : $status;
+		if ( '' === $normalized || ! array_key_exists( 'wc-' . $normalized, wc_get_order_statuses() ) ) {
+			return new WP_Error( 'dianxiaomi_api_invalid_order_status', __( 'Invalid order status', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
+		return $normalized;
 	}
 
 	/**

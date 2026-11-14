@@ -333,6 +333,43 @@ class HposApiOrderTest extends TestCase {
 		$this->assert_persisted_order( $order->get_id(), 'completed', $number, 'fedex' );
 	}
 
+	/**
+	 * WooCommerce turns an unknown status into pending. The API must refuse it instead.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_unknown_status_does_not_reset_the_order_to_pending( bool $hpos ): void {
+		$order = $this->create_stored_order( $hpos );
+
+		$edited = $this->api->edit_order(
+			$order->get_id(),
+			array(
+				'status'          => 'not-a-status',
+				'tracking_number' => 'SHOULD-NOT-SAVE',
+			)
+		);
+		$after_edit = new \WC_Order( $order->get_id() );
+		$this->assertSame( 'processing', $after_edit->get_status() );
+		$this->assertInstanceOf( \WP_Error::class, $edited );
+		$this->assertSame( 400, $edited->get_error_data()['status'] );
+		$this->assert_persisted_order( $order->get_id(), 'processing', '', '' );
+
+		$shipped = $this->api->ship_order(
+			$order->get_id(),
+			array(
+				'status'            => 'wc-not-a-status',
+				'tracking_provider' => 'ups',
+				'tracking_number'   => 'ALSO-NOT-SAVED',
+			)
+		);
+		$this->assertInstanceOf( \WP_Error::class, $shipped );
+		$this->assertSame( 400, $shipped->get_error_data()['status'] );
+		$this->assert_persisted_order( $order->get_id(), 'processing', '', '' );
+
+		$completed = $this->api->edit_order( $order->get_id(), array( 'status' => 'wc-completed' ) );
+		$this->assert_api_order( $completed, $order->get_id(), 'completed', '', '' );
+		$this->assert_persisted_order( $order->get_id(), 'completed', '', '' );
+	}
+
 	#[DataProvider( 'storage_modes' )]
 	public function test_invalid_ids_and_non_orders_are_rejected( bool $hpos ): void {
 		$order            = $this->create_stored_order( $hpos );
