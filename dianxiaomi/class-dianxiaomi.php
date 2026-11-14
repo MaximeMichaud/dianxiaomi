@@ -558,6 +558,11 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 
+		// Official Shipment Tracking stores a list. The legacy string is the fallback.
+		if ( $this->display_wc_shipment_tracking_items( $order ) ) {
+			return;
+		}
+
 		$tracking_meta   = $order->get_meta( '_tracking_number', true );
 		$tracking        = is_string( $tracking_meta ) ? $tracking_meta : '';
 		if ( $tracking === '' ) {
@@ -587,6 +592,42 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
 			$this->display_track_button( $tracking_provider, $tracking_number, $required_fields, $custom_domain );
 		}
+	}
+
+	/**
+	 * Show one track button per official Shipment Tracking item.
+	 *
+	 * @param WC_Order $order Order that may store `_wc_shipment_tracking_items`.
+	 * @return bool True when at least one number was shown.
+	 */
+	private function display_wc_shipment_tracking_items( WC_Order $order ): bool {
+		$items = $order->get_meta( '_wc_shipment_tracking_items', true );
+		if ( ! is_array( $items ) ) {
+			return false;
+		}
+
+		$shown = false;
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$number_raw = $item['tracking_number'] ?? null;
+			$number     = is_string( $number_raw ) ? trim( $number_raw ) : '';
+			if ( $number === '' ) {
+				continue;
+			}
+			$provider_raw  = $item['tracking_provider'] ?? null;
+			$custom_raw    = $item['custom_tracking_provider'] ?? null;
+			$provider      = is_string( $provider_raw ) && $provider_raw !== '' ? $provider_raw : '';
+			if ( $provider === '' && is_string( $custom_raw ) ) {
+				$provider = $custom_raw;
+			}
+			$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
+			$this->display_track_button( $provider, $number, array(), $custom_domain );
+			$shown = true;
+		}
+
+		return $shown;
 	}
 
 	/**

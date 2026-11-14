@@ -410,4 +410,50 @@ class TrackingDisplayTest extends TestCase {
 		);
 		$this->assertStringNotContainsString( '1Z999:1Z999', $output );
 	}
+
+	/**
+	 * Official WooCommerce Shipment Tracking stores a list, not the legacy string.
+	 */
+	public function test_official_shipment_tracking_items_render_the_track_button(): void {
+		$order = $this->create_order();
+		$order->delete_meta_data( '_tracking_number' );
+		$order->update_meta_data(
+			'_wc_shipment_tracking_items',
+			array(
+				array(
+					'tracking_provider'        => 'UPS',
+					'custom_tracking_provider' => '',
+					'custom_tracking_link'     => '',
+					'tracking_number'          => '1ZOFFICIAL',
+					'date_shipped'             => '1717200000',
+				),
+				array(
+					'tracking_provider'        => '',
+					'custom_tracking_provider' => 'Local Courier',
+					'custom_tracking_link'     => 'https://local.example/track/%1$s',
+					'tracking_number'          => 'LOCAL1',
+					'date_shipped'             => '1717200000',
+				),
+			)
+		);
+		$order->save();
+
+		$plugin                   = $this->get_plugin();
+		$plugin->plugin           = 'wc-shipment-tracking';
+		$plugin->use_track_button = true;
+		$plugin->custom_domain    = 'https://track.example.com/?num=';
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$output = ob_get_clean();
+
+		$this->assertMatchesRegularExpression(
+			'#<a class="btn" href="https://track\.example\.com/\?num=1ZOFFICIAL"#',
+			$output
+		);
+		$this->assertMatchesRegularExpression(
+			'#<a class="btn" href="https://track\.example\.com/\?num=LOCAL1"#',
+			$output
+		);
+	}
 }
