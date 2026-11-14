@@ -38,9 +38,9 @@ interface Dianxiaomi_API_Handler {
 	 *
 	 * @param string $data Raw request body.
 	 *
-	 * @return array<string, mixed> Parsed request data.
+	 * @return array<string, mixed>|WP_Error Parsed request data, or an error when the body is not JSON.
 	 */
-	public function parse_body( string $data ): array;
+	public function parse_body( string $data ): array|WP_Error;
 
 	/**
 	 * Generate a response from an array of data.

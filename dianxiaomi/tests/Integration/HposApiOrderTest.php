@@ -370,6 +370,56 @@ class HposApiOrderTest extends TestCase {
 		$this->assert_persisted_order( $order->get_id(), 'completed', '', '' );
 	}
 
+	/**
+	 * A broken JSON body must not look like a successful order update.
+	 */
+	#[DataProvider( 'storage_modes' )]
+	public function test_invalid_json_body_does_not_count_as_an_order_update( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$server = new class( '/orders/' . $order->get_id() ) extends \Dianxiaomi_API_Server {
+			public string $body = '{';
+
+			public function get_raw_data(): string {
+				return $this->body;
+			}
+		};
+		$api = new \Dianxiaomi_API_Orders( $server );
+		$server->method = 'PUT';
+		$server->params = array(
+			'GET'  => array(),
+			'POST' => array(),
+		);
+		try {
+			$edited = $server->dispatch();
+			$this->assertInstanceOf( \WP_Error::class, $edited, is_array( $edited ) ? 'returned order ' . (string) ( $edited['order']['status'] ?? '' ) : '' );
+			$this->assertSame( 400, $edited->get_error_data()['status'] );
+			$this->assert_persisted_order( $order->get_id(), 'processing', '', '' );
+
+			$server->path = '/orders/' . $order->get_id() . '/ship';
+			$server->body = '{"tracking_number":';
+			$shipped      = $server->dispatch();
+			$this->assertInstanceOf( \WP_Error::class, $shipped );
+			$this->assertSame( 400, $shipped->get_error_data()['status'] );
+			$this->assert_persisted_order( $order->get_id(), 'processing', '', '' );
+
+			$server->path = '/orders/' . $order->get_id();
+			$server->body = '';
+			$empty        = $server->dispatch();
+			$this->assert_api_order( $empty, $order->get_id(), 'processing', '', '' );
+
+			$server->body = '{"status":"completed"}';
+			$completed    = $server->dispatch();
+			$this->assert_api_order( $completed, $order->get_id(), 'completed', '', '' );
+			$this->assert_persisted_order( $order->get_id(), 'completed', '', '' );
+		} finally {
+			remove_filter( 'dianxiaomi_api_endpoints', array( $api, 'register_routes' ) );
+			foreach ( array( 'order', 'coupon', 'customer', 'product', 'report' ) as $resource ) {
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'maybe_add_meta' ), 15 );
+				remove_filter( "dianxiaomi_api_{$resource}_response", array( $api, 'filter_response_fields' ), 20 );
+			}
+		}
+	}
+
 	#[DataProvider( 'storage_modes' )]
 	public function test_invalid_ids_and_non_orders_are_rejected( bool $hpos ): void {
 		$order            = $this->create_stored_order( $hpos );

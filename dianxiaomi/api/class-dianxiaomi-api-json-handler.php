@@ -51,13 +51,19 @@ final class Dianxiaomi_API_JSON_Handler implements Dianxiaomi_API_Handler {
 	 *
 	 * @param string $data JSON string to be parsed.
 	 *
-	 * @return array<string, mixed> Parsed data as an associative array.
+	 * @return array<string, mixed>|WP_Error Parsed data, or an error for a non-empty invalid body.
 	 */
-	public function parse_body( string $data ): array {
+	public function parse_body( string $data ): array|WP_Error {
+		// An empty body is a no-op update. A truncated body must not look like one.
+		if ( '' === trim( $data ) ) {
+			return array();
+		}
 		$decoded = json_decode( $data, true );
-		/** @var array<string, mixed> $result */
-		$result = is_array( $decoded ) ? $decoded : array();
-		return $result;
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+			return new WP_Error( 'dianxiaomi_api_invalid_json', __( 'Invalid JSON', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
+		/** @var array<string, mixed> $decoded */
+		return $decoded;
 	}
 
 	/**

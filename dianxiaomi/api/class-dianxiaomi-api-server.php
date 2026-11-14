@@ -294,6 +294,9 @@ class Dianxiaomi_API_Server {
 				$args        = array_merge( $args, $get_params, $post_params );
 				if ( $supported & self::ACCEPT_DATA ) {
 					$data = $this->handler->parse_body( $this->get_raw_data() );
+					if ( is_wp_error( $data ) ) {
+						return $data;
+					}
 					$args = array_merge( $args, array( 'data' => $data ) );
 				} elseif ( $supported & self::ACCEPT_RAW_DATA ) {
 					$data = $this->get_raw_data();
