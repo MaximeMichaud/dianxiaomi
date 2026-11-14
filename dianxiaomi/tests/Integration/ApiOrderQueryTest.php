@@ -443,6 +443,36 @@ class ApiOrderQueryTest extends TestCase {
 	}
 
 	/**
+	 * filter[updated_at_min][] is the same lower bound as a string.
+	 */
+	public function test_nested_repeated_updated_at_min_keeps_the_bound(): void {
+		$this->use_storage( false );
+		$ids = array();
+		foreach ( array( '11:59:59', '12:00:00' ) as $time ) {
+			$order = $this->create_query_order( "2199-04-01T{$time}Z" );
+			$this->set_modified_date( $order, "2199-04-01T{$time}Z" );
+			$ids[] = $order->get_id();
+		}
+		$this->server->method = 'GET';
+		$this->server->path   = '/orders';
+		$this->server->params = array(
+			'GET'  => array(
+				'status' => 'dxm-query',
+				'filter' => array(
+					'posts_per_page' => '50',
+					'updated_at_min' => array( '2199-04-01T17:00:00+05:00' ),
+				),
+			),
+			'POST' => array(),
+		);
+
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$found = array_column( $listed['orders'], 'id' );
+		$this->assertSame( array( $ids[1] ), $found, 'ids=' . implode( ',', $found ) );
+	}
+
+	/**
 	 * updated_at_min[] is one lower bound, not a crash.
 	 */
 	public function test_repeated_updated_at_min_keeps_the_bound(): void {

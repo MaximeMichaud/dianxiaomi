@@ -564,16 +564,16 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$query_args['status'] = $this->query_statuses( $args['status'] ?? null );
 
 		$created = $this->date_comparison(
-			isset( $args['created_at_min'] ) && is_string( $args['created_at_min'] ) ? $args['created_at_min'] : null,
-			isset( $args['created_at_max'] ) && is_string( $args['created_at_max'] ) ? $args['created_at_max'] : null
+			$this->single_query_string( $args['created_at_min'] ?? null ),
+			$this->single_query_string( $args['created_at_max'] ?? null )
 		);
 		if ( null !== $created ) {
 			$query_args['date_created'] = $created;
 		}
 
 		$modified = $this->date_comparison(
-			isset( $args['updated_at_min'] ) && is_string( $args['updated_at_min'] ) ? $args['updated_at_min'] : null,
-			isset( $args['updated_at_max'] ) && is_string( $args['updated_at_max'] ) ? $args['updated_at_max'] : null
+			$this->single_query_string( $args['updated_at_min'] ?? null ),
+			$this->single_query_string( $args['updated_at_max'] ?? null )
 		);
 		if ( null !== $modified ) {
 			$query_args['date_modified'] = $modified;
@@ -664,6 +664,18 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			}
 		}
 		return 10;
+	}
+
+	/**
+	 * One query string, including a repeated parameter that arrived as a one-value list.
+	 *
+	 * @param mixed $value Request value.
+	 */
+	private function single_query_string( mixed $value ): ?string {
+		if ( is_array( $value ) && 1 === count( $value ) ) {
+			$value = array_values( $value )[0] ?? null;
+		}
+		return is_string( $value ) && '' !== $value ? $value : null;
 	}
 
 	/**
