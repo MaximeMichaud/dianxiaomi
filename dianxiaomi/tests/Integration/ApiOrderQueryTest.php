@@ -405,6 +405,52 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertLessThan( $all_count['count'], $filtered_count['count'] );
 	}
 
+	/**
+	 * fields[] is the same field list the order detail route already accepts.
+	 */
+	public function test_repeated_fields_filter_the_order_list(): void {
+		$this->use_storage( false );
+		$order = $this->create_query_order( '2099-08-01T12:00:00Z' );
+		$this->server->method = 'GET';
+		$this->server->path   = '/orders';
+		$this->server->params = array(
+			'GET'  => array(
+				'fields' => array( 'id', 'status' ),
+				'status' => 'dxm-query',
+				'filter' => array( 'posts_per_page' => '20' ),
+			),
+			'POST' => array(),
+		);
+
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$row = null;
+		foreach ( $listed['orders'] as $candidate ) {
+			if ( is_array( $candidate ) && (int) $candidate['id'] === $order->get_id() ) {
+				$row = $candidate;
+			}
+		}
+		$this->assertSame(
+			array(
+				'id'     => $order->get_id(),
+				'status' => 'dxm-query',
+			),
+			$row
+		);
+
+		$this->server->path = '/orders/' . $order->get_id();
+		$detail             = $this->server->dispatch();
+		$this->assertSame(
+			array(
+				'order' => array(
+					'id'     => $order->get_id(),
+					'status' => 'dxm-query',
+				),
+			),
+			$detail
+		);
+	}
+
 	/** @dataProvider encoded_bounds */
 	public function test_following_pagination_links_preserves_encoded_filters( bool $hpos, bool $nested ): void {
 		$this->use_storage( $hpos );

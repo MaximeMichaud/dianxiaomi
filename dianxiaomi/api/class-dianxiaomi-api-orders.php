@@ -86,7 +86,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|null                    $fields         Fields to include.
+	 * @param array<int, string>|string|null $fields         Fields to include. A list selects those fields.
 	 * @param array<string, mixed>|string    $filter         Query filters. A string is rejected.
 	 * @param array<int, string>|string|null $status         Order status filter. A list selects those statuses.
 	 * @param string|int                     $page           Page number.
@@ -94,7 +94,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @return array<string, mixed>|WP_Error Orders data or error.
 	 */
-	public function get_orders( ?string $fields = null, array|string $filter = array(), string|array|null $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
+	public function get_orders( string|array|null $fields = null, array|string $filter = array(), string|array|null $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
 		if ( ! is_array( $filter ) ) {
 			return new WP_Error( 'dianxiaomi_api_invalid_filter', __( 'Invalid filter', 'dianxiaomi' ), array( 'status' => 400 ) );
 		}
@@ -117,7 +117,8 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		$orders = array();
 
-		$fields_array = null !== $fields ? explode( ',', $fields ) : null;
+		// A repeated fields query parameter is a list. The detail route already accepts that list.
+		$fields_array = is_string( $fields ) ? explode( ',', $fields ) : $fields;
 		foreach ( $query->posts as $order_id ) {
 			$order_id = $order_id instanceof WP_Post ? $order_id->ID : (int) $order_id;
 			$order_result = $this->get_order( $order_id, $fields_array );
