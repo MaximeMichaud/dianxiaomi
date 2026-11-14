@@ -514,12 +514,15 @@ final class Dianxiaomi implements Subscriber_Interface {
 		$required_fields_msg = ! empty( $required_fields_values ) ? ' (' . join( ', ', $required_fields_values ) . ')' : '';
 
 		$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
-		$tracking_url  = $custom_domain . $dianxiaomi_tracking_number;
+		if ( preg_match( '#^[a-z][a-z0-9+.-]*:|^//#i', $custom_domain ) !== 1 ) {
+			$custom_domain = '//' . ltrim( $custom_domain, '/' );
+		}
+		$tracking_url = $custom_domain . $dianxiaomi_tracking_number;
 
 		echo esc_html( $track_message_1 ) . esc_html( $dianxiaomi_tracking_provider_name ) . '<br/>' . esc_html( $track_message_2 ) . '<a target="_blank" href="' . esc_url( $tracking_url ) . '">' . esc_html( $dianxiaomi_tracking_number ) . '</a>' . esc_html( $required_fields_msg );
 
 		if ( ! $for_email && $this->use_track_button ) {
-			$this->display_track_button( $dianxiaomi_tracking_provider, $dianxiaomi_tracking_number, $required_fields_values );
+			$this->display_track_button( $dianxiaomi_tracking_provider, $dianxiaomi_tracking_number, $required_fields_values, $custom_domain );
 		}
 	}
 
@@ -549,8 +552,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$tracking_provider = substr( $tracking, 0, $sharp );
 			if ( $colon !== false ) {
 				$tracking_number = substr( $tracking, $sharp + 1, $colon - $sharp - 1 );
-				$temp            = substr( $tracking, $sharp + 1 );
-				$required_fields = explode( ':', $temp );
+				$after           = substr( $tracking, $colon + 1 );
+				$required_fields = $after === '' ? array() : explode( ':', $after );
 			} else {
 				$tracking_number = substr( $tracking, $sharp + 1 );
 			}
@@ -559,7 +562,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$tracking_number   = $tracking;
 		}
 		if ( $tracking_number !== '' ) {
-			$this->display_track_button( $tracking_provider, $tracking_number, $required_fields );
+			$custom_domain = $this->custom_domain !== '' ? $this->custom_domain : 'https://t.17track.net/en#nums=';
+			$this->display_track_button( $tracking_provider, $tracking_number, $required_fields, $custom_domain );
 		}
 	}
 
@@ -578,8 +582,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 	 * @param string             $tracking_provider      Tracking provider slug.
 	 * @param string             $tracking_number        Tracking number.
 	 * @param array<int, string> $required_fields_values Additional required field values.
+	 * @param string             $custom_domain          Tracking URL prefix.
 	 */
-	private function display_track_button( string $tracking_provider, string $tracking_number, array $required_fields_values ): void {
+	private function display_track_button( string $tracking_provider, string $tracking_number, array $required_fields_values, string $custom_domain ): void {
 		$js = '(function(e,t,n){})(document,"script","trackdog-jssdk")';
 
 		$handle = 'dianxiaomi-trackdog';
@@ -591,14 +596,7 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$tracking_number = $tracking_number . ':' . join( ':', $required_fields_values );
 		}
 
-		$temp_url  = '';
-		$temp_slug = ' data-slug="' . $tracking_provider . '"';
-		if ( $this->custom_domain !== '' ) {
-			$temp_url  = '" data-domain="' . $this->custom_domain;
-			$temp_slug = '';
-		}
-
-		$this->display_track_button_html( $this->custom_domain, $tracking_number, $tracking_provider );
+		$this->display_track_button_html( $custom_domain, $tracking_number, $tracking_provider );
 
 		echo '<br><br>';
 	}
@@ -607,19 +605,26 @@ final class Dianxiaomi implements Subscriber_Interface {
 	private function display_track_button_html( string $custom_domain, string $tracking_number, string $tracking_provider ): void {
 		$css = '<style>.btn{position:relative; border-radius: 4px;text-decoration: none !important; border:2px solid #1e88e5;text-align:left;background-color:#1e88e5;color:#fff !important;font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;} .btn:hover{border-color: #1c95ff;background-color: #1c95ff;} .btn span{font-size: 16px;vertical-align: middle;}.btn.a:focus,.btn.a:hover{border-color:#1c95ff;background-color:#1c95ff;}.btn.a{padding:10px 6px 12px;border-radius:4px;outline:0} .btn.a{background-color:transparent}.btn.a:active,.btn.a:hover{outline:0}*,:after,:before{box-sizing:border-box}.tracking-widget .fluid-input-wrapper{display:block;overflow:hidden}.-has-tracking-number .fluid-input-wrapper{float:left}.tracking-widget input{padding:2px 6px 3px;width:100%}.tracking-widget .btn{float:right;padding:4px 10px 3px 36px;margin-left:7px}.tracking-widget .-has-tracking-number .btn,.tracking-widget .-hidden-tracking-number .btn{float:none}.tracking-widget .text-large{font-size:17.5px;padding:10px 6px 12px}.tracking-widget .btn-large{font-size:17.5px;padding:10px 20px 12px 58px}.tracking-widget .text-small{padding:2px 6px 3px;font-size:12px}.tracking-widget .btn-small{padding:2px 10px 3px 32px;font-size:12px}.icon-trackdog{left:9px;top:7px;width:17px;height:19px}.tracking-widget .btn-small .icon-trackdog{left:9px;top:7px;height:19px;width:16px}.icon-trackdog,.icon-trackdog.-large{height:28px;width:24px}.tracking-widget .btn-large .icon-trackdog{left:20px;top:7px;height:28px;width:24px}.ie9 .tracking-widget .btn-small .icon-trackdog{top:0}.-hidden-tracking-number .btn{margin-left:0}.tracking-widget+.tracking-widget{margin-top:20px}.icon-trackdog{position:absolute;display:inline-block;background-repeat:no-repeat;background-position:0 0}.tracking-widget .icon-trackdog{height:21px}.tracking-copyright{font-size:12px;padding:3px 3px 0;text-align:left}.tracking-preset{line-height:28px}.tracking-preset.large{line-height:47px}.tracking-preset.small{font-size:14px;line-height:24px} .tracking-widget .btn{padding: 1px 20px;}</style>';
 
-		echo wp_kses_post( $css );
+		// The stylesheet is static. wp_kses_post() drops style tags and prints the CSS as text.
+		echo wp_kses(
+			$css,
+			array(
+				'style' => array(),
+			)
+		);
 
-		// Build tracking URL.
-		$go_url = $custom_domain;
-
-		// Check if 17track and add tracking params.
-		if ( strpos( $custom_domain, '17track' ) !== false ) {
-			$go_url = $custom_domain . $tracking_number . '&pf=wc_d&pf_c=' . rawurlencode( $tracking_provider );
+		// The text link and the button use the same prefix plus the tracking number.
+		$go_url = $custom_domain . $tracking_number;
+		if ( str_contains( $custom_domain, '17track' ) ) {
+			$go_url .= '&pf=wc_d&pf_c=' . rawurlencode( $tracking_provider );
 		}
 
-		// Only add protocol prefix if URL doesn't already have a scheme.
-		$has_scheme = preg_match( '#^https?://#i', $go_url ) === 1;
-		$href       = $has_scheme ? esc_url( $go_url ) : '//' . esc_url( $go_url );
+		if ( preg_match( '#^https?://#i', $go_url ) === 1 ) {
+			$href = esc_url( $go_url );
+		} else {
+			$relative = str_starts_with( $go_url, '//' ) ? $go_url : '//' . ltrim( $go_url, '/' );
+			$href     = esc_url( $relative );
+		}
 
 		// Show track button.
 		$html = '<div class="tracking-widget"><div class="tracking-widget -has-tracking-number"><a class="btn" href="' . $href . '" target="_blank"><span class="btn_text">' . esc_html__( 'Track', 'wc_dianxiaomi' ) . '</span></a></div></div>';
