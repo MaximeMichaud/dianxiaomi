@@ -508,4 +508,41 @@ class ApiOrderQueryTest extends TestCase {
 		$links = $this->server->sent_headers['Link'] ?? array();
 		$this->assertSame( array(), $links, (string) wp_json_encode( $links ) );
 	}
+
+	/**
+	 * The index describes the WooCommerce store, not unset plugin-only option names.
+	 */
+	public function test_index_reports_woocommerce_store_units_and_tax(): void {
+		$names = array(
+			'woocommerce_prices_include_tax',
+			'woocommerce_weight_unit',
+			'woocommerce_dimension_unit',
+			'woocommerce_force_ssl_checkout',
+		);
+		$saved = array();
+		foreach ( $names as $name ) {
+			$saved[ $name ] = get_option( $name );
+		}
+		update_option( 'woocommerce_prices_include_tax', 'yes' );
+		update_option( 'woocommerce_weight_unit', 'oz' );
+		update_option( 'woocommerce_dimension_unit', 'yd' );
+		update_option( 'woocommerce_force_ssl_checkout', 'yes' );
+
+		try {
+			$index = $this->server->get_index();
+			$meta  = $index['store']['meta'];
+			$this->assertTrue( $meta['tax_included'] );
+			$this->assertSame( 'oz', $meta['weight_unit'] );
+			$this->assertSame( 'yd', $meta['dimension_unit'] );
+			$this->assertTrue( $meta['ssl_enabled'] );
+		} finally {
+			foreach ( $saved as $name => $value ) {
+				if ( false === $value ) {
+					delete_option( $name );
+				} else {
+					update_option( $name, $value );
+				}
+			}
+		}
+	}
 }
