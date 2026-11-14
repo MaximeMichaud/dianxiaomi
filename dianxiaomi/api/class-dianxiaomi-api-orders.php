@@ -86,15 +86,15 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param array<int, string>|string|null $fields         Fields to include. A list selects those fields.
-	 * @param array<string, mixed>|string    $filter         Query filters. A string is rejected.
-	 * @param array<int, string>|string|null $status         Order status filter. A list selects those statuses.
-	 * @param string|int                     $page           Page number.
-	 * @param string                         $updated_at_min Minimum update date.
+	 * @param array<int, string>|string|null    $fields         Fields to include. A list selects those fields.
+	 * @param array<string, mixed>|string       $filter         Query filters. A string is rejected.
+	 * @param array<int, string>|string|null    $status         Order status filter. A list selects those statuses.
+	 * @param array<int, string|int>|string|int $page           Page number. One repeated value selects that page.
+	 * @param string                            $updated_at_min Minimum update date.
 	 *
 	 * @return array<string, mixed>|WP_Error Orders data or error.
 	 */
-	public function get_orders( string|array|null $fields = null, array|string $filter = array(), string|array|null $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
+	public function get_orders( string|array|null $fields = null, array|string $filter = array(), string|array|null $status = null, string|int|array $page = 1, string $updated_at_min = '' ): array|WP_Error {
 		if ( ! is_array( $filter ) ) {
 			return new WP_Error( 'dianxiaomi_api_invalid_filter', __( 'Invalid filter', 'dianxiaomi' ), array( 'status' => 400 ) );
 		}
@@ -109,6 +109,17 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 
 		if ( ! empty( $updated_at_min ) ) {
 			$filter['updated_at_min'] = $updated_at_min;
+		}
+
+		if ( is_array( $page ) ) {
+			// A repeated page query parameter is a one-value list.
+			$page_values = array_values( $page );
+			$only        = $page_values[0] ?? null;
+			$one_value   = 1 === count( $page_values ) && ( is_int( $only ) || is_string( $only ) ) && is_numeric( $only );
+			if ( ! $one_value ) {
+				return new WP_Error( 'dianxiaomi_api_invalid_page', __( 'Invalid page', 'dianxiaomi' ), array( 'status' => 400 ) );
+			}
+			$page = $only;
 		}
 
 		$filter['page'] = (int) $page;

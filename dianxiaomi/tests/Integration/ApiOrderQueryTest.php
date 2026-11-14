@@ -406,6 +406,43 @@ class ApiOrderQueryTest extends TestCase {
 	}
 
 	/**
+	 * page[]=2 is the second page, not a crash.
+	 */
+	public function test_repeated_page_parameter_selects_that_page(): void {
+		$this->use_storage( false );
+		$older = $this->create_query_order( '2199-01-01T12:00:00Z' );
+		$newer = $this->create_query_order( '2199-01-02T12:00:00Z' );
+		$this->server->method = 'GET';
+		$this->server->path   = '/orders';
+		$this->server->params = array(
+			'GET'  => array(
+				'page'   => array( '2' ),
+				'status' => 'dxm-query',
+				'filter' => array(
+					'posts_per_page' => '1',
+					'created_at_min' => '2199-01-01T00:00:00Z',
+				),
+			),
+			'POST' => array(),
+		);
+
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$this->assertSame( array( $older->get_id() ), array_column( $listed['orders'], 'id' ) );
+		$this->assertNotContains( $newer->get_id(), array_column( $listed['orders'], 'id' ) );
+
+		$this->server->params['GET']['page'] = '2';
+		$plain = $this->server->dispatch();
+		$this->assertIsArray( $plain );
+		$this->assertSame( array( $older->get_id() ), array_column( $plain['orders'], 'id' ) );
+
+		$this->server->params['GET']['page'] = array( '2', '3' );
+		$invalid = $this->server->dispatch();
+		$this->assertInstanceOf( \WP_Error::class, $invalid );
+		$this->assertSame( 400, $invalid->get_error_data()['status'] );
+	}
+
+	/**
 	 * fields[] is the same field list the order detail route already accepts.
 	 */
 	public function test_repeated_fields_filter_the_order_list(): void {
