@@ -545,4 +545,13 @@ class ApiOrderQueryTest extends TestCase {
 			}
 		}
 	}
+
+	/** The API index must use the store URL's own scheme. */
+	public function test_index_preserves_the_store_url_scheme(): void {
+		foreach ( array( 'http', 'https' ) as $scheme ) {
+			update_option( 'home', $scheme . '://store.example.test:8899' );
+			$index = $this->server->get_index();
+			$this->assertSame( home_url( '/dianxiaomi-api/v1/orders' ), $index['store']['routes']['/orders']['meta']['self'] );
+		}
+	}
 }

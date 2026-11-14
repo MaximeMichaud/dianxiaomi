@@ -65,7 +65,7 @@ if ( ! function_exists( 'get_dianxiaomi_api_url' ) ) {
 	 * @return string Full API URL.
 	 */
 	function get_dianxiaomi_api_url( string $route = '' ): string {
-		return home_url( '/dianxiaomi-api/v1' . $route, 'https' );
+		return home_url( '/dianxiaomi-api/v1' . $route );
 	}
 }
 
