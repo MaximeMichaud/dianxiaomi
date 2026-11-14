@@ -426,7 +426,8 @@ class Dianxiaomi_API_Server {
 
 		$next_page = $page + 1;
 
-		if ( ! $single ) {
+		// An empty result has no last page. Linking to page 0 is not a page.
+		if ( ! $single && $total_pages >= 1 ) {
 			if ( $page > 1 ) {
 				$this->link_header( 'first', $this->get_paginated_url( 1 ) );
 				$this->link_header( 'prev', $this->get_paginated_url( $page - 1 ) );

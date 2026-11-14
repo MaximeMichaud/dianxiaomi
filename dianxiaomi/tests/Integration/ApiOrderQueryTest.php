@@ -481,4 +481,31 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
 		$this->assertSame( array( '1' ), $this->server->sent_headers['X-WC-Total'] );
 	}
+
+	/** @dataProvider storage_modes */
+	public function test_empty_order_page_omits_a_page_zero_link( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$existing = wc_get_orders(
+			array(
+				'status' => array( 'wc-dxm-query' ),
+				'limit'  => -1,
+				'return' => 'ids',
+			)
+		);
+		if ( is_array( $existing ) ) {
+			foreach ( $existing as $order_id ) {
+				$order = wc_get_order( (int) $order_id );
+				if ( $order instanceof \WC_Order ) {
+					$order->delete( true );
+				}
+			}
+		}
+		$result = $this->api->get_orders( null, array(), 'dxm-query' );
+
+		$this->assertSame( array(), $result['orders'] );
+		$this->assertSame( array( '0' ), $this->server->sent_headers['X-WC-Total'] );
+		$this->assertSame( array( '0' ), $this->server->sent_headers['X-WC-TotalPages'] );
+		$links = $this->server->sent_headers['Link'] ?? array();
+		$this->assertSame( array(), $links, (string) wp_json_encode( $links ) );
+	}
 }
