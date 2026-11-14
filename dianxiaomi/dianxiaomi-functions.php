@@ -86,3 +86,39 @@ if ( ! function_exists( 'dianxiaomi_wpdate' ) ) {
 		return false !== $result ? $result : '';
 	}
 }
+
+if ( ! function_exists( 'dianxiaomi_courier_name' ) ) {
+	/**
+	 * Carrier name shown to the customer.
+	 *
+	 * The admin meta box stores the catalog name. The ship API only sends the slug,
+	 * so an unknown or missing catalog entry falls back to that slug.
+	 *
+	 * @param string $slug Courier slug.
+	 *
+	 * @return string Display name.
+	 */
+	function dianxiaomi_courier_name( string $slug ): string {
+		if ( '' === $slug ) {
+			return '';
+		}
+
+		/** @var array<string, string>|null $names */
+		static $names = null;
+		if ( ! is_array( $names ) ) {
+			/** @var array<string, string> $loaded */
+			$loaded = array();
+			$path = __DIR__ . '/assets/js/couriers.js';
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local plugin catalog, not a remote URL.
+			$js = is_readable( $path ) ? file_get_contents( $path ) : false;
+			if ( is_string( $js ) && preg_match_all( '/"slug"\s*:\s*"((?:\\\\.|[^"\\\\])*)"\s*,\s*"name"\s*:\s*"((?:\\\\.|[^"\\\\])*)"/', $js, $matches ) > 0 ) {
+				foreach ( $matches[1] as $index => $courier_slug ) {
+					$loaded[ stripcslashes( $courier_slug ) ] = stripcslashes( $matches[2][ $index ] );
+				}
+			}
+			$names = $loaded;
+		}
+
+		return $names[ $slug ] ?? $slug;
+	}
+}

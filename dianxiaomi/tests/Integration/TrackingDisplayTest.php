@@ -14,6 +14,34 @@ namespace Dianxiaomi\Tests\Integration;
  */
 class TrackingDisplayTest extends TestCase {
 
+	public function test_missing_provider_name_uses_the_catalog_then_the_slug(): void {
+		$order = $this->create_order();
+		$order->update_meta_data( '_dianxiaomi_tracking_provider', 'ups' );
+		$order->update_meta_data( '_dianxiaomi_tracking_number', '1ZAPI' );
+		$order->delete_meta_data( '_dianxiaomi_tracking_provider_name' );
+		$order->save();
+
+		$unknown = $this->create_order();
+		$unknown->update_meta_data( '_dianxiaomi_tracking_provider', 'custom-carrier' );
+		$unknown->update_meta_data( '_dianxiaomi_tracking_number', 'CUSTOM1' );
+		$unknown->delete_meta_data( '_dianxiaomi_tracking_provider_name' );
+		$unknown->save();
+
+		$plugin                   = $this->get_plugin();
+		$plugin->plugin           = 'dianxiaomi';
+		$plugin->use_track_button = false;
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$known_output = ob_get_clean();
+		ob_start();
+		$plugin->display_tracking_info( $unknown->get_id() );
+		$unknown_output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Your order was shipped via UPS', $known_output );
+		$this->assertStringContainsString( 'Your order was shipped via custom-carrier', $unknown_output );
+	}
+
 	/**
 	 * Test tracking info displays on order page.
 	 */

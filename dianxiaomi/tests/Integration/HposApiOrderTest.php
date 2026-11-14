@@ -223,6 +223,24 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	#[DataProvider( 'storage_modes' )]
+	public function test_ship_order_stores_the_catalog_carrier_name( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$number = 'NAME-' . wp_generate_uuid4();
+		$this->api->ship_order(
+			$order->get_id(),
+			array(
+				'status'            => 'completed',
+				'tracking_provider' => 'ups',
+				'tracking_number'   => $number,
+			)
+		);
+
+		$stored = wc_get_order( $order->get_id() );
+		$this->assertInstanceOf( \WC_Order::class, $stored );
+		$this->assertSame( 'UPS', $stored->get_meta( '_dianxiaomi_tracking_provider_name' ) );
+	}
+
+	#[DataProvider( 'storage_modes' )]
 	public function test_ship_order_persists_status_and_tracking( bool $hpos ): void {
 		$order  = $this->create_stored_order( $hpos );
 		$number = 'SHIP-' . wp_generate_uuid4();

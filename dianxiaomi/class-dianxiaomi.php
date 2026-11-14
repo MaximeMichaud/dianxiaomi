@@ -499,6 +499,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 		$dianxiaomi_tracking_provider      = is_string( $tracking_provider_meta ) ? $tracking_provider_meta : '';
 		$dianxiaomi_tracking_number        = is_string( $tracking_number_meta ) ? $tracking_number_meta : '';
 		$dianxiaomi_tracking_provider_name = is_string( $provider_name_meta ) ? $provider_name_meta : '';
+		if ( '' === $dianxiaomi_tracking_provider_name ) {
+			$dianxiaomi_tracking_provider_name = dianxiaomi_courier_name( $dianxiaomi_tracking_provider );
+		}
 
 		if ( $dianxiaomi_tracking_provider === '' || $dianxiaomi_tracking_number === '' ) {
 			return;

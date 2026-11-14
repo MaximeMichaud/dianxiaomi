@@ -303,6 +303,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			// A status change must not erase tracking that the request did not mention.
 			if ( array_key_exists( 'tracking_provider', $data ) && is_string( $data['tracking_provider'] ) ) {
 				$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
+				$order->update_meta_data( '_dianxiaomi_tracking_provider_name', dianxiaomi_courier_name( $data['tracking_provider'] ) );
 			}
 			if ( array_key_exists( 'tracking_number', $data ) && is_string( $data['tracking_number'] ) ) {
 				$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
@@ -372,6 +373,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		}
 		if ( ! empty( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
+			$order->update_meta_data( '_dianxiaomi_tracking_provider_name', dianxiaomi_courier_name( $data['tracking_provider'] ) );
 		}
 
 		// Vérifier si le statut de la commande doit être ignoré
