@@ -213,14 +213,8 @@ final class Dianxiaomi implements Subscriber_Interface {
 		wp_nonce_field( 'dianxiaomi_save_meta_box', 'dianxiaomi_nonce' );
 
 		echo '<div id="dianxiaomi_wrapper">';
-		echo '<p class="form-field"><label for="dianxiaomi_tracking_provider">' . esc_html__( 'Carrier:', 'wc_dianxiaomi' ) . '</label><br/><select id="dianxiaomi_tracking_provider" name="dianxiaomi_tracking_provider" class="wc-enhanced-select" style="width:100%">';
-		if ( $selected_provider === '' ) {
-			$selected_text = 'selected="selected"';
-		} else {
-			$selected_text = '';
-		}
-		echo '<br><a href="options-general.php?page=dianxiaomi-setting-admin">' . esc_html__( 'Update carrier list', 'wc_dianxiaomi' ) . '</a>';
-		echo '</select>';
+		// Options are filled by admin.js. Keep the settings link outside the select, once.
+		echo '<p class="form-field"><label for="dianxiaomi_tracking_provider">' . esc_html__( 'Carrier:', 'wc_dianxiaomi' ) . '</label><br/><select id="dianxiaomi_tracking_provider" name="dianxiaomi_tracking_provider" class="wc-enhanced-select" style="width:100%"></select>';
 		echo '<br><a href="options-general.php?page=dianxiaomi-setting-admin">' . esc_html__( 'Update carrier list', 'wc_dianxiaomi' ) . '</a>';
 		$provider_value = is_string( $selected_provider ) ? $selected_provider : '';
 		echo '<input type="hidden" id="dianxiaomi_tracking_provider_hidden" value="' . esc_attr( $provider_value ) . '"/>';

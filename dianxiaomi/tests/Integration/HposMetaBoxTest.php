@@ -187,4 +187,38 @@ class HposMetaBoxTest extends TestCase {
 			}
 		}
 	}
+
+	/**
+	 * The carrier settings link is a sibling of the select, rendered once.
+	 *
+	 * Options are appended later by admin.js. The PHP markup must not nest
+	 * that anchor inside the select, and must not print it twice.
+	 *
+	 * @dataProvider storage_modes
+	 */
+	public function test_carrier_list_link_is_rendered_once_outside_the_select( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$order = $this->create_fixture();
+		unset( $GLOBALS['post'] );
+
+		ob_start();
+		try {
+			$this->get_plugin()->meta_box( $hpos ? $order : get_post( $order->get_id() ) );
+			$html = ob_get_contents();
+		} finally {
+			ob_end_clean();
+		}
+		$this->assertIsString( $html );
+
+		$href  = 'options-general.php?page=dianxiaomi-setting-admin';
+		$links = substr_count( $html, $href );
+		$this->assertSame( 1, $links, 'links=' . $links );
+
+		$start = strpos( $html, '<select id="dianxiaomi_tracking_provider"' );
+		$end   = false !== $start ? strpos( $html, '</select>', $start ) : false;
+		$this->assertNotFalse( $start );
+		$this->assertNotFalse( $end );
+		$select = substr( $html, (int) $start, (int) $end - (int) $start );
+		$this->assertStringNotContainsString( '<a', $select );
+	}
 }
