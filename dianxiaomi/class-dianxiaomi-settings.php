@@ -215,7 +215,11 @@ class Dianxiaomi_Settings implements Subscriber_Interface {
 		}
 
 		if ( isset( $input['custom_domain'] ) && is_string( $input['custom_domain'] ) ) {
-			$new_input['custom_domain'] = sanitize_text_field( $input['custom_domain'] );
+			// sanitize_text_field() deletes %XX octets, which corrupts a tracking URL prefix.
+			$domain = wp_check_invalid_utf8( $input['custom_domain'] );
+			$domain = wp_strip_all_tags( $domain );
+			$domain = str_replace( array( "\r", "\n", "\t" ), '', $domain );
+			$new_input['custom_domain'] = trim( $domain );
 		}
 
 		if ( isset( $input['plugin'] ) && is_string( $input['plugin'] ) ) {

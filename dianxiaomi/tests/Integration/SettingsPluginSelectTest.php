@@ -62,6 +62,53 @@ class SettingsPluginSelectTest extends TestCase {
 		}
 	}
 
+	/**
+	 * The custom domain is a URL prefix. Saving it must keep percent-encoding and a schemeless host.
+	 */
+	public function test_custom_domain_save_keeps_percent_encoding(): void {
+		$settings = new \Dianxiaomi_Settings();
+		try {
+			$encoded = 'https://track.example.com/search?q=order%2F123&num=';
+			$saved   = $settings->sanitize(
+				array(
+					'custom_domain' => $encoded,
+					'plugin'        => 'dianxiaomi',
+				)
+			);
+			$this->assertSame( $encoded, $saved['custom_domain'] );
+
+			$schemeless = $settings->sanitize( array( 'custom_domain' => 'track.example.com/?num=' ) );
+			$this->assertSame( 'track.example.com/?num=', $schemeless['custom_domain'] );
+
+			$tracker = $settings->sanitize( array( 'custom_domain' => 'https://t.17track.net/en#nums=' ) );
+			$this->assertSame( 'https://t.17track.net/en#nums=', $tracker['custom_domain'] );
+
+			$tagged = $settings->sanitize(
+				array( 'custom_domain' => '<script>alert(1)</script>https://track.example/?num=' )
+			);
+			$this->assertIsString( $tagged['custom_domain'] );
+			$this->assertStringNotContainsString( '<', $tagged['custom_domain'] );
+			$this->assertStringContainsString( 'https://track.example/?num=', $tagged['custom_domain'] );
+
+			$order = $this->create_order();
+			$this->set_tracking_info( $order, 'ups', 'ENC1', 'UPS' );
+			$plugin                   = $this->get_plugin();
+			$plugin->plugin           = 'dianxiaomi';
+			$plugin->use_track_button = false;
+			$plugin->custom_domain    = $saved['custom_domain'];
+			ob_start();
+			$plugin->display_tracking_info( $order->get_id() );
+			$html = (string) ob_get_clean();
+			$this->assertStringContainsString( 'order%2F123', $html );
+			$this->assertStringContainsString( 'num=ENC1', $html );
+			$this->assertStringNotContainsString( 'order123', $html );
+		} finally {
+			foreach ( \Dianxiaomi_Settings::get_subscribed_events() as $hook => $callback ) {
+				remove_action( $hook, array( $settings, $callback ) );
+			}
+		}
+	}
+
 	public function test_empty_custom_domain_field_matches_the_storefront_tracker(): void {
 		$this->assertSettingsHtml(
 			array( 'plugin' => 'dianxiaomi' ),
