@@ -145,6 +145,52 @@ class TrackingDisplayTest extends TestCase {
 	}
 
 	/**
+	 * The meta box stores the ship date as a unix timestamp.
+	 */
+	public function test_ship_date_required_field_formats_the_stored_timestamp(): void {
+		$order     = $this->create_order();
+		$timestamp = ( new \DateTimeImmutable( '2024-06-01 12:00:00 UTC' ) )->getTimestamp();
+		$this->set_tracking_info( $order, 'deutsch-post', 'DE456', 'Deutsche Post' );
+		$order->update_meta_data( '_dianxiaomi_tracking_shipdate', (string) $timestamp );
+		$order->update_meta_data( '_dianxiaomi_tracking_required_fields', 'tracking_ship_date' );
+		$order->save();
+
+		$plugin                   = $this->get_plugin();
+		$plugin->plugin           = 'dianxiaomi';
+		$plugin->use_track_button = false;
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( '1st June 2024', $output );
+		$this->assertStringNotContainsString( 'November 2026', $output );
+	}
+
+	/**
+	 * A stored unix timestamp must not be parsed again as a date string.
+	 */
+	public function test_numeric_ship_date_is_not_rendered_as_today(): void {
+		$order     = $this->create_order();
+		$timestamp = ( new \DateTimeImmutable( '2024-06-01 12:00:00 UTC' ) )->getTimestamp();
+		$this->set_tracking_info( $order, 'deutsch-post', 'DE789', 'Deutsche Post' );
+		$order->update_meta_data( '_dianxiaomi_tracking_shipdate', (string) $timestamp );
+		$order->update_meta_data( '_dianxiaomi_tracking_required_fields', 'dianxiaomi_tracking_shipdate' );
+		$order->save();
+
+		$plugin                   = $this->get_plugin();
+		$plugin->plugin           = 'dianxiaomi';
+		$plugin->use_track_button = false;
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( '1st June 2024', $output );
+		$this->assertStringNotContainsString( 'November 2026', $output );
+	}
+
+	/**
 	 * A custom tracking prefix has to carry the number on the button itself.
 	 */
 	public function test_custom_domain_track_button_includes_the_tracking_number(): void {
