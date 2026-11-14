@@ -5,6 +5,7 @@
   "scripts": {
     "wp-env": "wp-env",
     "test": "wp-env run cli --config=.wp-env.current.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
+    "test:js": "node --test tests/js/*.test.js",
     "test:legacy": "wp-env run cli --config=.wp-env.legacy.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit",
     "test:watch": "wp-env run cli --config=.wp-env.current.json --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit --filter",
     "start": "wp-env start --config=.wp-env.current.json",

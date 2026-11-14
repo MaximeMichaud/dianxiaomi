@@ -135,6 +135,10 @@ jobs:
           npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" wp plugin is-active dianxiaomi
         working-directory: dianxiaomi
 
+      - name: Run JavaScript regression tests
+        run: npm run test:js
+        working-directory: dianxiaomi
+
       - name: Run PHPUnit tests
         run: npx --no-install wp-env run cli --config="$WP_ENV_CONFIG" --env-cwd=wp-content/plugins/dianxiaomi vendor/bin/phpunit
         working-directory: dianxiaomi
