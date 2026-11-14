@@ -186,6 +186,29 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	#[DataProvider( 'storage_modes' )]
+	public function test_status_only_edit_keeps_existing_tracking( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$number = 'KEEP-' . wp_generate_uuid4();
+		$this->set_tracking_info( $order, 'ups', $number );
+
+		$result = $this->api->edit_order( $order->get_id(), array( 'status' => 'completed' ) );
+
+		$this->assert_api_order( $result, $order->get_id(), 'completed', $number, 'ups' );
+		$this->assert_persisted_order( $order->get_id(), 'completed', $number, 'ups' );
+
+		$cleared = $this->api->edit_order(
+			$order->get_id(),
+			array(
+				'status'            => 'on-hold',
+				'tracking_provider' => '',
+				'tracking_number'   => '',
+			)
+		);
+		$this->assert_api_order( $cleared, $order->get_id(), 'on-hold', '', '' );
+		$this->assert_persisted_order( $order->get_id(), 'on-hold', '', '' );
+	}
+
+	#[DataProvider( 'storage_modes' )]
 	public function test_ship_order_persists_status_and_tracking( bool $hpos ): void {
 		$order  = $this->create_stored_order( $hpos );
 		$number = 'SHIP-' . wp_generate_uuid4();
