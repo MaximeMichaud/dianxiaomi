@@ -328,6 +328,29 @@ class ApiOrderQueryTest extends TestCase {
 		$this->assertSame( array( $ids[1] ), array_column( $result['orders'], 'id' ) );
 	}
 
+	/**
+	 * A query string filter is an object. A plain string must not crash the endpoint.
+	 */
+	public function test_string_filter_is_rejected_without_crashing(): void {
+		$this->use_storage( false );
+		$this->create_query_order( '2026-04-01T12:00:00Z' );
+		$this->server->method = 'GET';
+		$this->server->params = array(
+			'GET'  => array( 'filter' => 'not-an-array' ),
+			'POST' => array(),
+		);
+
+		$this->server->path = '/orders';
+		$list = $this->server->dispatch();
+		$this->assertInstanceOf( \WP_Error::class, $list );
+		$this->assertSame( 400, $list->get_error_data()['status'] );
+
+		$this->server->path = '/orders/count';
+		$count = $this->server->dispatch();
+		$this->assertInstanceOf( \WP_Error::class, $count );
+		$this->assertSame( 400, $count->get_error_data()['status'] );
+	}
+
 	/** @dataProvider encoded_bounds */
 	public function test_following_pagination_links_preserves_encoded_filters( bool $hpos, bool $nested ): void {
 		$this->use_storage( $hpos );

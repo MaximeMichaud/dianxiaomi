@@ -86,15 +86,19 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|null          $fields         Fields to include.
-	 * @param array<string, mixed> $filter         Query filters.
-	 * @param string|null          $status         Order status filter.
-	 * @param string|int           $page           Page number.
-	 * @param string               $updated_at_min Minimum update date.
+	 * @param string|null                 $fields         Fields to include.
+	 * @param array<string, mixed>|string $filter         Query filters. A string is rejected.
+	 * @param string|null                 $status         Order status filter.
+	 * @param string|int                  $page           Page number.
+	 * @param string                      $updated_at_min Minimum update date.
 	 *
 	 * @return array<string, mixed>|WP_Error Orders data or error.
 	 */
-	public function get_orders( ?string $fields = null, array $filter = array(), ?string $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
+	public function get_orders( ?string $fields = null, array|string $filter = array(), ?string $status = null, string|int $page = 1, string $updated_at_min = '' ): array|WP_Error {
+		if ( ! is_array( $filter ) ) {
+			return new WP_Error( 'dianxiaomi_api_invalid_filter', __( 'Invalid filter', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
+
 		if ( ! current_user_can( 'read_private_shop_orders' ) ) {
 			return $this->forbidden( __( 'You do not have permission to read the orders', 'dianxiaomi' ) );
 		}
@@ -331,12 +335,16 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 *
 	 * @since 2.1
 	 *
-	 * @param string|null          $status Optional status to filter the count.
-	 * @param array<string, mixed> $filter Additional filters for the query.
+	 * @param string|null                 $status Optional status to filter the count.
+	 * @param array<string, mixed>|string $filter Additional filters for the query. A string is rejected.
 	 *
 	 * @return array<string, int>|WP_Error Returns the count of orders or a WP_Error object if permissions are insufficient.
 	 */
-	public function get_orders_count( ?string $status = null, array $filter = array() ): array|WP_Error {
+	public function get_orders_count( ?string $status = null, array|string $filter = array() ): array|WP_Error {
+		if ( ! is_array( $filter ) ) {
+			return new WP_Error( 'dianxiaomi_api_invalid_filter', __( 'Invalid filter', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
+
 		if ( ! empty( $status ) ) {
 			$filter['status'] = $status;
 		}
