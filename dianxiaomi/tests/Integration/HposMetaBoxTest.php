@@ -143,4 +143,48 @@ class HposMetaBoxTest extends TestCase {
 			$this->assertSame( '0', $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = '_dianxiaomi_tracking_number'", $order->get_id() ) ) );
 		}
 	}
+
+	/** @dataProvider storage_modes */
+	public function test_ship_date_round_trips_in_the_site_timezone( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$original_timezone = get_option( 'timezone_string' );
+		update_option( 'timezone_string', 'America/New_York' );
+		try {
+			$order = $this->create_fixture();
+			$_POST = array(
+				'dianxiaomi_nonce'              => wp_create_nonce( 'dianxiaomi_save_meta_box' ),
+				'dianxiaomi_tracking_provider'  => 'deutsch-post',
+				'dianxiaomi_tracking_number'    => 'DATE-' . $order->get_id(),
+				'dianxiaomi_tracking_shipdate'  => '2024-06-01',
+			);
+			do_action( 'woocommerce_process_shop_order_meta', $order->get_id(), $hpos ? $order : get_post( $order->get_id() ) );
+
+			ob_start();
+			try {
+				$this->get_plugin()->meta_box( $hpos ? new \WC_Order( $order->get_id() ) : get_post( $order->get_id() ) );
+				$html = ob_get_contents();
+			} finally {
+				ob_end_clean();
+			}
+
+			$document        = new \DOMDocument();
+			$previous_errors = libxml_use_internal_errors( true );
+			try {
+				$document->loadHTML( $html );
+			} finally {
+				libxml_clear_errors();
+				libxml_use_internal_errors( $previous_errors );
+			}
+			$nodes = ( new \DOMXPath( $document ) )->query( '//input[@id="dianxiaomi_tracking_shipdate"]' );
+			$this->assertNotFalse( $nodes );
+			$this->assertSame( 1, $nodes->length );
+			$this->assertSame( '2024-06-01', $nodes->item( 0 )->getAttribute( 'value' ) );
+		} finally {
+			if ( false === $original_timezone ) {
+				delete_option( 'timezone_string' );
+			} else {
+				update_option( 'timezone_string', $original_timezone );
+			}
+		}
+	}
 }

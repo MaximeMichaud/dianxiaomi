@@ -310,7 +310,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 				$raw_value   = isset( $_POST[ $field_id ] ) ? wp_unslash( $_POST[ $field_id ] ) : '';
 				$field_value = is_string( $raw_value ) ? sanitize_text_field( $raw_value ) : '';
 				if ( $field_type === 'date' ) {
-					$field_value = (string) strtotime( $field_value );
+					// Midnight in the site timezone, so the admin date field round-trips.
+					$parsed      = $field_value !== '' ? date_create_immutable( $field_value, wp_timezone() ) : false;
+					$field_value = $parsed instanceof \DateTimeImmutable ? (string) $parsed->getTimestamp() : '';
 				}
 				$order->update_meta_data( '_' . $field_id, sanitize_text_field( $field_value ) );
 			}
