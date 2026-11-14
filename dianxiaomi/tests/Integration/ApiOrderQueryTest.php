@@ -443,6 +443,42 @@ class ApiOrderQueryTest extends TestCase {
 	}
 
 	/**
+	 * page=0 and page=-1 are not pages. HPOS would use a negative SQL offset for 0.
+	 *
+	 * @dataProvider storage_modes
+	 */
+	public function test_zero_or_negative_page_is_rejected( bool $hpos ): void {
+		$this->use_storage( $hpos );
+		$order = $this->create_query_order( '2399-01-02T12:00:00Z' );
+
+		foreach ( array( '0', '-1' ) as $page ) {
+			$this->server->method = 'GET';
+			$this->server->path   = '/orders';
+			$this->server->params = array(
+				'GET'  => array(
+					'page'   => $page,
+					'status' => 'dxm-query',
+					'filter' => array(
+						'posts_per_page' => '1',
+						'created_at_min' => '2399-01-01T00:00:00Z',
+					),
+				),
+				'POST' => array(),
+			);
+			$result  = $this->server->dispatch();
+			$detail  = is_array( $result ) ? (string) wp_json_encode( array_column( $result['orders'] ?? array(), 'id' ) ) : get_debug_type( $result );
+			$this->assertInstanceOf( \WP_Error::class, $result, $page . ' ' . ( $hpos ? 'hpos' : 'cpt' ) . ' ' . $detail );
+			$this->assertSame( 'dianxiaomi_api_invalid_page', $result->get_error_code() );
+			$this->assertSame( 400, $result->get_error_data()['status'] ?? null );
+		}
+
+		$this->server->params['GET']['page'] = '1';
+		$listed = $this->server->dispatch();
+		$this->assertIsArray( $listed );
+		$this->assertSame( array( $order->get_id() ), array_column( $listed['orders'], 'id' ) );
+	}
+
+	/**
 	 * filter[updated_at_min][] is the same lower bound as a string.
 	 */
 	public function test_nested_repeated_updated_at_min_keeps_the_bound(): void {

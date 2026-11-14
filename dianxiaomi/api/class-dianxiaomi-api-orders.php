@@ -89,7 +89,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	 * @param array<int, string>|string|null    $fields         Fields to include. A list selects those fields.
 	 * @param array<string, mixed>|string       $filter         Query filters. A string is rejected.
 	 * @param array<int, string>|string|null    $status         Order status filter. A list selects those statuses.
-	 * @param array<int, string|int>|string|int $page           Page number. One repeated value selects that page.
+	 * @param array<int, string|int>|string|int $page           Page number. One repeated value selects that page. A number below 1 is rejected.
 	 * @param array<int, string>|string         $updated_at_min Minimum update date. One repeated value is that bound.
 	 *
 	 * @return array<string, mixed>|WP_Error Orders data or error.
@@ -132,7 +132,12 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			$page = $only;
 		}
 
-		$filter['page'] = (int) $page;
+		// page=0 becomes LIMIT -1 on HPOS. A missing page stays at the default of 1.
+		$page_number = is_int( $page ) || is_float( $page ) || ( is_string( $page ) && is_numeric( $page ) ) ? (int) $page : 0;
+		if ( $page_number < 1 ) {
+			return new WP_Error( 'dianxiaomi_api_invalid_page', __( 'Invalid page', 'dianxiaomi' ), array( 'status' => 400 ) );
+		}
+		$filter['page'] = $page_number;
 
 		$query = $this->query_orders( $filter );
 
