@@ -209,6 +209,20 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	#[DataProvider( 'storage_modes' )]
+	public function test_paid_date_uses_the_same_utc_instant_as_other_dates( bool $hpos ): void {
+		update_option( 'timezone_string', 'America/Toronto' );
+		$order = $this->create_stored_order( $hpos );
+		$order->set_date_paid( '2026-01-15T12:34:56Z' );
+		$order->save();
+
+		$result = $this->api->get_order( $order->get_id() );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( '2026-01-15T12:34:56Z', $result['order']['payment_details']['paid'] );
+		$this->assertSame( $result['order']['payment_details']['paid'], gmdate( 'Y-m-d\TH:i:s\Z', $order->get_date_paid()->getTimestamp() ) );
+	}
+
+	#[DataProvider( 'storage_modes' )]
 	public function test_ship_order_persists_status_and_tracking( bool $hpos ): void {
 		$order  = $this->create_stored_order( $hpos );
 		$number = 'SHIP-' . wp_generate_uuid4();

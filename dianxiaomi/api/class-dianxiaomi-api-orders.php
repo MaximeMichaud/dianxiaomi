@@ -175,7 +175,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 			'payment_details'           => array(
 				'method_id'    => $order->get_payment_method(),
 				'method_title' => $order->get_payment_method_title(),
-				'paid'         => $date_paid ? $date_paid->date( 'Y-m-d H:i:s' ) : null,
+				'paid'         => $date_paid ? $this->server->format_datetime( $date_paid->getTimestamp() ) : null,
 			),
 			'billing_address'           => array(
 				'first_name' => $order->get_billing_first_name(),
