@@ -484,9 +484,9 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$meta_value = $order->get_meta( '_' . $field_id );
 			$meta_str   = is_string( $meta_value ) ? $meta_value : ( is_numeric( $meta_value ) ? (string) $meta_value : '' );
 			if ( $field_type === 'date' && $meta_str !== '' ) {
-				// Numeric meta is a Unix timestamp, not a date string.
+				// Numeric meta is a unix timestamp. date_i18n() would shift midnight east of UTC to the previous day.
 				$timestamp            = is_numeric( $meta_str ) ? (int) $meta_str : strtotime( $meta_str );
-				$values[ $field_id ] = is_int( $timestamp ) && $timestamp > 0 ? date_i18n( __( 'l jS F Y', 'wc_shipment_tracking' ), $timestamp ) : '';
+				$values[ $field_id ] = is_int( $timestamp ) && $timestamp > 0 ? dianxiaomi_wpdate( __( 'l jS F Y', 'wc_shipment_tracking' ), $timestamp ) : '';
 			} else {
 				$values[ $field_id ] = $meta_str;
 			}

@@ -274,6 +274,49 @@ class TrackingDisplayTest extends TestCase {
 	}
 
 	/**
+	 * The customer sees the calendar day the merchant saved, including east of UTC.
+	 */
+	public function test_customer_ship_date_keeps_the_saved_calendar_day(): void {
+		$original_timezone = get_option( 'timezone_string' );
+		update_option( 'timezone_string', 'Asia/Tokyo' );
+		try {
+			$order  = $this->create_order();
+			$plugin = $this->get_plugin();
+			$_POST  = array(
+				'dianxiaomi_nonce'                     => wp_create_nonce( 'dianxiaomi_save_meta_box' ),
+				'dianxiaomi_tracking_provider'         => 'deutsch-post',
+				'dianxiaomi_tracking_provider_name'    => 'Deutsche Post',
+				'dianxiaomi_tracking_number'           => 'JP-DATE',
+				'dianxiaomi_tracking_shipdate'         => '2024-06-01',
+				'dianxiaomi_tracking_required_fields'  => 'tracking_ship_date',
+			);
+			$plugin->save_meta_box( $order->get_id(), $order );
+
+			$plugin->plugin           = 'dianxiaomi';
+			$plugin->use_track_button = false;
+
+			ob_start();
+			$plugin->display_tracking_info( $order->get_id() );
+			$page = ob_get_clean();
+			ob_start();
+			do_action( 'woocommerce_email_before_order_table', wc_get_order( $order->get_id() ), false, false, null );
+			$email = ob_get_clean();
+		} finally {
+			$_POST = array();
+			if ( false === $original_timezone ) {
+				delete_option( 'timezone_string' );
+			} else {
+				update_option( 'timezone_string', $original_timezone );
+			}
+		}
+
+		foreach ( array( $page, $email ) as $output ) {
+			$this->assertStringContainsString( '1st June 2024', $output );
+			$this->assertStringNotContainsString( '31st May 2024', $output );
+		}
+	}
+
+	/**
 	 * A custom tracking prefix has to carry the number on the button itself.
 	 */
 	public function test_custom_domain_track_button_includes_the_tracking_number(): void {
