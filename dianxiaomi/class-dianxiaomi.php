@@ -463,15 +463,21 @@ final class Dianxiaomi implements Subscriber_Interface {
 			return;
 		}
 
-		$values = array();
+		$values        = array();
+		$field_aliases = array();
 		foreach ( $this->dianxiaomi_fields as $field ) {
 			if ( ! is_array( $field ) ) {
 				continue;
 			}
 			$field_id   = isset( $field['id'] ) && is_string( $field['id'] ) ? $field['id'] : '';
 			$field_type = isset( $field['type'] ) && is_string( $field['type'] ) ? $field['type'] : '';
+			$field_key  = isset( $field['key'] ) && is_string( $field['key'] ) ? $field['key'] : '';
 			if ( $field_id === '' ) {
 				continue;
+			}
+			$field_aliases[ $field_id ] = $field_id;
+			if ( $field_key !== '' ) {
+				$field_aliases[ $field_key ] = $field_id;
 			}
 			$meta_value = $order->get_meta( '_' . $field_id );
 			$meta_str   = is_string( $meta_value ) ? $meta_value : '';
@@ -505,8 +511,10 @@ final class Dianxiaomi implements Subscriber_Interface {
 			$provider_required_fields = explode( ',', $required_fields_str );
 
 			foreach ( $provider_required_fields as $field ) {
-				if ( isset( $values[ $field ] ) && is_string( $values[ $field ] ) ) {
-					$required_fields_values[] = $values[ $field ];
+				$field    = trim( $field );
+				$value_id = $field_aliases[ $field ] ?? '';
+				if ( $value_id !== '' && isset( $values[ $value_id ] ) && is_string( $values[ $value_id ] ) && $values[ $value_id ] !== '' ) {
+					$required_fields_values[] = $values[ $value_id ];
 				}
 			}
 		}

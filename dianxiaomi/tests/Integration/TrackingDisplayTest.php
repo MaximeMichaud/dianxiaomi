@@ -122,6 +122,29 @@ class TrackingDisplayTest extends TestCase {
 	}
 
 	/**
+	 * Courier definitions store required field keys, not meta field ids.
+	 */
+	public function test_required_courier_fields_are_shown_with_the_tracking_number(): void {
+		$order = $this->create_order();
+		$this->set_tracking_info( $order, 'deutsch-post', 'DE123', 'Deutsche Post' );
+		$order->update_meta_data( '_dianxiaomi_tracking_postal', '75001' );
+		$order->update_meta_data( '_dianxiaomi_tracking_required_fields', 'tracking_postal_code' );
+		$order->save();
+
+		$plugin                     = $this->get_plugin();
+		$plugin->plugin             = 'dianxiaomi';
+		$plugin->use_track_button   = true;
+		$plugin->custom_domain      = 'https://t.17track.net/en#nums=';
+
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( '(75001)', $output );
+		$this->assertMatchesRegularExpression( '#<a class="btn" href="[^"]*nums=DE123:75001#', $output );
+	}
+
+	/**
 	 * A custom tracking prefix has to carry the number on the button itself.
 	 */
 	public function test_custom_domain_track_button_includes_the_tracking_number(): void {
