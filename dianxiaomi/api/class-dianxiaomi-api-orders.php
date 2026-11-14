@@ -464,7 +464,7 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 	private function query_orders( array $args ): WP_Query {
 		$query_args = array(
 			'return'  => 'ids',
-			'limit'   => isset( $args['posts_per_page'] ) && is_numeric( $args['posts_per_page'] ) ? (int) $args['posts_per_page'] : 10,
+			'limit'   => $this->orders_per_page( $args ),
 			'page'    => isset( $args['page'] ) && is_numeric( $args['page'] ) ? (int) $args['page'] : 1,
 			'orderby' => 'date',
 			'order'   => 'DESC',
@@ -525,6 +525,31 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		$query->max_num_pages = $query_args['limit'] > 0 ? (int) ceil( $query->found_posts / $query_args['limit'] ) : 1;
 
 		return $query;
+	}
+
+	/**
+	 * Page size from the legacy WooCommerce filter names.
+	 *
+	 * `posts_per_page` stays first so existing callers keep their explicit size.
+	 * `limit` is the name documented by the WooCommerce API filter object.
+	 *
+	 * @param array<string, mixed> $args Request filters.
+	 */
+	private function orders_per_page( array $args ): int {
+		foreach ( array( 'posts_per_page', 'limit' ) as $key ) {
+			if ( ! isset( $args[ $key ] ) ) {
+				continue;
+			}
+			$size = $args[ $key ];
+			if ( ! is_int( $size ) && ! is_float( $size ) && ! ( is_string( $size ) && is_numeric( $size ) ) ) {
+				continue;
+			}
+			$parsed = (int) $size;
+			if ( $parsed > 0 || -1 === $parsed ) {
+				return $parsed;
+			}
+		}
+		return 10;
 	}
 
 	/**
