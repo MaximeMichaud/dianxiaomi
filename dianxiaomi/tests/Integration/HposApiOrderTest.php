@@ -223,6 +223,58 @@ class HposApiOrderTest extends TestCase {
 	}
 
 	#[DataProvider( 'storage_modes' )]
+	public function test_ship_order_keeps_courier_details_the_customer_needs( bool $hpos ): void {
+		$order  = $this->create_stored_order( $hpos );
+		$result = $this->api->ship_order(
+			$order->get_id(),
+			array(
+				'tracking_provider'            => 'b2ceurope',
+				'tracking_number'              => 'B2C1',
+				'tracking_postal_code'         => '75001',
+				'tracking_destination_country' => 'FR',
+				'tracking_ship_date'           => '2024-06-01',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( '75001', $result['order']['trackings'][0]['tracking_postal_code'] );
+		$this->assertSame( 'FR', $result['order']['trackings'][0]['tracking_destination_country'] );
+		$ship_meta = $result['order']['trackings'][0]['tracking_ship_date'];
+		$this->assertMatchesRegularExpression( '/^[0-9]+$/', $ship_meta );
+
+		$box = \Dianxiaomi::instance();
+		ob_start();
+		$box->meta_box( wc_get_order( $order->get_id() ) );
+		$meta_html = (string) ob_get_clean();
+		$document  = new \DOMDocument();
+		$previous  = libxml_use_internal_errors( true );
+		$document->loadHTML( $meta_html );
+		libxml_clear_errors();
+		libxml_use_internal_errors( $previous );
+		$ship_input = ( new \DOMXPath( $document ) )->query( '//input[@id="dianxiaomi_tracking_shipdate"]' );
+		$this->assertNotFalse( $ship_input );
+		$this->assertSame( 1, $ship_input->length );
+		$this->assertSame( '2024-06-01', $ship_input->item( 0 )->getAttribute( 'value' ) );
+
+		$plugin                   = \Dianxiaomi::instance();
+		$plugin->plugin           = 'dianxiaomi';
+		$plugin->use_track_button = false;
+		ob_start();
+		$plugin->display_tracking_info( $order->get_id() );
+		$html = (string) ob_get_clean();
+		$this->assertStringContainsString( '(75001, FR)', $html );
+
+		$again = $this->api->ship_order(
+			$order->get_id(),
+			array( 'tracking_number' => 'B2C2' )
+		);
+		$this->assertIsArray( $again );
+		$this->assertSame( 'B2C2', $again['order']['trackings'][0]['tracking_number'] );
+		$this->assertSame( '75001', $again['order']['trackings'][0]['tracking_postal_code'] );
+		$this->assertSame( 'FR', $again['order']['trackings'][0]['tracking_destination_country'] );
+	}
+
+	#[DataProvider( 'storage_modes' )]
 	public function test_ship_order_stores_the_catalog_carrier_name( bool $hpos ): void {
 		$order  = $this->create_stored_order( $hpos );
 		$number = 'NAME-' . wp_generate_uuid4();

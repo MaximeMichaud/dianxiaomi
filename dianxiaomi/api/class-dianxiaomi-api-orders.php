@@ -371,9 +371,32 @@ final class Dianxiaomi_API_Orders extends Dianxiaomi_API_Resource {
 		if ( ! empty( $data['tracking_number'] ) && is_string( $data['tracking_number'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_number', $data['tracking_number'] );
 		}
+		$detail_meta = array(
+			'tracking_ship_date'           => '_dianxiaomi_tracking_shipdate',
+			'tracking_postal_code'         => '_dianxiaomi_tracking_postal',
+			'tracking_account_number'      => '_dianxiaomi_tracking_account',
+			'tracking_key'                 => '_dianxiaomi_tracking_key',
+			'tracking_destination_country' => '_dianxiaomi_tracking_destination_country',
+		);
+		foreach ( $detail_meta as $key => $meta_key ) {
+			if ( ! array_key_exists( $key, $data ) ) {
+				continue;
+			}
+			if ( ! is_string( $data[ $key ] ) ) {
+				continue;
+			}
+			$value = $data[ $key ];
+			if ( 'tracking_ship_date' === $key && '' !== $value && ! is_numeric( $value ) ) {
+				// Same midnight-in-site-timezone timestamp the meta box stores.
+				$parsed = date_create_immutable( $value, wp_timezone() );
+				$value  = $parsed instanceof \DateTimeImmutable ? (string) $parsed->getTimestamp() : '';
+			}
+			$order->update_meta_data( $meta_key, $value );
+		}
 		if ( ! empty( $data['tracking_provider'] ) && is_string( $data['tracking_provider'] ) ) {
 			$order->update_meta_data( '_dianxiaomi_tracking_provider', $data['tracking_provider'] );
 			$order->update_meta_data( '_dianxiaomi_tracking_provider_name', dianxiaomi_courier_name( $data['tracking_provider'] ) );
+			$order->update_meta_data( '_dianxiaomi_tracking_required_fields', dianxiaomi_courier_required_fields( $data['tracking_provider'] ) );
 		}
 
 		// Vérifier si le statut de la commande doit être ignoré
