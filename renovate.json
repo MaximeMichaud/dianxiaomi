@@ -10,7 +10,9 @@
   "timezone": "America/Toronto",
   "schedule": ["before 6am on Monday"],
   "labels": ["dependencies"],
-  "dependencyDashboard": true,
+  "dependencyDashboard": {
+    "enabled": true
+  },
   "automerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
