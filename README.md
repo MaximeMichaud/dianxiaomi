@@ -29,8 +29,8 @@ collaborative improvements.
 
 | Software     | Minimum Version | Tested Up To |
 |--------------|-----------------|--------------|
-| WordPress    | 5.8             | 7.1.4        |
-| WooCommerce  | 8.0             | 11.2.2       |
+| WordPress    | 5.8             | 7.1.5        |
+| WooCommerce  | 8.0             | 11.3.1       |
 | PHP          | 8.1             | 8.5          |
 
 > **Note:** Static analysis runs on PHP 8.1 through 8.5. Integration tests run
